@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Geo-fence Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#d32f2f">
+  <link rel="icon" type="image/png" href="icon-192.png">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+</head>
+
+
+<body>
+  <h1>Swoop Spotter</h1>
+  <p>Move into the test zone to trigger an alert.</p>
+  <div id="map"></div>
+  <div id="alertBox" class="alert"></div>
+  <audio id="alertSound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
+
+  <script>
+    // Example geo-fence: Sydney Opera House
+    const fenceLat = -33.8568;
+    const fenceLng = 151.2153;
+    const fenceRadius = 200; // in meters
+
+    // Create map
+    const map = L.map('map').setView([fenceLat, fenceLng], 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Draw fence circle
+    const fenceCircle = L.circle([fenceLat, fenceLng], {
+      radius: fenceRadius,
+      color: 'red',
+      fillColor: '#f03',
+      fillOpacity: 0.2
+    }).addTo(map);
+
+    // Add marker for fence center
+    L.marker([fenceLat, fenceLng]).addTo(map).bindPopup("Test Geo-fence Zone");
+
+    // Haversine formula for distance between two coords
+    function getDistance(lat1, lon1, lat2, lon2) {
+      const R = 6371e3; // Earth radius in meters
+      const toRad = x => x * Math.PI / 180;
+      const φ1 = toRad(lat1);
+      const φ2 = toRad(lat2);
+      const Δφ = toRad(lat2 - lat1);
+      const Δλ = toRad(lon2 - lon1);
+
+      const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                Math.cos(φ1) * Math.cos(φ2) *
+                Math.sin(Δλ/2) * Math.sin(Δλ/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c; // in meters
+    }
+
+    // Monitor user location
+    const alertBox = document.getElementById("alertBox");
+    const alertSound = document.getElementById("alertSound");
+
+    if ("geolocation" in navigator) {
+      navigator.geolocation.watchPosition(pos => {
+        const { latitude, longitude } = pos.coords;
+
+        // Show user position
+        L.marker([latitude, longitude], { title: "You" })
+          .addTo(map)
+          .bindPopup("You are here")
+          .openPopup();
+
+        // Check if inside geo-fence
+        const distance = getDistance(latitude, longitude, fenceLat, fenceLng);
+        if (distance < fenceRadius) {
+          alertBox.textContent = "⚠️ You entered the geo-fenced zone!";
+          alertSound.play();
+        } else {
+          alertBox.textContent = "";
+        }
+      }, err => {
+        console.error(err);
+      }, { enableHighAccuracy: true });
+    } else {
+      alertBox.textContent = "Geolocation not supported in this browser.";
+    }
+
+    if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("service-worker.js")
+      .then(() => console.log("Service Worker registered"));
+  }
+  </script>
+
+</body>
+</html>

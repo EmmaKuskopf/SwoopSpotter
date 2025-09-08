@@ -2,28 +2,56 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Geo-fence Demo</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#d32f2f">
-  <link rel="icon" type="image/png" href="icon-192.png">
+  <title>Swoop Spotter</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 20px; }
+    #map { height: 60vh; width: 100%; margin-top: 10px; }
+    .alert { color: red; font-weight: bold; font-size: 1.2em; margin-top: 15px; }
+    .controls { margin: 10px; }
+    input, button { padding: 6px; margin: 5px; cursor: pointer; }
+    .simulator { margin-top: 15px; }
+  </style>
+  <!-- Leaflet for map -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 </head>
 
-
 <body>
-  <h1>Swoop Spotter</h1>
-  <p>Move into the test zone to trigger an alert.</p>
+  <h1>Swoop Spotter Demo</h1>
+  <p>Enter mock coordinates, use real GPS, or simulate walking into the Swoop Spot by using the slider from left to right to enter the zone.</p>
+  
+  <div class="controls">
+    <input type="number" id="latInput" placeholder="Latitude" step="0.0001">
+    <input type="number" id="lngInput" placeholder="Longitude" step="0.0001">
+    <button onclick="setMockLocation()">Set Mock Location</button>
+    <button onclick="useRealGPS()">Use Real GPS</button>
+  </div>
+
+  <div class="simulator">
+    <label>🚶 Simulate Movement: </label>
+    <input type="range" id="simSlider" min="0" max="100" value="0" oninput="simulateMovement(this.value)">
+    <button onclick="playWalk()">▶️ Play Walk</button>
+    <button onclick="stopWalk()">⏹️ Stop</button>
+  </div>
+
   <div id="map"></div>
   <div id="alertBox" class="alert"></div>
-  <audio id="alertSound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
+  <audio id="alertSound" src="https://upload.wikimedia.org/wikipedia/commons/8/81/Alarm_or_siren.ogg"></audio>
+
+  <div class="fenceForm">
+  <h3>Create a New Geo-fence</h3>
+  <input type="text" id="fenceName" placeholder="Fence Name">
+  <input type="number" id="fenceLat" placeholder="Latitude" step="0.0001">
+  <input type="number" id="fenceLng" placeholder="Longitude" step="0.0001">
+  <input type="number" id="fenceRadius" placeholder="Radius (meters)" step="1">
+  <button onclick="addGeoFence()">Add Geo-fence</button>
+</div>
 
   <script>
-    // Example geo-fence: Sydney Opera House
-    const fenceLat = -33.8568;
-    const fenceLng = 151.2153;
-    const fenceRadius = 200; // in meters
+    // Example geo-fence: Masked Lapwing Nest
+    const fenceLat = -27.4160891;
+    const fenceLng = 152.9151256;
+    const fenceRadius = 100; // in meters
 
     // Create map
     const map = L.map('map').setView([fenceLat, fenceLng], 15);
@@ -31,67 +59,158 @@
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    // Draw fence circle
-    const fenceCircle = L.circle([fenceLat, fenceLng], {
+    // Draw fence
+    L.circle([fenceLat, fenceLng], {
       radius: fenceRadius,
       color: 'red',
       fillColor: '#f03',
       fillOpacity: 0.2
     }).addTo(map);
-
-    // Add marker for fence center
     L.marker([fenceLat, fenceLng]).addTo(map).bindPopup("Test Geo-fence Zone");
 
-    // Haversine formula for distance between two coords
+    // Haversine distance
     function getDistance(lat1, lon1, lat2, lon2) {
-      const R = 6371e3; // Earth radius in meters
+      const R = 6371e3;
       const toRad = x => x * Math.PI / 180;
-      const φ1 = toRad(lat1);
-      const φ2 = toRad(lat2);
-      const Δφ = toRad(lat2 - lat1);
-      const Δλ = toRad(lon2 - lon1);
-
-      const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-                Math.cos(φ1) * Math.cos(φ2) *
-                Math.sin(Δλ/2) * Math.sin(Δλ/2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-      return R * c; // in meters
+      const φ1 = toRad(lat1), φ2 = toRad(lat2);
+      const Δφ = toRad(lat2 - lat1), Δλ = toRad(lon2 - lon1);
+      const a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     }
 
-    // Monitor user location
     const alertBox = document.getElementById("alertBox");
     const alertSound = document.getElementById("alertSound");
+    let userMarker = null;
 
-    if ("geolocation" in navigator) {
-      navigator.geolocation.watchPosition(pos => {
-        const { latitude, longitude } = pos.coords;
+    function checkLocation(lat, lng) {
+    if (userMarker) map.removeLayer(userMarker);
+    userMarker = L.marker([lat, lng], { title: "You" }).addTo(map);
 
-        // Show user position
-        L.marker([latitude, longitude], { title: "You" })
-          .addTo(map)
-          .bindPopup("You are here")
-          .openPopup();
+    let insideAny = false;
+  geoFences.forEach(fence => {
+    const distance = getDistance(lat, lng, fence.lat, fence.lng);
+    if (distance < fence.radius) {
+      alertBox.textContent = `⚠️ You have entered a Swoop Spot: ${fence.name}`;
+      alertSound.play();
+      insideAny = true;
+    }
+    
+  });
 
-        // Check if inside geo-fence
-        const distance = getDistance(latitude, longitude, fenceLat, fenceLng);
-        if (distance < fenceRadius) {
-          alertBox.textContent = "⚠️ You entered the geo-fenced zone!";
-          alertSound.play();
-        } else {
-          alertBox.textContent = "";
-        }
-      }, err => {
-        console.error(err);
-      }, { enableHighAccuracy: true });
-    } else {
-      alertBox.textContent = "Geolocation not supported in this browser.";
+  if (!insideAny) {
+    alertBox.textContent = "✅ You are in a Swoop Safe zone!";
+  }
+}
+
+function addGeoFence() {
+  const name = document.getElementById("fenceName").value;
+  const lat = parseFloat(document.getElementById("fenceLat").value);
+  const lng = parseFloat(document.getElementById("fenceLng").value);
+  const radius = parseFloat(document.getElementById("fenceRadius").value);
+
+  if (!name || isNaN(lat) || isNaN(lng) || isNaN(radius)) {
+    alert("Please fill in all fence fields correctly.");
+    return;
+  }
+
+  const circle = L.circle([lat, lng], {
+    radius: radius,
+    color: 'blue',
+    fillColor: '#30f',
+    fillOpacity: 0.2
+  }).addTo(map);
+
+  L.marker([lat, lng]).addTo(map).bindPopup(name);
+
+  geoFences.push({ name, lat, lng, radius, circle });
+
+  // Clear inputs
+  document.getElementById("fenceName").value = "";
+  document.getElementById("fenceLat").value = "";
+  document.getElementById("fenceLng").value = "";
+  document.getElementById("fenceRadius").value = "";
+}
+
+
+    // Manual mock location
+    function setMockLocation() {
+      const lat = parseFloat(document.getElementById("latInput").value);
+      const lng = parseFloat(document.getElementById("lngInput").value);
+      if (!isNaN(lat) && !isNaN(lng)) {
+        map.setView([lat, lng], 16);
+        checkLocation(lat, lng);
+      }
     }
 
-    if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("service-worker.js")
-      .then(() => console.log("Service Worker registered"));
-  }
-  </script>
+    // Real GPS tracking
+    function useRealGPS() {
+      if ("geolocation" in navigator) {
+        navigator.geolocation.watchPosition(pos => {
+          const { latitude, longitude } = pos.coords;
+          map.setView([latitude, longitude], 16);
+          checkLocation(latitude, longitude);
+        }, err => {
+          alertBox.textContent = "Error: " + err.message;
+        }, { enableHighAccuracy: true });
+      } else {
+        alertBox.textContent = "Geolocation not supported.";
+      }
+    }
 
+    // Simulation path: from outside to inside the fence
+    const start = { lat: -27.4192985, lng: 152.9167399 }; // outside
+    const end = { lat: fenceLat, lng: fenceLng };   // inside
+    function simulateMovement(value) {
+      const t = value / 100; // 0 → 1
+      const lat = start.lat + (end.lat - start.lat) * t;
+      const lng = start.lng + (end.lng - start.lng) * t;
+      map.setView([lat, lng], 16);
+      checkLocation(lat, lng);
+    }
+
+    // Auto-walk simulation
+    let walkInterval = null;
+    function playWalk() {
+      stopWalk(); // clear existing interval
+      const slider = document.getElementById("simSlider");
+      let value = parseInt(slider.value);
+
+      walkInterval = setInterval(() => {
+        if (value >= 100) {
+          stopWalk();
+          return;
+        }
+        value += 2; // step size
+        slider.value = value;
+        simulateMovement(value);
+      }, 500); // move every 0.5 sec
+    }
+
+    function stopWalk() {
+      if (walkInterval) {
+        clearInterval(walkInterval);
+        walkInterval = null;
+      }
+    }
+
+    // Store all geo-fences
+const geoFences = [];
+
+// Example default fence (if you had one)
+geoFences.push({
+  name: "Sydney Opera House",
+  lat: -33.8568,
+  lng: 151.2153,
+  radius: 200,
+  circle: L.circle([-33.8568, 151.2153], {
+    radius: 200,
+    color: 'red',
+    fillColor: '#f03',
+    fillOpacity: 0.2
+  }).addTo(map)
+});
+L.marker([-33.8568, 151.2153]).addTo(map).bindPopup("Sydney Opera House");
+
+  </script>
 </body>
 </html>

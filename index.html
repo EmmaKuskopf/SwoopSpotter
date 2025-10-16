@@ -1,216 +1,2220 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Swoop Spotter</title>
-  <style>
-    body { font-family: sans-serif; text-align: center; padding: 20px; }
-    #map { height: 60vh; width: 100%; margin-top: 10px; }
-    .alert { color: red; font-weight: bold; font-size: 1.2em; margin-top: 15px; }
-    .controls { margin: 10px; }
-    input, button { padding: 6px; margin: 5px; cursor: pointer; }
-    .simulator { margin-top: 15px; }
-  </style>
-  <!-- Leaflet for map -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-</head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Swoop Spotter — Reports</title>
 
-<body>
-  <h1>Swoop Spotter Demo</h1>
-  <p>Enter mock coordinates, use real GPS, or simulate walking into the Swoop Spot by using the slider from left to right to enter the zone.</p>
+<!-- Tailwind CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- Leaflet -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<style>
+  :root {
+    --color-light: #f2eceb;
+    --color-dark: #422d1e;
+  }
+  body { background: var(--color-light); font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; }
+  #map { 
+    height: 56vh; 
+    width: 100%; 
+    border-radius: 0.5rem; 
+    position: relative;
+    z-index: 1;
+    background: #e8e2e1;
+  }
+  .fab { position:absolute; bottom:1rem; right:1rem; z-index:1400; width:56px; height:56px; border-radius:9999px; display:grid; place-items:center; box-shadow:0 8px 24px rgba(66,45,30,0.18); cursor:pointer; }
+  .tag-input { min-height:2.6rem; display:flex; align-items:center; gap:6px; flex-wrap:wrap; padding:6px; border:1px solid #d4cac7; border-radius:8px; background: var(--color-light); cursor:text; }
+  .tag { background:#e8e2e1; color: var(--color-dark); padding:6px 8px; border-radius:999px; display:inline-flex; align-items:center; gap:6px; font-size:13px; }
+  .tag .x { cursor:pointer; font-weight:700; }
+  .tag-list { position:absolute; left:0; right:0; top:100%; margin-top:6px; background: var(--color-light); border:1px solid #d4cac7; border-radius:8px; box-shadow:0 10px 30px rgba(66,45,30,0.12); max-height:220px; overflow:auto; z-index:10050; display:none; }
+  .tag-list > div { padding:8px 10px; cursor:pointer; }
+  .tag-list > div:hover { background:#e8e2e1; }
+  .modal-overlay { z-index:99999 !important; }
+  .tag-box { 
+    min-height: 2.6rem; 
+    display: flex; 
+    align-items: center; 
+    gap: 6px; 
+    flex-wrap: wrap; 
+    padding: 6px; 
+    border: 1px solid #d4cac7; 
+    border-radius: 8px; 
+    background: var(--color-light); 
+    cursor: text;
+    margin-bottom: 1rem;
+  }
+  .input-field {
+    width: 100%;
+    border: 1px solid #d4cac7;
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-bottom: 1rem;
+    background: var(--color-light);
+  }
+  #alertBox { position: fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index: 1000000; background:#fff7ed; color: var(--color-dark); border:2px solid #f59e0b; border-radius:0.5rem; padding:0.75rem 1rem; max-width:92%; width:460px; box-shadow: 0 10px 30px rgba(66,45,30,.22); opacity:0; pointer-events:none; transition:opacity .26s ease; display:none; }
+  #alertBox.show { display:block; opacity:1; pointer-events:auto; }
+  .required::after { content: ' *'; color: #ef4444; font-weight:700; margin-left:6px; }
+  /* report feed coloring */
+  .report-low { border-left: 4px solid #10B981; }
+  .report-caution { border-left: 4px solid #F59E0B; }
+  .report-danger { border-left: 4px solid #EF4444; }
+  @media (max-width:480px){ #alertBox{ width:94%; padding:.6rem; } }
+
+  .tab-content {
+    display: none;
+  }
+  .tab-content.active {
+    display: block;
+  }
+  .tab-btn {
+    transition: all 0.2s;
+    position: relative;
+  }
+  .tab-btn:not(.active) {
+    color: var(--color-dark);
+    opacity: 0.6;
+    border-bottom-color: transparent;
+  }
+  .tab-btn.active {
+    color: var(--color-dark);
+    opacity: 1;
+    border-bottom-color: var(--color-dark);
+  }
+  .tab-btn:hover:not(.active) {
+    opacity: 0.8;
+    border-bottom-color: #d4cac7;
+  }
+  .latest-report {
+    background-color: var(--color-light);
+    border-radius: 0.5rem;
+    padding: 1rem;
+  }
   
-  <div class="controls">
-    <input type="number" id="latInput" placeholder="Latitude" step="0.0001">
-    <input type="number" id="lngInput" placeholder="Longitude" step="0.0001">
-    <button onclick="setMockLocation()">Set Mock Location</button>
-    <button onclick="useRealGPS()">Use Real GPS</button>
+  /* Safari-specific form element fixes */
+  select, input, textarea {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+  }
+  
+  /* Consistent form field styling across all browsers */
+  #birdSpecies {
+    background-color: white;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px !important;
+  }
+  
+  /* Bird Add Button Styling */
+  .bird-add-btn {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+    overflow: hidden;
+    background: transparent;
+  }
+  .bird-add-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.24);
+  }
+  .bird-add-btn:active {
+    transform: scale(0.98);
+  }
+  .bird-add-btn img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .bird-add-btn .plus-icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 32px;
+    font-weight: 300;
+    color: white;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    pointer-events: none;
+    z-index: 2;
+  }
+</style>
+</head>
+<body class="min-h-screen">
+
+<header class="shadow sticky top-0 z-50" style="background-color: #f2eceb;">
+  <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+    <div>
+      <img src="Assets/Logo/Logo-Horizontal.svg" alt="Swoop Spotter Logo" class="h-8" />
+    </div>
+    <div class="flex gap-2">
+      <button id="useGPSBtn" class="text-sm px-3 py-1 rounded text-white" style="background-color: #422d1e;">Use GPS</button>
+      <button id="clearSpotsBtn" class="text-sm px-3 py-1 rounded border text-red-600" style="border-color: #d4cac7;">Clear</button>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-4xl mx-auto px-4 pb-12 pt-4">
+  <div id="map" class="shadow rounded relative">
+    <button id="openAddBtn" class="fab bird-add-btn" title="Add Swoop Spot">
+      <img src="Assets/Icons/bird_background.svg" alt="">
+      <span class="plus-icon">+</span>
+    </button>
   </div>
 
-  <div class="simulator">
-    <label>🚶 Simulate Movement: </label>
-    <input type="range" id="simSlider" min="0" max="100" value="0" oninput="simulateMovement(this.value)">
-    <button onclick="playWalk()">▶️ Play Walk</button>
-    <button onclick="stopWalk()">⏹️ Stop</button>
+  <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+    <section class="p-3 rounded shadow" style="background-color: #f2eceb;">
+      <h2 class="font-semibold mb-2" style="color: #422d1e;">Nearby Alerts</h2>
+      <div id="alertsList" class="space-y-2 max-h-56 overflow-auto"></div>
+    </section>
+
+    <section class="p-3 rounded shadow" style="background-color: #f2eceb;">
+      <h2 class="font-semibold mb-2" style="color: #422d1e;">Walk Simulator</h2>
+      <div class="text-xs mb-2" style="color: #422d1e; opacity: 0.7;">Simulate a straight-line walk (Start → End addresses)</div>
+      <div class="grid gap-2">
+        <input id="simStart" placeholder="Start walk: Address" class="p-2 rounded w-full" style="border: 1px solid #d4cac7; background-color: #f2eceb;"/>
+        <input id="simEnd" placeholder="End walk: Address" class="p-2 rounded w-full" style="border: 1px solid #d4cac7; background-color: #f2eceb;"/>
+        <div class="flex gap-2">
+          <button id="playSim" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded">Play</button>
+          <button id="stopSim" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded">Stop</button>
+        </div>
+      </div>
+    </section>
   </div>
+</main>
 
-  <div id="map"></div>
-  <div id="alertBox" class="alert"></div>
-  <audio id="alertSound" src="https://upload.wikimedia.org/wikipedia/commons/8/81/Alarm_or_siren.ogg"></audio>
+<!-- centered alert -->
+<div id="alertBox" role="status" aria-live="polite"></div>
 
-  <div class="fenceForm">
-  <h3>Create a New Geo-fence</h3>
-  <input type="text" id="fenceName" placeholder="Fence Name">
-  <input type="number" id="fenceLat" placeholder="Latitude" step="0.0001">
-  <input type="number" id="fenceLng" placeholder="Longitude" step="0.0001">
-  <input type="number" id="fenceRadius" placeholder="Radius (meters)" step="1">
-  <button onclick="addGeoFence()">Add Geo-fence</button>
+<!-- Add / New Spot Modal -->
+<div id="spotModal" class="hidden fixed inset-0 modal-overlay flex items-start justify-center bg-black/40 pt-12">
+  <div class="rounded-lg shadow-lg w-11/12 max-w-2xl" style="background-color: #f2eceb;">
+    <div class="p-6">
+      <!-- Header -->
+      <div class="flex justify-between items-center mb-4">
+        <div>
+          <h2 class="text-xl font-bold" style="color: #422d1e;">Add Swoop Spot</h2>
+          <p class="text-sm mt-1" style="color: #422d1e; opacity: 0.7;">Click the map to select location, or enter an address below</p>
+        </div>
+        <button id="closeSpotModal" class="text-2xl" style="color: #422d1e; opacity: 0.6;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">&times;</button>
+      </div>
+
+    <form id="spotForm" class="space-y-4">
+      <!-- Spot Details Section -->
+      <div class="rounded-lg p-4" style="background-color: #e8e2e1;">
+        <h3 class="font-medium mb-3" style="color: #422d1e;">Spot Details</h3>
+        <div class="space-y-3">
+          <div>
+            <label class="block text-sm font-medium mb-1" style="color: #422d1e;">Bird species <span class="text-red-500">*</span></label>
+            <select id="birdSpecies" class="w-full rounded-lg p-2" style="padding: 8px 12px; border-radius: 8px; border: 1px solid #d4cac7; background-color: #f2eceb; color: #422d1e;">
+              <option>Magpie</option>
+              <option>Magpie-Lark</option>
+              <option>Masked Lapwing (plover)</option>
+              <option>Butcherbird</option>
+              <option>Crow</option>
+              <option>Noisy Miner</option>
+              <option>Noisy Friarbird</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Location Section -->
+      <div class="rounded-lg p-4" style="background-color: #e8e2e1;">
+        <h3 class="font-medium mb-3" style="color: #422d1e;">Location</h3>
+        <div class="space-y-3">
+          <div>
+            <label class="block text-sm font-medium mb-1" style="color: #422d1e;">Address (optional)</label>
+            <div class="flex gap-2">
+              <div class="relative flex-1">
+                <input id="addressField" placeholder="Enter an address" class="w-full rounded-lg p-2" style="padding: 8px 12px; border-radius: 8px; border: 1px solid #d4cac7; background-color: #f2eceb; color: #422d1e;" />
+                <div id="addressField_suggestions"></div>
+              </div>
+              <button type="button" id="geoBtn" class="px-3 py-2 rounded text-sm whitespace-nowrap" style="border: 1px solid #d4cac7; background-color: #f2eceb; color: #422d1e;" onmouseover="this.style.backgroundColor='#e8e2e1'" onmouseout="this.style.backgroundColor='#f2eceb'">📍 Find Me</button>
+            </div>
+            <div id="addressInfo" class="text-xs mt-1" style="color: #422d1e; opacity: 0.7;"></div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium mb-1" style="color: #422d1e;">Coordinates</label>
+            <input id="coordsField" class="w-full rounded-lg p-2" style="padding: 8px 12px; border-radius: 8px; border: 1px solid #d4cac7; background-color: #e8e2e1; color: #422d1e;" readonly placeholder="Click map or find address"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- Initial Report Section -->
+      <div class="rounded-lg p-4" style="background-color: #e8e2e1;">
+        <h3 class="font-medium mb-3" style="color: #422d1e;">Initial Report</h3>
+        <div class="space-y-3">
+          <div>
+            <label class="block text-sm font-medium mb-1" style="color: #422d1e;">Bird behaviour <span class="text-red-500">*</span></label>
+            <div class="relative">
+              <div id="rbirdBox" class="tag-input" tabindex="0"></div>
+              <div id="rbirdList" class="tag-list"></div>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium mb-1">Human behaviour <span class="text-red-500">*</span></label>
+            <div class="relative">
+              <div id="rhumanBox" class="tag-input" tabindex="0"></div>
+              <div id="rhumanList" class="tag-list"></div>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium mb-1">Precautions taken <span class="text-red-500">*</span></label>
+            <div class="relative">
+              <div id="rprecBox" class="tag-input" tabindex="0"></div>
+              <div id="rprecList" class="tag-list"></div>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium mb-1" style="color: #422d1e;">Alert level (auto-set from bird behaviour)</label>
+            <input type="text" id="ralertLevel" class="w-full rounded-lg p-2" style="padding: 8px 12px; border-radius: 8px; border: 1px solid #d4cac7; background-color: #e8e2e1; color: #422d1e;" readonly>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium mb-1" style="color: #422d1e;">Extra info (optional)</label>
+            <textarea id="reextra" class="w-full rounded-lg p-2 h-20" style="padding: 8px 12px; border-radius: 8px; border: 1px solid #d4cac7; background-color: #f2eceb; color: #422d1e;" placeholder="Any additional notes..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" id="spotCancel" class="px-4 py-2 rounded" style="border: 1px solid #d4cac7; color: #422d1e;" onmouseover="this.style.backgroundColor='#e8e2e1'" onmouseout="this.style.backgroundColor='transparent'">Cancel</button>
+        <button type="submit" id="spotSave" class="px-4 py-2 text-white rounded" style="background-color: #422d1e;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">Create Swoop Spot</button>
+      </div>
+    </form>
+    </div>
+  </div>
 </div>
 
-  <script>
-    // Example geo-fence: Masked Lapwing Nest
-    const fenceLat = -27.4160891;
-    const fenceLng = 152.9151256;
-    const fenceRadius = 100; // in meters
+<!-- Spot Details / Report Feed Modal -->
+<div id="detailsModal" class="hidden fixed inset-0 modal-overlay flex items-start justify-center bg-black/40 pt-12">
+  <div class="rounded-lg shadow-lg w-11/12 max-w-2xl p-5" style="background-color: #f2eceb;">
+    <div class="flex justify-between items-start">
+      <div>
+        <h3 id="detailsTitle" class="text-lg font-semibold" style="color: #422d1e;">Spot details</h3>
+        <p id="detailsSubtitle" class="text-xs" style="color: #422d1e; opacity: 0.7;">Feed of reports. Add a new report to append to this spot.</p>
+      </div>
+      <div>
+        <button id="closeDetails" style="color: #422d1e; opacity: 0.7;">✖</button>
+      </div>
+    </div>
 
-    // Create map
-    const map = L.map('map').setView([fenceLat, fenceLng], 15);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
+    <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+      <!-- Left: spot summary & reports -->
+      <div>
+        <div id="spotHeader" class="p-3 rounded mb-3" style="border: 1px solid #d4cac7;">
+          <!-- populated dynamically -->
+        </div>
 
-    // Draw fence
-    L.circle([fenceLat, fenceLng], {
-      radius: fenceRadius,
-      color: 'red',
-      fillColor: '#f03',
-      fillOpacity: 0.2
-    }).addTo(map);
-    L.marker([fenceLat, fenceLng]).addTo(map).bindPopup("Test Geo-fence Zone");
+        <div class="overflow-auto max-h-96 space-y-2" id="reportsFeed">
+          <!-- report items -->
+        </div>
+      </div>
 
-    // Haversine distance
-    function getDistance(lat1, lon1, lat2, lon2) {
-      const R = 6371e3;
-      const toRad = x => x * Math.PI / 180;
-      const φ1 = toRad(lat1), φ2 = toRad(lat2);
-      const Δφ = toRad(lat2 - lat1), Δλ = toRad(lon2 - lon1);
-      const a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
-      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    }
+      <!-- Right: add new report form -->
+      <div class="p-3 rounded" style="background-color: #e8e2e1;">
+        <h4 class="font-semibold mb-2" style="color: #422d1e;">Add a report</h4>
+        <form id="reportForm" class="space-y-3 text-sm">
+          <div>
+            <label class="required" style="color: #422d1e;">Bird behaviour</label>
+            <div class="relative">
+              <div id="rbirdBox2" class="tag-input" tabindex="0"></div>
+              <div id="rbirdList2" class="tag-list"></div>
+            </div>
+          </div>
 
-    const alertBox = document.getElementById("alertBox");
-    const alertSound = document.getElementById("alertSound");
-    let userMarker = null;
+          <div>
+            <label class="required" style="color: #422d1e;">Human behaviour</label>
+            <div class="relative">
+              <div id="rhumanBox2" class="tag-input" tabindex="0"></div>
+              <div id="rhumanList2" class="tag-list"></div>
+            </div>
+          </div>
 
-    function checkLocation(lat, lng) {
-    if (userMarker) map.removeLayer(userMarker);
-    userMarker = L.marker([lat, lng], { title: "You" }).addTo(map);
+          <div>
+            <label class="required" style="color: #422d1e;">Precautions</label>
+            <div class="relative">
+              <div id="rprecBox2" class="tag-input" tabindex="0"></div>
+              <div id="rprecList2" class="tag-list"></div>
+            </div>
+          </div>
 
-    let insideAny = false;
-  geoFences.forEach(fence => {
-    const distance = getDistance(lat, lng, fence.lat, fence.lng);
-    if (distance < fence.radius) {
-      alertBox.textContent = `⚠️ You have entered a Swoop Spot: ${fence.name}`;
-      alertSound.play();
-      insideAny = true;
-    }
+          <div>
+            <label class="required">Alert level (derived)</label>
+            <select id="repAlertLevel" class="w-full border p-2 rounded">
+              <option>Low risk</option>
+              <option>Take caution</option>
+              <option>Danger - Avoid</option>
+            </select>
+          </div>
+
+          <div>
+            <label>Extra notes</label>
+            <textarea id="repExtra" class="w-full border p-2 rounded"></textarea>
+          </div>
+
+          <div class="flex justify-end gap-2">
+            <button type="button" id="reportCancel" class="px-3 py-2 border rounded">Cancel</button>
+            <button type="submit" id="reportSave" class="px-4 py-2 bg-yellow-500 text-white rounded">Add report</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm discard modal -->
+<div id="confirmModal" class="hidden fixed inset-0 flex items-center justify-center bg-black/40 z-50">
+  <div class="rounded-lg shadow-lg p-4 max-w-sm w-11/12" style="background-color: #f2eceb;">
+    <div class="text-sm mb-3">
+      <div class="font-semibold" style="color: #422d1e;">Discard changes?</div>
+      <div class="text-xs" style="color: #422d1e; opacity: 0.7;">You have unsaved changes. Are you sure you want to close without saving?</div>
+    </div>
+    <div class="flex justify-end gap-2">
+      <button id="keepEditing" class="px-3 py-1 rounded" style="border: 1px solid #d4cac7; color: #422d1e;">Keep editing</button>
+      <button id="discardChanges" class="px-3 py-1 bg-red-600 text-white rounded">Discard</button>
+    </div>
+  </div>
+</div>
+
+<!-- Success modal -->
+<div id="successModal" class="hidden fixed inset-0 flex items-center justify-center bg-black/40 z-50">
+  <div class="rounded-lg shadow-lg p-6 max-w-md w-11/12" style="background-color: #f2eceb;">
+    <div class="text-center">
+      <div class="mb-4">
+        <img id="successUserIcon" src="" alt="User status" class="w-32 h-32 mx-auto" />
+      </div>
+      <h3 class="text-xl font-bold mb-2" style="color: #422d1e;">Swoop Spot Created!</h3>
+      <p id="successMessage" class="mb-4" style="color: #422d1e;">
+        <!-- Message will be dynamically set -->
+      </p>
+      <p id="goodEggMessage" class="text-lg font-medium text-green-600 mb-4">You're a good egg!</p>
+      <button id="closeSuccessModal" class="px-6 py-2 text-white rounded-lg" style="background-color: #422d1e;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+        Got it!
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Exit Prompt Modal -->
+<div id="exitPromptModal" class="hidden fixed inset-0 flex items-center justify-center bg-black/40 z-50">
+  <div class="rounded-lg shadow-lg p-6 max-w-lg w-11/12 max-h-[80vh] flex flex-col" style="background-color: #f2eceb;">
+    <div class="mb-4">
+      <h3 class="text-xl font-bold mb-2" style="color: #422d1e;">Did you spot any birds?</h3>
+      <p class="text-sm" style="color: #422d1e; opacity: 0.7;">You passed through the following swoop zones. Please update each one:</p>
+    </div>
     
-  });
+    <div id="exitPromptList" class="flex-1 overflow-y-auto space-y-3 mb-4">
+      <!-- Spots will be dynamically added here -->
+    </div>
+    
+    <div class="flex justify-end gap-2 pt-3" style="border-top: 1px solid #d4cac7;">
+      <button id="closeExitPrompt" class="px-4 py-2 rounded" style="border: 1px solid #d4cac7; color: #422d1e;" onmouseover="this.style.backgroundColor='#e8e2e1'" onmouseout="this.style.backgroundColor='transparent'">
+        Close
+      </button>
+    </div>
+  </div>
+</div>
 
-  if (!insideAny) {
-    alertBox.textContent = "✅ You are in a Swoop Safe zone!";
-  }
-}
-
-function addGeoFence() {
-  const name = document.getElementById("fenceName").value;
-  const lat = parseFloat(document.getElementById("fenceLat").value);
-  const lng = parseFloat(document.getElementById("fenceLng").value);
-  const radius = parseFloat(document.getElementById("fenceRadius").value);
-
-  if (!name || isNaN(lat) || isNaN(lng) || isNaN(radius)) {
-    alert("Please fill in all fence fields correctly.");
-    return;
-  }
-
-  const circle = L.circle([lat, lng], {
-    radius: radius,
-    color: 'blue',
-    fillColor: '#30f',
-    fillOpacity: 0.2
+<script>
+(() => {
+  // ----------------------------
+  // Setup map + icons + DOM refs
+  // ----------------------------
+  // Initialize map with a slight delay to ensure DOM is ready
+  const map = L.map('map', {
+    minZoom: 3,
+    maxZoom: 18
+  }).setView([-27.4698, 153.0251], 14);
+  
+  // Add OpenStreetMap tiles
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors',
+    subdomains: ['a','b','c']
   }).addTo(map);
 
-  L.marker([lat, lng]).addTo(map).bindPopup(name);
+  function birdSVG(col){
+    let iconName;
+    switch(col) {
+      case '#10B981': iconName = 'swoop_low.svg'; break;
+      case '#F59E0B': iconName = 'swoop_caution.svg'; break;
+      case '#EF4444': iconName = 'swoop_danger.svg'; break;
+      default: iconName = 'swoop_calm.svg';
+    }
+    return `<img src="Assets/Icons/${iconName}" width="36" height="36" alt="Bird icon">`;
+  }
+  function getBirdIcon(level){
+    let col = '#10B981'; // low risk (green)
+    if(level === 'Take caution') col = '#F59E0B'; // caution (amber)
+    if(level === 'Danger - Avoid') col = '#EF4444'; // danger (red)
+    return L.divIcon({ className:'bird-marker', html: birdSVG(col), iconSize:[36,36], iconAnchor:[18,18] });
+  }
+  function getBirdIconSVG(level){
+    let iconName;
+    if(level === 'Danger - Avoid') iconName = 'swoop_danger.svg';
+    else if(level === 'Take caution') iconName = 'swoop_caution.svg';
+    else iconName = 'swoop_low.svg';
+    return `<img src="Assets/Icons/${iconName}" width="48" height="48" alt="Bird icon" class="rounded-lg">`;
+  }
+  const userIcon = L.divIcon({ className:'user-marker', html: `<img src="Assets/Icons/user.svg" width="36" height="36" alt="User icon">`, iconSize:[36,36], iconAnchor:[18,34] });
 
-  geoFences.push({ name, lat, lng, radius, circle });
+  // DOM refs
+  const openAddBtn = document.getElementById('openAddBtn');
+  const spotModal = document.getElementById('spotModal');
+  const closeSpotModal = document.getElementById('closeSpotModal');
+  const spotForm = document.getElementById('spotForm');
+  const birdSpecies = document.getElementById('birdSpecies');
+  const addressField = document.getElementById('addressField');
+  const addressInfo = document.getElementById('addressInfo');
+  const coordsField = document.getElementById('coordsField');
+  const rbirdBox = document.getElementById('rbirdBox');
+  const rbirdList = document.getElementById('rbirdList');
+  const rhumanBox = document.getElementById('rhumanBox');
+  const rhumanList = document.getElementById('rhumanList');
+  const rprecBox = document.getElementById('rprecBox');
+  const rprecList = document.getElementById('rprecList');
+  const ralertLevel = document.getElementById('ralertLevel');
+  const reextra = document.getElementById('reextra');
+  const spotCancel = document.getElementById('spotCancel');
+  const geoBtn = document.getElementById('geoBtn');
 
-  // Clear inputs
-  document.getElementById("fenceName").value = "";
-  document.getElementById("fenceLat").value = "";
-  document.getElementById("fenceLng").value = "";
-  document.getElementById("fenceRadius").value = "";
-}
+  const detailsModal = document.getElementById('detailsModal');
+  const closeDetails = document.getElementById('closeDetails');
+  const detailsTitle = document.getElementById('detailsTitle');
+  const reportsFeed = document.getElementById('reportsFeed');
+  const spotHeader = document.getElementById('spotHeader');
+  const reportForm = document.getElementById('reportForm');
+  const rbirdBox2 = document.getElementById('rbirdBox2');
+  const rbirdList2 = document.getElementById('rbirdList2');
+  const rhumanBox2 = document.getElementById('rhumanBox2');
+  const rhumanList2 = document.getElementById('rhumanList2');
+  const rprecBox2 = document.getElementById('rprecBox2');
+  const rprecList2 = document.getElementById('rprecList2');
+  const repAlertLevel = document.getElementById('repAlertLevel');
+  const repExtra = document.getElementById('repExtra');
+  const reportCancel = document.getElementById('reportCancel');
 
+  const alertsList = document.getElementById('alertsList');
+  const alertBox = document.getElementById('alertBox');
 
-    // Manual mock location
-    function setMockLocation() {
-      const lat = parseFloat(document.getElementById("latInput").value);
-      const lng = parseFloat(document.getElementById("lngInput").value);
-      if (!isNaN(lat) && !isNaN(lng)) {
-        map.setView([lat, lng], 16);
-        checkLocation(lat, lng);
-      }
+  const confirmModal = document.getElementById('confirmModal');
+  const keepEditing = document.getElementById('keepEditing');
+  const discardChanges = document.getElementById('discardChanges');
+
+  const successModal = document.getElementById('successModal');
+  const closeSuccessModal = document.getElementById('closeSuccessModal');
+  const successUserIcon = document.getElementById('successUserIcon');
+  const successMessage = document.getElementById('successMessage');
+  const goodEggMessage = document.getElementById('goodEggMessage');
+
+  const exitPromptModal = document.getElementById('exitPromptModal');
+  const exitPromptList = document.getElementById('exitPromptList');
+  const closeExitPrompt = document.getElementById('closeExitPrompt');
+
+  const useGPSBtn = document.getElementById('useGPSBtn');
+  const clearSpotsBtn = document.getElementById('clearSpotsBtn');
+
+  const playSim = document.getElementById('playSim');
+  const stopSim = document.getElementById('stopSim');
+
+  // constants + data arrays
+  const STORAGE_KEY = 'swoop_reports_v1';
+  const BIRD_BEHAVIOURS = ["noisy","swoop","close swoop","made contact + uninjured","made contact + injured"];
+  const HUMAN_BEHAVIOURS = ["walking","running","cycling","riding e-scooter","alone","with others","with pram","with children","in group","other"];
+  const PRECAUTIONS = ["Hat","Sunglasses","Umbrella","Helmet","Helmet with Cable Ties","Made Eye Contact","None"];
+
+  // state
+  let spots = []; // spot objects with reports array
+  let tempMarker = null;
+  let selectedLocation = null; // {lat,lng}
+  let initialFormState = null; // for dirty checks
+  let selectedRBird = [], selectedRHuman = [], selectedRPrec = [];
+  let selectedReportBird = [], selectedReportHuman = [], selectedReportPrec = [];
+  let activeDetailsSpotId = null;
+  let userMarker = null;
+  let simTimer = null, simPath = [], simIndex = 0;
+
+  // cute names - expanded dataset with 50+ creative generic bird names
+  const cuteNames = [
+    "Fluffy Breeze", "Peckle Pops", "Feather Fiasco", "Wingy Woo", "Sir Chirpsalot",
+    "Cloud Nibbler", "Little Zoomer", "Chirpadoodle", "Pip Squeak", "Muffin Flap",
+    "Captain Beaky", "Swoopy McSwoopface", "Tweety Tornado", "Baron Von Birb",
+    "Princess Plume", "Sky Rascal", "Beaky Blinder", "Lord Featherbottom",
+    "Waddle Wellington", "Squawk Box", "Professor Peck", "Ruffles McGee",
+    "Wing Commander", "Count Flappula", "Duchess Downy", "Sir Flapsalot",
+    "Mister Whistle", "Lady Wingnut", "Captain Caw", "Feathers O'Malley",
+    "Birdy Sanders", "Nest Potato", "Flap Jackson", "Beaker Bonanza",
+    "Sergeant Swoop", "Admiral Airborne", "Doctor Doodle", "Judge Jitters",
+    "Mayor Feathers", "Sheriff Screech", "Detective Talon", "Colonel Crest",
+    "General Wings", "Lieutenant Chirp", "Commander Cluck", "Private Peep",
+    "Zippy Zephyr", "Gusty Gale", "Breezy Buddy", "Windy Wanderer",
+    "Talon Trouble", "Skyward Sam", "Aerial Ace", "Hover Helper",
+    "Perch Patrol", "Branch Boss", "Treetop Terror", "Canopy Captain",
+    "Swoosh Sultan", "Draft Dodger", "Glide Guide", "Soar Supreme"
+  ];
+  function randName(){ return cuteNames[Math.floor(Math.random()*cuteNames.length)]; }
+  
+  // Get a unique name within 5km radius
+  function getUniqueName(lat, lng) {
+    // Get all spot names within 5km
+    const usedNames = spots
+      .filter(s => metersBetween(lat, lng, s.lat, s.lng) <= 5000)
+      .map(s => s.name);
+    
+    // Get available names (not used within 5km)
+    const availableNames = cuteNames.filter(name => !usedNames.includes(name));
+    
+    // If all names are used within 5km, just use any random name
+    if (availableNames.length === 0) {
+      return randName();
+    }
+    
+    // Return a random name from available names
+    return availableNames[Math.floor(Math.random() * availableNames.length)];
+  }
+  
+  function uid(){ return 's_' + Math.random().toString(36).slice(2,9); }
+
+  // Debounce helper
+  function debounce(func, wait) {
+    let timeout;
+    return function(...args) {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+  }
+
+  // Get radius based on risk level
+  function getRadiusByRisk(risk) {
+    return risk === 'Danger - Avoid' ? 100 : 
+           risk === 'Take caution' ? 80 : 50;
+  }
+
+  function metersBetween(aLat,aLng,bLat,bLng){
+    const R=6371e3, toRad=v=>v*Math.PI/180;
+    const φ1=toRad(aLat), φ2=toRad(bLat), Δφ=toRad(bLat-aLat), Δλ=toRad(bLng-aLng);
+    const a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  }
+  function toast(msg, t=1600){ const el=document.createElement('div'); el.innerHTML=`<div class="fixed top-24 right-6 z-50 text-white px-3 py-2 rounded" style="background-color: #422d1e;">${String(msg)}</div>`; document.body.appendChild(el); setTimeout(()=>el.remove(), t); }
+  function escapeHtml(s){ if(s==null) return ''; return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'); }
+
+  // ----------------------------
+  // Persistence
+  // ----------------------------
+  function saveAll(){
+    try {
+      const serial = spots.map(s => {
+        const { marker, circle, ...rest } = s;
+        return rest;
+      });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(serial));
+    } catch(e){ console.warn(e); }
+  }
+  function loadAll(){
+    try {
+      const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      raw.forEach(r => createSpotFromData(r, true));
+    } catch(e){ console.warn(e); }
+  }
+
+  // ----------------------------
+  // Robust Tag UI: idempotent, safe to re-run
+  // Replaces previous setupTagUI implementation
+  // ----------------------------
+  function setupTagUI(box, list, options, selectedArray, onChange){
+    // remove previously attached handlers stored on elements (if any)
+    if (box._tagui_cleanup) {
+      try { box._tagui_cleanup(); } catch(e){ /* ignore */ }
+      delete box._tagui_cleanup;
+    }
+    if (list._tagui_cleanup) {
+      try { list._tagui_cleanup(); } catch(e){ /* ignore */ }
+      delete list._tagui_cleanup;
     }
 
-    // Real GPS tracking
-    function useRealGPS() {
-      if ("geolocation" in navigator) {
-        navigator.geolocation.watchPosition(pos => {
-          const { latitude, longitude } = pos.coords;
-          map.setView([latitude, longitude], 16);
-          checkLocation(latitude, longitude);
-        }, err => {
-          alertBox.textContent = "Error: " + err.message;
-        }, { enableHighAccuracy: true });
+    // render function (idempotent)
+    function render(){
+      box.innerHTML = '';
+      selectedArray.forEach(p=>{
+        const span = document.createElement('span');
+        span.className='tag';
+        span.innerHTML = `${escapeHtml(p)} <span class="x" data-val="${escapeHtml(p)}">&times;</span>`;
+        box.appendChild(span);
+      });
+      if(selectedArray.length === 0){
+        const ph = document.createElement('span');
+        ph.className='text-xs text-gray-500';
+        ph.textContent='Select...';
+        box.appendChild(ph);
+      }
+      const caret = document.createElement('span');
+      caret.innerHTML='&#9662;';
+      caret.style.marginLeft='auto';
+      caret.className='text-gray-400 text-sm';
+      box.appendChild(caret);
+    }
+
+    // helper to populate list
+    function populateList(){
+      list.innerHTML = '';
+      options.forEach(p => {
+        const d = document.createElement('div');
+        d.textContent = p;
+        d.dataset.val = p;
+        list.appendChild(d);
+      });
+    }
+
+    // state for whether list is shown
+    let listVisible = false;
+
+    // click handler for box (toggle list)
+    const onBoxClick = (e) => {
+      e.stopPropagation();
+      // toggle
+      listVisible = !listVisible;
+      if(listVisible){
+        populateList();
+        list.style.display = 'block';
       } else {
-        alertBox.textContent = "Geolocation not supported.";
+        list.style.display = 'none';
       }
+    };
+
+    // click handler for list items
+    const onListClick = (e) => {
+      const v = e.target && e.target.dataset && e.target.dataset.val;
+      if(!v) return;
+      if(!selectedArray.includes(v)) selectedArray.push(v);
+      render();
+      onChange && onChange();
+      list.style.display = 'none';
+      listVisible = false;
+    };
+
+    // click handler for removing a tag (delegated on the box)
+    const onBoxRemoveClick = (e) => {
+      const x = e.target.closest('.x');
+      if(!x) return;
+      const v = x.dataset.val;
+      const idx = selectedArray.indexOf(v);
+      if(idx>-1) selectedArray.splice(idx,1);
+      render();
+      onChange && onChange();
+    };
+
+    // global click to hide lists when clicking outside
+    const onDocumentClick = (e) => {
+      if(listVisible){
+        list.style.display = 'none';
+        listVisible = false;
+      }
+    };
+
+    // attach listeners
+    box.addEventListener('click', onBoxClick);
+    list.addEventListener('click', onListClick);
+    box.addEventListener('click', onBoxRemoveClick);
+    document.addEventListener('click', onDocumentClick);
+
+    // store cleanup function so subsequent initializations remove handlers
+    box._tagui_cleanup = () => {
+      try { box.removeEventListener('click', onBoxClick); } catch(e){}
+      try { box.removeEventListener('click', onBoxRemoveClick); } catch(e){}
+      try { document.removeEventListener('click', onDocumentClick); } catch(e){}
+      try { list.removeEventListener('click', onListClick); } catch(e){}
+      // hide list on cleanup
+      try { list.style.display = 'none'; } catch(e){}
+    };
+    list._tagui_cleanup = box._tagui_cleanup;
+
+    // initial render
+    render();
+  }
+
+  // initializeAllTagUIs: central handler to reset & attach tag UIs cleanly
+  function initializeAllTagUIs(){
+    // hide any floating lists left open
+    document.querySelectorAll('.tag-list').forEach(el => { el.style.display = 'none'; });
+
+    // reset and attach create-spot modal tags
+    selectedRBird = [];
+    selectedRHuman = [];
+    selectedRPrec = [];
+    setupTagUI(rbirdBox, rbirdList, BIRD_BEHAVIOURS, selectedRBird, updateRAlertFromBirds);
+    setupTagUI(rhumanBox, rhumanList, HUMAN_BEHAVIOURS, selectedRHuman, ()=>{});
+    setupTagUI(rprecBox, rprecList, PRECAUTIONS, selectedRPrec, ()=>{});
+
+    // reset and attach add-report modal tags
+    selectedReportBird = [];
+    selectedReportHuman = [];
+    selectedReportPrec = [];
+    setupTagUI(rbirdBox2, rbirdList2, BIRD_BEHAVIOURS, selectedReportBird, updateRepAlertFromBirds);
+    setupTagUI(rhumanBox2, rhumanList2, HUMAN_BEHAVIOURS, selectedReportHuman, ()=>{});
+    setupTagUI(rprecBox2, rprecList2, PRECAUTIONS, selectedReportPrec, ()=>{});
+  }
+
+  // ----------------------------
+  // Alert level logic
+  // ----------------------------
+  function computeAlertFromBirds(birdTags){
+    if(!Array.isArray(birdTags)) return 'Low risk';
+    if(birdTags.includes('made contact + injured') || birdTags.includes('made contact + uninjured')) return 'Danger - Avoid';
+    if(birdTags.includes('close swoop')) return 'Take caution';
+    // if has swoop or noisy or none -> Low risk
+    return 'Low risk';
+  }
+  function updateRAlertFromBirds(){ ralertLevel.value = computeAlertFromBirds(selectedRBird); }
+  function updateRepAlertFromBirds(){ repAlertLevel.value = computeAlertFromBirds(selectedReportBird); }
+
+  // ----------------------------
+  // Geocoding (Nominatim)
+  // ----------------------------
+  async function geocodeAddress(q){
+    const url = 'https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(q);
+    const res = await fetch(url);
+    const j = await res.json();
+    if(!j || j.length===0) throw new Error('Address not found');
+    return { lat: parseFloat(j[0].lat), lng: parseFloat(j[0].lon), display: j[0].display_name };
+  }
+
+  // Address suggestions UI
+  function createAddressList(input) {
+    let listId = input.id + '_suggestions';
+    let existingList = document.getElementById(listId);
+    if (!existingList) {
+      const list = document.createElement('div');
+      list.id = listId;
+      list.className = 'absolute left-0 right-0 rounded-lg shadow-lg mt-1 z-50 max-h-48 overflow-y-auto hidden';
+      list.style.backgroundColor = '#f2eceb';
+      list.style.border = '1px solid #d4cac7';
+      input.parentElement.style.position = 'relative';
+      input.parentElement.appendChild(list);
+      return list;
+    }
+    return existingList;
+  }
+
+  // Address lookup and suggestion handler
+  async function handleAddressLookup(input) {
+    if (!input.value.trim()) {
+      const list = document.getElementById(input.id + '_suggestions');
+      if (list) list.classList.add('hidden');
+      return;
     }
 
-    // Simulation path: from outside to inside the fence
-    const start = { lat: -27.4192985, lng: 152.9167399 }; // outside
-    const end = { lat: fenceLat, lng: fenceLng };   // inside
-    function simulateMovement(value) {
-      const t = value / 100; // 0 → 1
-      const lat = start.lat + (end.lat - start.lat) * t;
-      const lng = start.lng + (end.lng - start.lng) * t;
-      map.setView([lat, lng], 16);
-      checkLocation(lat, lng);
+    try {
+      const url = 'https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(input.value.trim());
+      const res = await fetch(url);
+      const results = await res.json();
+      
+      const list = createAddressList(input);
+      list.innerHTML = '';
+      
+      if (results.length > 0) {
+        results.slice(0, 5).forEach(r => {
+          const div = document.createElement('div');
+          div.className = 'p-2 cursor-pointer text-sm';
+          div.style.color = '#422d1e';
+          div.textContent = r.display_name;
+          div.addEventListener('mouseover', () => div.style.backgroundColor = '#e8e2e1');
+          div.addEventListener('mouseout', () => div.style.backgroundColor = 'transparent');
+          div.addEventListener('click', () => {
+            input.value = r.display_name;
+            if (input.id === 'addressField') {
+              selectedLocation = { lat: parseFloat(r.lat), lng: parseFloat(r.lon) };
+              coordsField.value = `${selectedLocation.lat.toFixed(6)}, ${selectedLocation.lng.toFixed(6)}`;
+              addressInfo.textContent = `Selected: ${r.display_name}`;
+              if (tempMarker) try { map.removeLayer(tempMarker); } catch(e){}
+              tempMarker = L.marker([selectedLocation.lat, selectedLocation.lng]).addTo(map);
+              map.setView([selectedLocation.lat, selectedLocation.lng], 16);
+            }
+            list.classList.add('hidden');
+          });
+          list.appendChild(div);
+        });
+        list.classList.remove('hidden');
+      } else {
+        list.classList.add('hidden');
+      }
+    } catch(err) {
+      console.warn('Address lookup error:', err);
     }
+  }
 
-    // Auto-walk simulation
-    let walkInterval = null;
-    function playWalk() {
-      stopWalk(); // clear existing interval
-      const slider = document.getElementById("simSlider");
-      let value = parseInt(slider.value);
+  // Setup debounced address lookup
+  const debouncedAddressLookup = debounce(handleAddressLookup, 300);
 
-      walkInterval = setInterval(() => {
-        if (value >= 100) {
-          stopWalk();
-          return;
+  // ----------------------------
+  // Map click behavior
+  // ----------------------------
+  map.on('click', (e) => {
+    // if the spot modal is open, treat click as selected location
+    if(!spotModal.classList.contains('hidden')){
+      selectedLocation = { lat: e.latlng.lat, lng: e.latlng.lng };
+      coordsField.value = `${selectedLocation.lat.toFixed(6)}, ${selectedLocation.lng.toFixed(6)}`;
+      addressInfo.textContent = `Selected from map: ${selectedLocation.lat.toFixed(6)}, ${selectedLocation.lng.toFixed(6)}`;
+      if(tempMarker) try{ map.removeLayer(tempMarker); } catch(e){}
+      tempMarker = L.marker(e.latlng).addTo(map);
+      return;
+    }
+    // when details modal open, do nothing special
+    if(!detailsModal.classList.contains('hidden')) return;
+    // otherwise pan
+    map.panTo(e.latlng);
+  });
+
+  // ----------------------------
+  // Create spot & reports model
+  // ----------------------------
+  function createSpotFromData(data, skipSave=false){
+    if(!data.id) data.id = uid();
+    if(!Array.isArray(data.reports)) data.reports = [];
+    // compute risk if absent
+    if(!data.risk) data.risk = computeSpotRiskFromReports(data.reports);
+    
+    const lat = Number(data.lat), lng = Number(data.lng);
+    const marker = L.marker([lat,lng], { icon: getBirdIcon(data.risk) }).addTo(map);
+    const radius = getRadiusByRisk(data.risk);
+    
+    const circle = L.circle([lat,lng], { 
+      radius: radius,
+      color: data.risk === 'Danger - Avoid' ? '#EF4444' : data.risk === 'Take caution' ? '#F59E0B' : '#10B981',
+      fillColor: data.risk === 'Danger - Avoid' ? '#FEE2E2' : data.risk === 'Take caution' ? '#FEF3C7' : '#DCFCE7',
+      fillOpacity: 0.35 
+    }).addTo(map);
+
+    const spot = {
+      id: data.id,
+      name: data.name || 'Swoop Spot',
+      species: data.species || data.birdSpecies || '',
+      lat, lng,
+      address: data.address || '',
+      radius: getRadiusByRisk(data.risk),
+      risk: data.risk,
+      reports: data.reports.slice(),
+      safePassageCount: data.safePassageCount || 0,
+      marker, circle
+    };
+
+    // marker click shows quick alert (custom yellow box)
+    marker.on('click', ()=> showSpotQuickAlert(spot));
+
+    spots.push(spot);
+    if(!skipSave) saveAll();
+    renderAlerts();
+    return spot;
+  }
+
+  function buildSpotPopup(s){
+    return `<div class="text-sm"><b>${escapeHtml(s.name)}</b><br/>Species: ${escapeHtml(s.species)}<br/>Risk: ${escapeHtml(s.risk)}<br/>Reports: ${s.reports.length}</div>`;
+  }
+
+  // ----------------------------
+  // Add new spot (create from createSpotFromData)
+  // ----------------------------
+  function handleCreateSpotFromForm(e){
+    e.preventDefault();
+    // validations - removed spot name from required fields since it's auto-generated
+    const missing = [];
+    if(!birdSpecies.value.trim()) missing.push('Bird species');
+    if(selectedRBird.length===0) missing.push('Bird behaviour (initial report)');
+    if(selectedRHuman.length===0) missing.push('Human behaviour (initial report)');
+    if(selectedRPrec.length===0) missing.push('Precautions');
+    if(!selectedLocation && !addressField.value.trim()) missing.push('Location (click map or enter address)');
+    if(missing.length>0){ toast('Please complete: ' + missing.join(', ')); return; }
+
+    (async ()=>{
+      let latlng = null;
+      // prefer address if provided
+      if(addressField.value.trim()){
+        try {
+          addressInfo.textContent = 'Finding address...';
+          const g = await geocodeAddress(addressField.value.trim());
+          latlng = { lat: g.lat, lng: g.lng, display: g.display };
+          addressInfo.textContent = `Found: ${g.display}`;
+        } catch(err){
+          addressInfo.textContent = 'Address not found — use map click instead';
+          if(selectedLocation) latlng = selectedLocation;
+          else { toast('Address not found and no map selection'); return; }
         }
-        value += 2; // step size
-        slider.value = value;
-        simulateMovement(value);
-      }, 500); // move every 0.5 sec
+      } else if(selectedLocation){
+        latlng = selectedLocation;
+      } else {
+        toast('Please select a location');
+        return;
+      }
+
+      // create initial report
+      const report = {
+        id: uid(),
+        timestamp: new Date().toISOString(),
+        birdBehaviour: selectedRBird.slice(),
+        humanBehaviour: selectedRHuman.slice(),
+        precautions: selectedRPrec.slice(),
+        extra: reextra.value.trim(),
+        alertLevel: computeAlertFromBirds(selectedRBird)
+      };
+
+      // determine spot risk based on initial report (same immediate raise)
+      const spotRisk = computeSpotRiskFromReports([report]);
+
+      // Generate unique random name within 5km radius
+      const birdName = getUniqueName(latlng.lat, latlng.lng);
+      
+      const spotData = {
+        id: uid(),
+        name: birdName,
+        species: birdSpecies.value,
+        lat: latlng.lat,
+        lng: latlng.lng,
+        address: latlng.display || addressField.value.trim() || '',
+        radius: spotRisk === 'Danger - Avoid' ? 100 : spotRisk === 'Take caution' ? 80 : 50,
+        risk: spotRisk,
+        reports: [report]
+      };
+
+      createSpotFromData(spotData, false);
+      saveAll();
+      
+      // Show success modal BEFORE resetting the form (so selectedRBird is still populated)
+      showSuccessModal(birdName, birdSpecies.value, selectedRBird);
+      
+      closeSpotModalImmediate();
+    })();
+  }
+
+  // compute new overall spot risk from array of reports
+  function computeSpotRiskFromReports(reportsArray){
+    // Highest priority: any contact (injured/uninjured) => Danger
+    for(const r of reportsArray){
+      if(Array.isArray(r.birdBehaviour) && (r.birdBehaviour.includes('made contact + injured') || r.birdBehaviour.includes('made contact + uninjured'))) return 'Danger - Avoid';
+    }
+    // Next: any close swoop
+    for(const r of reportsArray){ if(Array.isArray(r.birdBehaviour) && r.birdBehaviour.includes('close swoop')) return 'Take caution'; }
+    // else Low
+    return 'Low risk';
+  }
+
+  // ----------------------------
+  // Details modal (feed) + add report
+  // ----------------------------
+  function openDetailsModal(spotId) {
+    const s = spots.find(x => x.id === spotId);
+    if(!s) return;
+    activeDetailsSpotId = spotId;
+
+    // Initialize new arrays for tag UI
+    selectedReportBird = [];
+    selectedReportHuman = [];
+    selectedReportPrec = [];
+
+    detailsModal.innerHTML = `
+      <div class="rounded-lg w-full max-w-2xl mx-4 relative" style="background-color: #f2eceb;">
+        <div class="p-6">
+          <!-- Header -->
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold" style="color: #422d1e;">${escapeHtml(s.name)}</h2>
+            <button id="closeDetails" style="color: #422d1e; opacity: 0.7;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">&times;</button>
+          </div>
+
+          <!-- Risk Level Banner -->
+          <div class="mb-4 py-2 px-3 rounded ${
+            s.risk === 'Danger - Avoid' ? 'bg-red-100 text-red-700' :
+            s.risk === 'Take caution' ? 'bg-yellow-100 text-yellow-700' :
+            'bg-green-100 text-green-700'
+          }">
+            <div class="font-medium">${escapeHtml(s.risk)}</div>
+            <div class="text-sm">${escapeHtml(s.species)} • ${s.reports.length} report${s.reports.length === 1 ? '' : 's'} • ${s.safePassageCount || 0} safe passage${(s.safePassageCount || 0) === 1 ? '' : 's'}</div>
+          </div>
+
+          <!-- Tabs -->
+          <div style="border-bottom: 1px solid #d4cac7;">
+            <nav class="flex -mb-px" role="tablist">
+              <button data-tab="main" role="tab" class="tab-btn active mr-4 py-2 px-1 border-b-2 font-medium" style="border-color: #422d1e; color: #422d1e;">
+                Main Info
+              </button>
+              <button data-tab="feed" role="tab" class="tab-btn mr-4 py-2 px-1 border-b-2 border-transparent" style="color: #422d1e; opacity: 0.6;" onmouseover="this.style.opacity='0.8'" onmouseout="this.classList.contains('active') || (this.style.opacity='0.6')">
+                Reports Feed
+              </button>
+              <button data-tab="add" role="tab" class="tab-btn py-2 px-1 border-b-2 border-transparent" style="color: #422d1e; opacity: 0.6;" onmouseover="this.style.opacity='0.8'" onmouseout="this.classList.contains('active') || (this.style.opacity='0.6')">
+                Add Report
+              </button>
+            </nav>
+          </div>
+
+          <!-- Tab Content -->
+          <div class="mt-4">
+            <!-- Main Info Tab -->
+            <div id="mainTab" class="tab-content active" role="tabpanel">
+              <div class="space-y-4">
+                <div class="rounded-lg p-4" style="background-color: #e8e2e1;">
+                  <div class="flex items-start gap-4 mb-3">
+                    <div class="flex-shrink-0">
+                      ${getBirdIconSVG(s.risk)}
+                    </div>
+                    <div class="flex-1">
+                      <h3 class="font-medium mb-1" style="color: #422d1e;">Location Details</h3>
+                      <div class="text-sm space-y-2" style="color: #422d1e;">
+                        <div><span style="opacity: 0.7;">Address:</span> ${s.address ? escapeHtml(s.address) : `${s.lat.toFixed(6)}, ${s.lng.toFixed(6)}`}</div>
+                        <div><span style="opacity: 0.7;">Bird Species:</span> ${escapeHtml(s.species)}</div>
+                        <div><span style="opacity: 0.7;">Total Reports:</span> ${s.reports.length}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="rounded-lg p-4" style="background-color: #e8e2e1;">
+                  <h3 class="font-medium mb-3" style="color: #422d1e;">Latest Report</h3>
+                  <div id="latestReport" class="rounded p-3" style="background-color: #f2eceb; border: 1px solid #d4cac7;">
+                    ${s.reports.length > 0 ? renderLatestReport(s.reports[s.reports.length - 1]) : '<p style="color: #422d1e; opacity: 0.7;">No reports yet</p>'}
+                  </div>
+                </div>
+
+                <div class="mt-4 text-center">
+                  <button class="text-white px-4 py-2 rounded add-report-btn" style="background-color: #422d1e;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+                    Add New Report
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Reports Feed Tab -->
+            <div id="feedTab" class="tab-content hidden" role="tabpanel">
+              <div class="space-y-3 max-h-[calc(100vh-300px)] overflow-y-auto">
+                ${renderReportsFeedContent(s)}
+              </div>
+            </div>
+
+            <!-- Add Report Tab -->
+            <div id="addTab" class="tab-content hidden" role="tabpanel">
+              <div class="rounded-lg p-4" style="background-color: #e8e2e1;">
+                <div class="mb-4 flex gap-3">
+                  <button type="button" id="noBirdBtn" class="flex-1 px-4 py-2 rounded" style="background-color: #e8e2e1; color: #422d1e; border: 1px solid #d4cac7;" onmouseover="this.style.backgroundColor='#dcd6d5'" onmouseout="this.style.backgroundColor='#e8e2e1'">
+                    No Birds Spotted
+                  </button>
+                  <button type="button" id="addReportBtn" class="flex-1 px-4 py-2 text-white rounded" style="background-color: #422d1e;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+                    Report Bird Activity
+                  </button>
+                </div>
+
+                <form id="reportForm" class="hidden space-y-4">
+                  <div>
+                    <label class="block text-sm font-medium mb-1" style="color: #422d1e;">Bird Behaviour <span class="text-red-500">*</span></label>
+                    <div class="relative">
+                      <div id="rbirdBox2" class="tag-box"></div>
+                      <div id="rbirdList2" class="tag-list"></div>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium mb-1" style="color: #422d1e;">Human Behaviour <span class="text-red-500">*</span></label>
+                    <div class="relative">
+                      <div id="rhumanBox2" class="tag-box"></div>
+                      <div id="rhumanList2" class="tag-list"></div>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium mb-1" style="color: #422d1e;">Precautions <span class="text-red-500">*</span></label>
+                    <div class="relative">
+                      <div id="rprecBox2" class="tag-box"></div>
+                      <div id="rprecList2" class="tag-list"></div>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium mb-1" style="color: #422d1e;">Alert Level (auto-set)</label>
+                    <input type="text" id="repAlertLevel" class="w-full rounded p-2" style="border: 1px solid #d4cac7; background-color: #e8e2e1; color: #422d1e;" readonly>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium mb-1" style="color: #422d1e;">Extra Notes</label>
+                    <textarea id="repExtra" class="w-full rounded p-2 h-20" style="border: 1px solid #d4cac7; background-color: #f2eceb; color: #422d1e;"></textarea>
+                  </div>
+                  <div class="flex justify-end gap-2">
+                    <button type="button" id="reportCancel" class="px-4 py-2 rounded" style="border: 1px solid #d4cac7; color: #422d1e;" onmouseover="this.style.backgroundColor='#e8e2e1'" onmouseout="this.style.backgroundColor='transparent'">Cancel</button>
+                    <button type="submit" class="px-4 py-2 text-white rounded" style="background-color: #422d1e;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">Submit Report</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Set up event handlers after the modal content is created
+    detailsModal.querySelector('#closeDetails').addEventListener('click', () => {
+      detailsModal.classList.add('hidden');
+      activeDetailsSpotId = null;
+    });
+
+    // Tab switching
+    detailsModal.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        switchTab(btn.dataset.tab);
+      });
+    });
+
+    // Add report buttons
+    detailsModal.querySelectorAll('.add-report-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        switchTab('add');
+      });
+    });
+
+    // No bird button
+    detailsModal.querySelector('#noBirdBtn').addEventListener('click', () => {
+      // Just increment the safe passage counter
+      if (!s.safePassageCount) s.safePassageCount = 0;
+      s.safePassageCount++;
+      
+      saveAll();
+      
+      // Close the details modal
+      detailsModal.classList.add('hidden');
+      
+      // Show success modal for safe passage
+      showSafePassageModal(s.name);
+    });
+
+    // Report form handling
+    const addReportBtn = detailsModal.querySelector('#addReportBtn');
+    const reportForm = detailsModal.querySelector('#reportForm');
+    
+    addReportBtn.addEventListener('click', () => {
+      reportForm.classList.remove('hidden');
+      addReportBtn.classList.add('hidden');
+      detailsModal.querySelector('#noBirdBtn').classList.add('hidden');
+      
+      // Get the tag UI elements
+      const rbirdBox2 = detailsModal.querySelector('#rbirdBox2');
+      const rbirdList2 = detailsModal.querySelector('#rbirdList2');
+      const rhumanBox2 = detailsModal.querySelector('#rhumanBox2');
+      const rhumanList2 = detailsModal.querySelector('#rhumanList2');
+      const rprecBox2 = detailsModal.querySelector('#rprecBox2');
+      const rprecList2 = detailsModal.querySelector('#rprecList2');
+      const repAlertLevel = detailsModal.querySelector('#repAlertLevel');
+      
+      // Reset and set up tag UIs
+      selectedReportBird = [];
+      selectedReportHuman = [];
+      selectedReportPrec = [];
+      
+      setupTagUI(rbirdBox2, rbirdList2, BIRD_BEHAVIOURS, selectedReportBird, () => {
+        repAlertLevel.value = computeAlertFromBirds(selectedReportBird);
+      });
+      setupTagUI(rhumanBox2, rhumanList2, HUMAN_BEHAVIOURS, selectedReportHuman, ()=>{});
+      setupTagUI(rprecBox2, rprecList2, PRECAUTIONS, selectedReportPrec, ()=>{});
+      
+      repAlertLevel.value = 'Low risk';
+    });
+
+    const reportCancel = detailsModal.querySelector('#reportCancel');
+    reportCancel.addEventListener('click', () => {
+      reportForm.classList.add('hidden');
+      addReportBtn.classList.remove('hidden');
+      detailsModal.querySelector('#noBirdBtn').classList.remove('hidden');
+      
+      // Reset form and tag arrays
+      selectedReportBird = [];
+      selectedReportHuman = [];
+      selectedReportPrec = [];
+      
+      const repExtra = detailsModal.querySelector('#repExtra');
+      const repAlertLevel = detailsModal.querySelector('#repAlertLevel');
+      
+      if (repExtra) repExtra.value = '';
+      if (repAlertLevel) repAlertLevel.value = 'Low risk';
+    });
+
+    // Set up tag UIs - Note: these are set up when the "Report Bird Activity" button is clicked
+    // to ensure they use the correct DOM elements from the modal
+
+    // Show modal
+    detailsModal.classList.remove('hidden');
+
+    // Set up form submission
+    reportForm.addEventListener('submit', handleAddReport);
+  }
+
+  function renderLatestReport(report) {
+    if (!report) return '<p class="text-gray-500">No reports yet</p>';
+    
+    const level = report.alertLevel || computeAlertFromBirds(report.birdBehaviour || []);
+    const levelClass = level === 'Danger - Avoid' ? 'text-red-600' : 
+                      level === 'Take caution' ? 'text-yellow-600' : 
+                      'text-green-600';
+    
+    return `
+      <div class="space-y-2">
+        <div class="font-medium ${levelClass}">${escapeHtml(level)}</div>
+        <div class="text-sm text-gray-600">${new Date(report.timestamp).toLocaleString()}</div>
+        <div class="text-sm"><b>Bird behavior:</b> ${escapeHtml((report.birdBehaviour||[]).join(', '))}</div>
+        <div class="text-sm"><b>Human activity:</b> ${escapeHtml((report.humanBehaviour||[]).join(', '))}</div>
+        <div class="text-sm"><b>Precautions:</b> ${escapeHtml((report.precautions||[]).join(', '))}</div>
+        ${report.extra ? `<div class="text-sm mt-1"><b>Notes:</b> ${escapeHtml(report.extra)}</div>` : ''}
+      </div>
+    `;
+  }
+
+  function renderReportsFeedContent(spot) {
+    if (!spot.reports || spot.reports.length === 0) {
+      return `
+        <div class="text-center py-8 text-gray-500">
+          No reports yet. Be the first to report bird activity at this location!
+        </div>
+        <div class="mt-4 text-center">
+          <button class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 add-report-btn">
+            Add Report
+          </button>
+        </div>
+      `;
     }
 
-    function stopWalk() {
-      if (walkInterval) {
-        clearInterval(walkInterval);
-        walkInterval = null;
+    return `
+      <div class="space-y-4">
+        ${spot.reports.slice().reverse().map(report => {
+          const level = report.alertLevel || computeAlertFromBirds(report.birdBehaviour || []);
+          const cls = level === 'Danger - Avoid' ? 'border-red-500' : 
+                     level === 'Take caution' ? 'border-yellow-500' : 
+                     'border-green-500';
+          const textColor = level === 'Danger - Avoid' ? 'text-red-600' : 
+                           level === 'Take caution' ? 'text-yellow-600' : 
+                           'text-green-600';
+
+          return `
+            <div class="p-3 rounded bg-white border-l-4 shadow-sm ${cls}">
+              <div class="flex justify-between items-start mb-2">
+                <div class="font-medium ${textColor}">${escapeHtml(level)}</div>
+                <div class="text-xs text-gray-500">${new Date(report.timestamp).toLocaleString()}</div>
+              </div>
+              <div class="space-y-2">
+                <div class="text-sm">
+                  <span class="font-medium">Bird Activity:</span> 
+                  ${escapeHtml((report.birdBehaviour||[]).join(', ')||'N/A')}
+                </div>
+                <div class="text-sm">
+                  <span class="font-medium">Human Activity:</span> 
+                  ${escapeHtml((report.humanBehaviour||[]).join(', ')||'N/A')}
+                </div>
+                <div class="text-sm">
+                  <span class="font-medium">Precautions:</span> 
+                  ${escapeHtml((report.precautions||[]).join(', ')||'None')}
+                </div>
+                ${report.extra ? `
+                  <div class="text-sm pt-1 border-t">
+                    <span class="font-medium">Notes:</span><br>
+                    ${escapeHtml(report.extra)}
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+      <div class="mt-4 text-center">
+        <button class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 add-report-btn">
+          Add New Report
+        </button>
+      </div>
+    `;
+  }
+
+  function switchTab(tabId) {
+    const tabButtons = detailsModal.querySelectorAll('.tab-btn');
+    const tabContents = detailsModal.querySelectorAll('.tab-content');
+
+    // First update all tab buttons
+    tabButtons.forEach(btn => {
+      if (btn.dataset.tab === tabId) {
+        btn.classList.add('border-blue-500', 'text-blue-600', 'active');
+        btn.classList.remove('text-gray-500', 'border-transparent');
+      } else {
+        btn.classList.remove('border-blue-500', 'text-blue-600', 'active');
+        btn.classList.add('text-gray-500', 'border-transparent');
+      }
+    });
+
+    // Then update all tab contents
+    tabContents.forEach(content => {
+      if (content.id === `${tabId}Tab`) {
+        content.classList.add('active');
+        content.classList.remove('hidden');
+      } else {
+        content.classList.remove('active');
+        content.classList.add('hidden');
+      }
+    });
+  }
+
+  // ----------------------------
+  // Create spot modal flow controls
+  // ----------------------------
+  openAddBtn.addEventListener('click', (e)=>{
+    e.stopPropagation(); // Prevent click from propagating to map
+    openCreateSpotModal();
+  });
+
+  function openCreateSpotModal(){
+    // reset all form fields and state
+    selectedLocation = null;
+    if(tempMarker) try{ map.removeLayer(tempMarker); } catch(e){}
+    tempMarker = null;
+    
+    // Show modal
+    spotModal.classList.remove('hidden');
+    
+    // Set default location to map center
+    const center = map.getCenter();
+    selectedLocation = { lat: center.lat, lng: center.lng };
+    coordsField.value = `${selectedLocation.lat.toFixed(6)}, ${selectedLocation.lng.toFixed(6)}`;
+    addressInfo.textContent = 'Using map center. Click the map to change location or enter an address.';
+    tempMarker = L.marker([selectedLocation.lat, selectedLocation.lng]).addTo(map);
+    
+    // Reset all form fields
+    birdSpecies.value = 'Magpie';
+    addressField.value = '';
+    selectedRBird = []; 
+    selectedRHuman = []; 
+    selectedRPrec = [];
+    reextra.value = '';
+    ralertLevel.value = 'Low risk';
+    
+    // Clear any suggestion lists
+    const addressSuggestions = document.getElementById('addressField_suggestions');
+    if(addressSuggestions) addressSuggestions.innerHTML = '';
+    
+    // Reset tag UIs
+    setupTagUI(rbirdBox, rbirdList, BIRD_BEHAVIOURS, selectedRBird, updateRAlertFromBirds);
+    setupTagUI(rhumanBox, rhumanList, HUMAN_BEHAVIOURS, selectedRHuman, ()=>{});
+    setupTagUI(rprecBox, rprecList, PRECAUTIONS, selectedRPrec, ()=>{});
+    
+    // Capture clean state for dirty checking
+    initialFormState = captureSpotFormState();
+  }
+
+  // Close button in the modal header
+  closeSpotModal.addEventListener('click', ()=> {
+    spotModal.classList.add('hidden');
+    closeSpotModalImmediate();
+  });
+
+  // Cancel button in the form
+  spotCancel.addEventListener('click', ()=> {
+    spotModal.classList.add('hidden');
+    closeSpotModalImmediate();
+  });
+
+  function closeSpotModalImmediate(){
+    // Hide the modal
+    spotModal.classList.add('hidden');
+    
+    // Clean up map
+    if(tempMarker) {
+      try { 
+        map.removeLayer(tempMarker); 
+      } catch(e){}
+      tempMarker = null;
+    }
+    
+    // Reset state
+    selectedLocation = null;
+    selectedRBird = [];
+    selectedRHuman = [];
+    selectedRPrec = [];
+    
+    // Clear any suggestion lists
+    const addressSuggestions = document.getElementById('addressField_suggestions');
+    if(addressSuggestions) addressSuggestions.innerHTML = '';
+    
+    // Reset form fields
+    birdSpecies.value = 'Magpie';
+    addressField.value = '';
+    coordsField.value = '';
+    addressInfo.textContent = '';
+    reextra.value = '';
+    ralertLevel.value = 'Low risk';
+    
+    // Reset tag UIs
+    setupTagUI(rbirdBox, rbirdList, BIRD_BEHAVIOURS, selectedRBird, updateRAlertFromBirds);
+    setupTagUI(rhumanBox, rhumanList, HUMAN_BEHAVIOURS, selectedRHuman, ()=>{});
+    setupTagUI(rprecBox, rprecList, PRECAUTIONS, selectedRPrec, ()=>{});
+  }
+
+  function captureSpotFormState(){
+    return {
+      species: birdSpecies.value||'',
+      addr: addressField.value||'',
+      coords: coordsField.value||'',
+      rbird: selectedRBird.slice(),
+      rhuman: selectedRHuman.slice(),
+      rprec: selectedRPrec.slice(),
+      ralert: ralertLevel.value||'',
+      extra: reextra.value||''
+    };
+  }
+  function spotFormIsDirty(){ return JSON.stringify(captureSpotFormState()) !== JSON.stringify(initialFormState); }
+
+  // Set up address auto-complete
+  addressField.addEventListener('input', () => {
+    debouncedAddressLookup(addressField);
+  });
+
+  // geo locate - Find Me button
+  geoBtn.addEventListener('click', ()=>{
+    if(!navigator.geolocation) return toast('Geolocation not supported');
+    navigator.geolocation.getCurrentPosition(p=>{
+      selectedLocation = { lat: p.coords.latitude, lng: p.coords.longitude };
+      coordsField.value = `${selectedLocation.lat.toFixed(6)}, ${selectedLocation.lng.toFixed(6)}`;
+      addressInfo.textContent = 'Located device coordinates';
+      if(tempMarker) try{ map.removeLayer(tempMarker); } catch(e){}
+      tempMarker = L.marker([selectedLocation.lat, selectedLocation.lng]).addTo(map);
+      map.setView([selectedLocation.lat, selectedLocation.lng], 16);
+    }, err => toast('GPS error: ' + err.message));
+  });
+
+  // submit create spot
+  spotForm.addEventListener('submit', handleCreateSpotFromForm);
+
+  // ----------------------------
+  // Save + load helpers (use createSpotFromData to add)
+  // ----------------------------
+  function createSpotFromUIObject(obj){
+    // convert UI object to spot data and call createSpotFromData
+    createSpotFromData(obj, false);
+    saveAll();
+    renderAlerts();
+  }
+
+  // ----------------------------
+  // Render alerts list (1km from map center)
+  // ----------------------------
+  function renderAlerts(){
+    alertsList.innerHTML = '';
+    const center = map.getCenter();
+    spots.forEach(s=>{
+      const d = metersBetween(center.lat, center.lng, s.lat, s.lng);
+      if(d <= 1000){
+        const item = document.createElement('div');
+        // Color code based on risk level
+        const borderColor = s.risk === 'Danger - Avoid' ? 'border-red-400 bg-red-50' : 
+                          s.risk === 'Take caution' ? 'border-yellow-400 bg-yellow-50' : 
+                          'border-green-400 bg-green-50';
+        const textColor = s.risk === 'Danger - Avoid' ? 'text-red-700' : 
+                         s.risk === 'Take caution' ? 'text-yellow-700' : 
+                         'text-green-700';
+        
+        item.className = `border-2 p-2 rounded text-sm cursor-pointer hover:opacity-90 flex justify-between items-center ${borderColor}`;
+        item.innerHTML = `
+          <div>
+            <b>${escapeHtml(s.name)}</b>
+            <div class="text-xs text-gray-600">${escapeHtml(s.species)}</div>
+            <div class="text-xs font-medium ${textColor}">${escapeHtml(s.risk)}</div>
+          </div>
+          <div class="text-xs text-gray-500">${(d/1000).toFixed(2)} km</div>
+        `;
+        item.addEventListener('click', ()=> {
+          map.setView([s.lat, s.lng], 16);
+          showSpotQuickAlert(s);
+        });
+        alertsList.appendChild(item);
+      }
+    });
+  }
+  map.on('moveend', ()=> renderAlerts());
+
+  // ----------------------------
+  // Open / close details modal
+  // ----------------------------
+  closeDetails.addEventListener('click', ()=> {
+    detailsModal.classList.add('hidden');
+    activeDetailsSpotId = null;
+    // cleanup UI arrays
+    selectedReportBird = []; selectedReportHuman = []; selectedReportPrec = [];
+    
+    // If there are still spots to address in the exit prompt, show it again
+    if(spotsToAddress.length > 0) {
+      exitPromptModal.classList.remove('hidden');
+    }
+  });
+
+  // report form handlers
+  function handleAddReport(e) {
+    e.preventDefault();
+    if(!activeDetailsSpotId) return;
+    
+    const s = spots.find(x => x.id === activeDetailsSpotId);
+    if(!s) return;
+    
+    // Validate required fields
+    if(selectedReportBird.length === 0 || selectedReportHuman.length === 0 || selectedReportPrec.length === 0) {
+      toast('Please complete all required fields');
+      return;
+    }
+    
+    // Get repExtra from the modal (not the static DOM reference)
+    const repExtraField = detailsModal.querySelector('#repExtra');
+    
+    // Create new report
+    const rep = {
+      id: uid(),
+      timestamp: new Date().toISOString(),
+      birdBehaviour: selectedReportBird.slice(),
+      humanBehaviour: selectedReportHuman.slice(),
+      precautions: selectedReportPrec.slice(),
+      extra: repExtraField ? repExtraField.value.trim() : '',
+      alertLevel: computeAlertFromBirds(selectedReportBird)
+    };
+    
+    // Add report to spot
+    s.reports.push(rep);
+    
+    // Recompute overall spot risk
+    const newRisk = computeSpotRiskFromReports(s.reports);
+    if(newRisk !== s.risk) {
+      s.risk = newRisk;
+      // Update marker icon and circle
+      try {
+        map.removeLayer(s.marker);
+        map.removeLayer(s.circle);
+      } catch(e){}
+      
+      s.marker = L.marker([s.lat, s.lng], { icon: getBirdIcon(newRisk) }).addTo(map);
+      s.marker.on('click', ()=> showSpotQuickAlert(s));
+      
+      const radius = getRadiusByRisk(newRisk);
+      s.radius = radius;
+      s.circle = L.circle([s.lat, s.lng], { 
+        radius: radius,
+        color: newRisk === 'Danger - Avoid' ? '#EF4444' : newRisk === 'Take caution' ? '#F59E0B' : '#10B981',
+        fillColor: newRisk === 'Danger - Avoid' ? '#FEE2E2' : newRisk === 'Take caution' ? '#FEF3C7' : '#DCFCE7',
+        fillOpacity: 0.35 
+      }).addTo(map);
+    }
+    
+    saveAll();
+    
+    // Show success modal with bird behavior context (isNewSpot=false for additional reports)
+    showSuccessModal(s.name, s.species, selectedReportBird, false);
+    
+    // Remove from spots to address if it was in the exit prompt
+    spotsToAddress = spotsToAddress.filter(spot => spot.id !== s.id);
+    
+    // Close the details modal
+    detailsModal.classList.add('hidden');
+    activeDetailsSpotId = null;
+    
+    // Clear the report form state
+    selectedReportBird = [];
+    selectedReportHuman = [];
+    selectedReportPrec = [];
+  }
+  
+  reportForm.addEventListener('submit', handleAddReport);
+  reportCancel.addEventListener('click', ()=> {
+    if(confirm('Cancel new report?')) {
+      // Reset form
+      selectedReportBird = []; 
+      selectedReportHuman = []; 
+      selectedReportPrec = [];
+      setupTagUI(rbirdBox2, rbirdList2, BIRD_BEHAVIOURS, selectedReportBird, updateRepAlertFromBirds);
+      setupTagUI(rhumanBox2, rhumanList2, HUMAN_BEHAVIOURS, selectedReportHuman, ()=>{});
+      setupTagUI(rprecBox2, rprecList2, PRECAUTIONS, selectedReportPrec, ()=>{});
+      repExtra.value = '';
+      repAlertLevel.value = 'Low risk';
+      
+      // Switch back to main tab
+      const mainTab = detailsModal.querySelector('[data-tab="main"]');
+      const mainContent = detailsModal.querySelector('#mainTab');
+      if(mainTab && mainContent) {
+        detailsModal.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active', 'text-blue-500', 'border-blue-500'));
+        detailsModal.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+        mainTab.classList.add('active', 'text-blue-500', 'border-blue-500');
+        mainContent.classList.remove('hidden');
       }
     }
+  });
 
-    // Store all geo-fences
-const geoFences = [];
+  // ----------------------------
+  // checkLocation - shows userMarker and center alert if within any spot
+  // ----------------------------
+  let currentAlertSpots = []; // Track currently displayed spots
+  let visitedSpots = new Set(); // Track spots visited during current journey
+  
+  function checkLocation(lat,lng){
+    if(userMarker){ try{ userMarker.setLatLng([lat,lng]); } catch(e){} } else { userMarker = L.marker([lat,lng], { icon: userIcon }).addTo(map); }
+    
+    // Find all spots the user is currently inside
+    let insideSpots = [];
+    for(const s of spots){
+      if(metersBetween(lat,lng,s.lat,s.lng) <= (s.radius || 150)){ 
+        insideSpots.push(s);
+        visitedSpots.add(s.id); // Track that we've been in this spot
+      }
+    }
+    
+    // Sort by risk level (highest first) for display
+    if(insideSpots.length > 0){
+      insideSpots.sort((a,b) => {
+        const riskOrder = {'Danger - Avoid': 3, 'Take caution': 2, 'Low risk': 1};
+        return (riskOrder[b.risk] || 0) - (riskOrder[a.risk] || 0);
+      });
+    }
+    
+    if(insideSpots.length > 0){
+      // Check if the spots have changed
+      const currentIds = currentAlertSpots.map(s => s.id).sort().join(',');
+      const newIds = insideSpots.map(s => s.id).sort().join(',');
+      
+      if(currentIds !== newIds){
+        currentAlertSpots = insideSpots;
+        showCenteredAlert(insideSpots);
+      }
+    } else {
+      // User has exited ALL zones
+      if(currentAlertSpots.length > 0){
+        const spotsToReport = Array.from(visitedSpots).map(id => spots.find(s => s.id === id)).filter(Boolean);
+        currentAlertSpots = [];
+        hideCenteredAlert();
+        
+        // Play happy tone when exiting all zones
+        playHappyTone();
+        
+        // Only show prompt if they visited spots
+        if(spotsToReport.length > 0){
+          showExitPrompt(spotsToReport);
+        }
+        
+        // Clear visited spots for next journey
+        visitedSpots.clear();
+      } else {
+        currentAlertSpots = [];
+        hideCenteredAlert();
+      }
+    }
+    renderAlerts();
+  }
 
-// Example default fence (if you had one)
-geoFences.push({
-  name: "Sydney Opera House",
-  lat: -33.8568,
-  lng: 151.2153,
-  radius: 200,
-  circle: L.circle([-33.8568, 151.2153], {
-    radius: 200,
-    color: 'red',
-    fillColor: '#f03',
-    fillOpacity: 0.2
-  }).addTo(map)
-});
-L.marker([-33.8568, 151.2153]).addTo(map).bindPopup("Sydney Opera House");
+  // Prompt user after exiting all swoop zones
+  let spotsToAddress = []; // Track spots that still need to be addressed
+  
+  function showExitPrompt(spotsVisited) {
+    // Sort by risk level (highest first)
+    spotsToAddress = spotsVisited.sort((a,b) => {
+      const riskOrder = {'Danger - Avoid': 3, 'Take caution': 2, 'Low risk': 1};
+      return (riskOrder[b.risk] || 0) - (riskOrder[a.risk] || 0);
+    });
+    
+    renderExitPromptList();
+    exitPromptModal.classList.remove('hidden');
+  }
+  
+  function renderExitPromptList() {
+    exitPromptList.innerHTML = '';
+    
+    if(spotsToAddress.length === 0) {
+      exitPromptList.innerHTML = '<div class="text-center text-gray-500 py-8">All spots addressed! Thank you for your feedback, stay safe!</div>';
+      return;
+    }
+    
+    spotsToAddress.forEach(spot => {
+      const item = document.createElement('div');
+      const borderColor = spot.risk === 'Danger - Avoid' ? 'border-red-400 bg-red-50' : 
+                         spot.risk === 'Take caution' ? 'border-yellow-400 bg-yellow-50' : 
+                         'border-green-400 bg-green-50';
+      const textColor = spot.risk === 'Danger - Avoid' ? 'text-red-700' : 
+                       spot.risk === 'Take caution' ? 'text-yellow-700' : 
+                       'text-green-700';
+      
+      item.className = `border-2 p-3 rounded ${borderColor}`;
+      item.innerHTML = `
+        <div class="flex justify-between items-start gap-3">
+          <div class="flex-1">
+            <div class="font-semibold">${escapeHtml(spot.name)}</div>
+            <div class="text-sm text-gray-600">${escapeHtml(spot.species)}</div>
+            <div class="text-sm font-medium ${textColor}">${escapeHtml(spot.risk)}</div>
+          </div>
+          <div class="flex flex-col gap-2">
+            <button class="safe-passage-btn text-xs px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded whitespace-nowrap" data-spot-id="${spot.id}">
+              Safe Passage
+            </button>
+            <button class="add-report-exit-btn text-xs px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded whitespace-nowrap" data-spot-id="${spot.id}">
+              Add Report
+            </button>
+          </div>
+        </div>
+      `;
+      
+      exitPromptList.appendChild(item);
+    });
+    
+    // Attach event handlers
+    exitPromptList.querySelectorAll('.safe-passage-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const spotId = e.target.dataset.spotId;
+        handleSafePassageFromExit(spotId);
+      });
+    });
+    
+    exitPromptList.querySelectorAll('.add-report-exit-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const spotId = e.target.dataset.spotId;
+        handleAddReportFromExit(spotId);
+      });
+    });
+  }
+  
+  function handleSafePassageFromExit(spotId) {
+    const spot = spots.find(s => s.id === spotId);
+    if(!spot) return;
+    
+    // Increment safe passage count
+    if (!spot.safePassageCount) spot.safePassageCount = 0;
+    spot.safePassageCount++;
+    saveAll();
+    
+    // Remove from spots to address
+    spotsToAddress = spotsToAddress.filter(s => s.id !== spotId);
+    
+    // Re-render the list
+    renderExitPromptList();
+    
+    // Show success modal for safe passage
+    showSafePassageModal(spot.name);
+  }
+  
+  function handleAddReportFromExit(spotId) {
+    // Remove from spots to address
+    spotsToAddress = spotsToAddress.filter(s => s.id !== spotId);
+    
+    // Close the exit prompt modal
+    exitPromptModal.classList.add('hidden');
+    
+    // Open the details modal for this spot
+    openDetailsModal(spotId);
+    switchTab('add');
+  }
+  
+  // Close exit prompt modal
+  closeExitPrompt.addEventListener('click', () => {
+    if(spotsToAddress.length > 0) {
+      if(confirm(`You haven't addressed ${spotsToAddress.length} spot${spotsToAddress.length === 1 ? '' : 's'}. Close anyway?`)) {
+        exitPromptModal.classList.add('hidden');
+        spotsToAddress = [];
+      }
+    } else {
+      exitPromptModal.classList.add('hidden');
+      spotsToAddress = [];
+    }
+  });
 
-  </script>
+  // Show quick alert for spot from list
+  function showSpotQuickAlert(s) {
+    alertBox.innerHTML = `
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <div class="text-sm font-semibold mb-1">${escapeHtml(s.name)} - ${escapeHtml(s.species)}</div>
+          <div class="text-sm ${s.risk==='Danger - Avoid'?'text-red-600': s.risk==='Take caution' ? 'text-yellow-600' : 'text-green-600'} font-medium">
+            ${escapeHtml(s.risk)}
+          </div>
+          <div class="text-xs text-gray-600 mt-1">${s.reports.length} report${s.reports.length === 1 ? '' : 's'}</div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="showMoreBtn" class="text-xs bg-yellow-500 hover:bg-yellow-600 text-white rounded px-3 py-1.5">Show More</button>
+          <button id="closeAlertBtn" class="text-xs border rounded px-3 py-1.5">Close</button>
+        </div>
+      </div>
+    `;
+    
+    alertBox.classList.add('show');
+    alertBox.style.display = 'block';
+    
+    // Attach event handlers after a short delay to ensure DOM is ready
+    requestAnimationFrame(() => {
+      const showMoreBtn = document.getElementById('showMoreBtn');
+      const closeAlertBtn = document.getElementById('closeAlertBtn');
+      
+      if (showMoreBtn) {
+        showMoreBtn.addEventListener('click', () => {
+          alertBox.style.display = 'none';
+          alertBox.classList.remove('show');
+          openDetailsModal(s.id);
+        });
+      }
+      
+      if (closeAlertBtn) {
+        closeAlertBtn.addEventListener('click', () => {
+          alertBox.style.display = 'none';
+          alertBox.classList.remove('show');
+        });
+      }
+    });
+  }
+
+
+  // Play alert sound and vibrate (for mobile)
+  function playAlertNotification() {
+    // Play alert sound
+    try {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      // Create a two-tone alert sound
+      oscillator.frequency.value = 800;
+      gainNode.gain.value = 0.3;
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.2);
+      
+      // Second beep
+      const oscillator2 = audioContext.createOscillator();
+      const gainNode2 = audioContext.createGain();
+      oscillator2.connect(gainNode2);
+      gainNode2.connect(audioContext.destination);
+      oscillator2.frequency.value = 600;
+      gainNode2.gain.value = 0.3;
+      oscillator2.start(audioContext.currentTime + 0.25);
+      oscillator2.stop(audioContext.currentTime + 0.45);
+    } catch(e) {
+      console.warn('Audio alert failed:', e);
+    }
+    
+    // Vibrate (mobile devices)
+    if ('vibrate' in navigator) {
+      try {
+        // Pattern: vibrate 200ms, pause 100ms, vibrate 200ms
+        navigator.vibrate([200, 100, 200]);
+      } catch(e) {
+        console.warn('Vibration failed:', e);
+      }
+    }
+  }
+
+  // Play happy tone when exiting all zones (safe now!)
+  function playHappyTone() {
+    try {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      
+      // Create a pleasant ascending chime (C-E-G major chord arpeggio)
+      const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
+      const noteDuration = 0.15;
+      
+      notes.forEach((freq, index) => {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.value = freq;
+        oscillator.type = 'sine'; // Smoother, more pleasant sound
+        
+        // Fade in/out envelope for smoother sound
+        const startTime = audioContext.currentTime + (index * noteDuration);
+        gainNode.gain.setValueAtTime(0, startTime);
+        gainNode.gain.linearRampToValueAtTime(0.2, startTime + 0.02);
+        gainNode.gain.linearRampToValueAtTime(0, startTime + noteDuration);
+        
+        oscillator.start(startTime);
+        oscillator.stop(startTime + noteDuration);
+      });
+    } catch(e) {
+      console.warn('Happy tone failed:', e);
+    }
+    
+    // Single short vibration for positive feedback
+    if ('vibrate' in navigator) {
+      try {
+        navigator.vibrate(100);
+      } catch(e) {
+        console.warn('Vibration failed:', e);
+      }
+    }
+  }
+
+  // Show alert when entering a spot's radius
+  function showCenteredAlert(spots) {
+    // Handle both single spot and array of spots
+    const spotArray = Array.isArray(spots) ? spots : [spots];
+    
+    // Play sound and vibrate when alert is shown
+    playAlertNotification();
+    
+    if(spotArray.length === 1) {
+      // Single spot - styled to match multi-bird view
+      const s = spotArray[0];
+      const borderColor = s.risk === 'Danger - Avoid' ? 'border-red-400 bg-red-50' : 
+                         s.risk === 'Take caution' ? 'border-yellow-400 bg-yellow-50' : 
+                         'border-green-400 bg-green-50';
+      const textColor = s.risk === 'Danger - Avoid' ? 'text-red-700' : 
+                       s.risk === 'Take caution' ? 'text-yellow-700' : 
+                       'text-green-700';
+      
+      alertBox.innerHTML = `
+        <div class="text-sm font-semibold mb-2">
+          ⚠️ Swooping zone detected!
+        </div>
+        <div class="border-l-4 ${borderColor} p-3 rounded text-xs mb-2">
+          <div class="font-semibold">${escapeHtml(s.name)}</div>
+          <div class="text-gray-600">${escapeHtml(s.species)}</div>
+          <div class="font-medium ${textColor}">${escapeHtml(s.risk)}</div>
+          <button class="show-more-btn mt-2 text-xs bg-yellow-500 hover:bg-yellow-600 text-white rounded px-3 py-1" data-spot-id="${s.id}">Show More</button>
+        </div>
+        <div class="flex gap-2">
+          <button id="clearAlertBtn" class="flex-1 text-xs border rounded px-3 py-1">Clear Alert</button>
+        </div>
+      `;
+
+      alertBox.classList.add('show');
+      alertBox.style.display = 'block';
+
+      // Attach event handlers
+      const showMoreBtn = alertBox.querySelector('.show-more-btn');
+      if(showMoreBtn) {
+        showMoreBtn.onclick = () => {
+          hideCenteredAlert();
+          openDetailsModal(s.id);
+        };
+      }
+      
+      document.getElementById('clearAlertBtn').onclick = () => {
+        currentAlertSpots = [];
+        hideCenteredAlert();
+        if (userMarker) try { map.removeLayer(userMarker); } catch(e){}
+      };
+    } else {
+      // Multiple spots - show list with Show More button for each
+      const highestRisk = spotArray[0].risk;
+      alertBox.innerHTML = `
+        <div class="text-sm font-semibold mb-2">
+          ⚠️ Multiple swooping zones detected! Highest risk: 
+          <span class="ml-1 ${highestRisk==='Danger - Avoid'?'text-red-600': highestRisk==='Take caution' ? 'text-yellow-600' : 'text-green-600'}">${escapeHtml(highestRisk)}</span>
+        </div>
+        <div class="max-h-48 overflow-y-auto space-y-2 mb-2">
+          ${spotArray.map(spot => {
+            const borderColor = spot.risk === 'Danger - Avoid' ? 'border-red-400 bg-red-50' : 
+                               spot.risk === 'Take caution' ? 'border-yellow-400 bg-yellow-50' : 
+                               'border-green-400 bg-green-50';
+            const textColor = spot.risk === 'Danger - Avoid' ? 'text-red-700' : 
+                             spot.risk === 'Take caution' ? 'text-yellow-700' : 
+                             'text-green-700';
+            
+            return `
+              <div class="border-l-4 ${borderColor} p-3 rounded text-xs">
+                <div class="font-semibold">${escapeHtml(spot.name)}</div>
+                <div class="text-gray-600">${escapeHtml(spot.species)}</div>
+                <div class="font-medium ${textColor}">${escapeHtml(spot.risk)}</div>
+                <button class="show-more-btn mt-2 text-xs bg-yellow-500 hover:bg-yellow-600 text-white rounded px-3 py-1" data-spot-id="${spot.id}">Show More</button>
+              </div>
+            `;
+          }).join('')}
+        </div>
+        <div class="flex gap-2">
+          <button id="clearAlertBtn" class="flex-1 text-xs border rounded px-3 py-1">Clear Alert</button>
+        </div>
+      `;
+
+      alertBox.classList.add('show');
+      alertBox.style.display = 'block';
+
+      // Attach event handlers for all Show More buttons
+      alertBox.querySelectorAll('.show-more-btn').forEach(btn => {
+        btn.onclick = () => {
+          const spotId = btn.dataset.spotId;
+          hideCenteredAlert();
+          openDetailsModal(spotId);
+        };
+      });
+      
+      document.getElementById('clearAlertBtn').onclick = () => {
+        currentAlertSpots = [];
+        hideCenteredAlert();
+        if (userMarker) try { map.removeLayer(userMarker); } catch(e){}
+      };
+    }
+  }
+
+  // Hide centered alert
+  function hideCenteredAlert() {
+    alertBox.style.display = 'none';
+    alertBox.classList.remove('show');
+  }
+
+  // Show success modal after creating a spot or adding a report
+  function showSuccessModal(birdName, birdSpecies, birdBehaviours, isNewSpot = true) {
+    console.log('showSuccessModal called with:', { birdName, birdSpecies, birdBehaviours, isNewSpot });
+    
+    // Ensure birdBehaviours is an array
+    if (!Array.isArray(birdBehaviours)) {
+      console.warn('birdBehaviours is not an array:', birdBehaviours);
+      birdBehaviours = [];
+    }
+    
+    // Determine which icon and message to show based on bird behavior
+    let iconPath = 'Assets/Icons/user.svg'; // default
+    let message = '';
+    
+    if (isNewSpot) {
+      // Messages for creating a new spot
+      message = `Thank you for keeping our community safe from <span class="font-bold text-blue-600">${escapeHtml(birdName)}</span> the <span class="font-bold">${escapeHtml(birdSpecies)}</span>.`;
+      
+      if (birdBehaviours.includes('made contact + injured')) {
+        iconPath = 'Assets/Icons/user_swoopedinjured.svg';
+        message = `Thank you for reporting <span class="font-bold text-blue-600">${escapeHtml(birdName)}</span> the <span class="font-bold">${escapeHtml(birdSpecies)}</span>. We're so sorry to hear you were injured! Please seek medical attention if needed.`;
+      } else if (birdBehaviours.includes('made contact + uninjured')) {
+        iconPath = 'Assets/Icons/user_swoopeduninjured.svg';
+        message = `Thank you for reporting <span class="font-bold text-blue-600">${escapeHtml(birdName)}</span> the <span class="font-bold">${escapeHtml(birdSpecies)}</span>. Sorry to hear about it swooping you, but we're glad you weren't injured!`;
+      } else if (birdBehaviours.includes('close swoop') || birdBehaviours.includes('swoop')) {
+        iconPath = 'Assets/Icons/user_swooped.svg';
+        message = `Thank you for reporting <span class="font-bold text-blue-600">${escapeHtml(birdName)}</span> the <span class="font-bold">${escapeHtml(birdSpecies)}</span>. Sorry to hear about the swoop — stay safe out there!`;
+      } else if (birdBehaviours.includes('noisy')) {
+        iconPath = 'Assets/Icons/user_noisy.svg';
+        message = `Thank you for reporting <span class="font-bold text-blue-600">${escapeHtml(birdName)}</span> the <span class="font-bold">${escapeHtml(birdSpecies)}</span>. Those noisy birds can be quite startling!`;
+      }
+    } else {
+      // Messages for adding a report to an existing spot
+      message = `Thank you for adding a report to <span class="font-bold text-blue-600">${escapeHtml(birdName)}'s</span> Swoop Spot.`;
+      
+      if (birdBehaviours.includes('made contact + injured')) {
+        iconPath = 'Assets/Icons/user_swoopedinjured.svg';
+        message = `Thank you for updating <span class="font-bold text-blue-600">${escapeHtml(birdName)}'s</span> Swoop Spot. We're so sorry to hear you were injured! Please seek medical attention if needed.`;
+      } else if (birdBehaviours.includes('made contact + uninjured')) {
+        iconPath = 'Assets/Icons/user_swoopeduninjured.svg';
+        message = `Thank you for updating <span class="font-bold text-blue-600">${escapeHtml(birdName)}'s</span> Swoop Spot. Sorry to hear about it swooping you, but we're glad you weren't injured!`;
+      } else if (birdBehaviours.includes('close swoop') || birdBehaviours.includes('swoop')) {
+        iconPath = 'Assets/Icons/user_swooped.svg';
+        message = `Thank you for updating <span class="font-bold text-blue-600">${escapeHtml(birdName)}'s</span> Swoop Spot. Sorry to hear about the swoop — stay safe out there!`;
+      } else if (birdBehaviours.includes('noisy')) {
+        iconPath = 'Assets/Icons/user_noisy.svg';
+        message = `Thank you for updating <span class="font-bold text-blue-600">${escapeHtml(birdName)}'s</span> Swoop Spot. Those noisy birds can be quite startling!`;
+      }
+    }
+    
+    console.log('Selected icon:', iconPath);
+    console.log('Selected message:', message);
+    
+    successUserIcon.src = iconPath;
+    successMessage.innerHTML = message;
+    goodEggMessage.style.display = 'block'; // Show the "good egg" message for general success
+    successModal.classList.remove('hidden');
+  }
+
+  // Close success modal
+  closeSuccessModal.addEventListener('click', () => {
+    successModal.classList.add('hidden');
+  });
+
+  // Show safe passage modal
+  function showSafePassageModal(birdName) {
+    successUserIcon.src = 'Assets/Icons/user_safepassage.svg';
+    successMessage.innerHTML = `I'm so glad you didn't spot <span class="font-bold text-blue-600">${escapeHtml(birdName)}</span>. You must be a lucky egg!`;
+    goodEggMessage.style.display = 'none'; // Hide the "good egg" message for safe passage
+    successModal.classList.remove('hidden');
+  }
+
+  // ----------------------------
+  // Walk simulator (straight line)
+  // ----------------------------
+  document.getElementById('playSim').addEventListener('click', async ()=>{
+    const s = document.getElementById('simStart').value.trim();
+    const e = document.getElementById('simEnd').value.trim();
+    if(!s || !e){ toast('Enter both addresses'); return; }
+    try {
+      const g1 = await geocodeAddress(s);
+      const g2 = await geocodeAddress(e);
+      const steps = 80; simPath = [];
+      for(let i=0;i<=steps;i++) simPath.push({ lat: g1.lat + (g2.lat - g1.lat)*(i/steps), lng: g1.lng + (g2.lng - g1.lng)*(i/steps) });
+      simIndex = 0;
+      if(userMarker) try{ map.removeLayer(userMarker); } catch(e){}
+      userMarker = L.marker([simPath[0].lat, simPath[0].lng], { icon: userIcon }).addTo(map);
+      if(simTimer) clearInterval(simTimer);
+      simTimer = setInterval(()=> {
+        simIndex++;
+        if(simIndex >= simPath.length){ clearInterval(simTimer); simTimer = null; return; }
+        const p = simPath[simIndex];
+        try{ userMarker.setLatLng([p.lat,p.lng]); } catch(e){}
+        checkLocation(p.lat, p.lng);
+        map.setView([p.lat,p.lng], map.getZoom());
+      }, 400);
+    } catch(err){ toast('Simulator error: ' + (err.message || err)); }
+  });
+  document.getElementById('stopSim').addEventListener('click', ()=> { if(simTimer) clearInterval(simTimer); simTimer=null; });
+
+  // ----------------------------
+  // Use GPS & clear spots
+  // ----------------------------
+  useGPSBtn.addEventListener('click', ()=> {
+    if(!navigator.geolocation) return toast('Geolocation not supported');
+    navigator.geolocation.getCurrentPosition(p => {
+      map.setView([p.coords.latitude, p.coords.longitude], 15);
+      checkLocation(p.coords.latitude, p.coords.longitude);
+    }, err => toast('GPS error: ' + err.message));
+  });
+
+  clearSpotsBtn.addEventListener('click', ()=> {
+    if(!confirm('Clear all saved swoop spots?')) return;
+    spots.forEach(s=>{ try{ map.removeLayer(s.marker); map.removeLayer(s.circle); } catch(e){} });
+    spots = []; saveAll(); renderAlerts(); hideCenteredAlert(); toast('Cleared all swoop spots');
+  });
+
+  // ----------------------------
+  // Initial load default spot if none
+  // ----------------------------
+  // initialize tag UIs once at startup
+  initializeAllTagUIs();
+
+  loadAll();
+  if(spots.length === 0){
+    createSpotFromData({
+      id: uid(),
+      name: 'South Bank Swoop',
+      species: 'Magpie',
+      lat: -27.4789,
+      lng: 153.0234,
+      radius: 150,
+      risk: 'Take caution',
+      reports: [{
+        id: uid(),
+        timestamp: new Date().toISOString(),
+        birdBehaviour: ['swoop'],
+        humanBehaviour: ['walking'],
+        precautions: ['Hat'],
+        extra: 'Peak swoop season',
+        alertLevel: 'Take caution'
+      }]
+    }, false);
+    saveAll();
+  }
+  renderAlerts();
+
+  // re-run initialization each time modals open/close so UI arrays & handlers are fresh
+  openAddBtn.addEventListener('click', initializeAllTagUIs);
+  closeSpotModal.addEventListener('click', initializeAllTagUIs);
+  closeDetails.addEventListener('click', initializeAllTagUIs);
+
+  // expose some for debugging
+  window.SwoopSpotter = { spots, map, openCreateSpotModal, openDetailsModal, checkLocation };
+
+})(); // IIFE end
+</script>
 </body>
 </html>

@@ -33,7 +33,11 @@
   .tag-list { position:absolute; left:0; right:0; top:100%; margin-top:6px; background: var(--color-light); border:1px solid #d4cac7; border-radius:8px; box-shadow:0 10px 30px rgba(66,45,30,0.12); max-height:220px; overflow:auto; z-index:10050; display:none; }
   .tag-list > div { padding:8px 10px; cursor:pointer; }
   .tag-list > div:hover { background:#e8e2e1; }
-  .modal-overlay { z-index:99999 !important; }
+  .modal-overlay { 
+    z-index:99999 !important; 
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  }
   .tag-box { 
     min-height: 2.6rem; 
     display: flex; 
@@ -92,6 +96,23 @@
     background-color: var(--color-light);
     border-radius: 0.5rem;
     padding: 1rem;
+  }
+  
+  /* Mobile modal scrolling improvements */
+  body.modal-open {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+  }
+  
+  /* Ensure modal content is scrollable on mobile */
+  @media (max-width: 768px) {
+    .modal-overlay {
+      align-items: flex-start !important;
+      padding-top: 1rem;
+      padding-bottom: 1rem;
+    }
   }
   
   /* Safari-specific form element fixes */
@@ -198,8 +219,8 @@
 <div id="alertBox" role="status" aria-live="polite"></div>
 
 <!-- Add / New Spot Modal -->
-<div id="spotModal" class="hidden fixed inset-0 modal-overlay flex items-start justify-center bg-black/40 pt-12">
-  <div class="rounded-lg shadow-lg w-11/12 max-w-2xl" style="background-color: #f2eceb;">
+<div id="spotModal" class="hidden fixed inset-0 modal-overlay flex items-start justify-center bg-black/40 pt-4 pb-4 px-4">
+  <div class="rounded-lg shadow-lg w-full max-w-2xl my-auto max-h-[95vh] overflow-y-auto" style="background-color: #f2eceb;">
     <div class="p-6">
       <!-- Header -->
       <div class="flex justify-between items-center mb-4">
@@ -303,8 +324,8 @@
 </div>
 
 <!-- Spot Details / Report Feed Modal -->
-<div id="detailsModal" class="hidden fixed inset-0 modal-overlay flex items-start justify-center bg-black/40 pt-12">
-  <div class="rounded-lg shadow-lg w-11/12 max-w-2xl p-5" style="background-color: #f2eceb;">
+<div id="detailsModal" class="hidden fixed inset-0 modal-overlay flex items-start justify-center bg-black/40 pt-4 pb-4 px-4">
+  <div class="rounded-lg shadow-lg w-full max-w-2xl p-5 my-auto max-h-[95vh] overflow-y-auto" style="background-color: #f2eceb;">
     <div class="flex justify-between items-start">
       <div>
         <h3 id="detailsTitle" class="text-lg font-semibold" style="color: #422d1e;">Spot details</h3>
@@ -380,8 +401,8 @@
 </div>
 
 <!-- Confirm discard modal -->
-<div id="confirmModal" class="hidden fixed inset-0 flex items-center justify-center bg-black/40 z-50">
-  <div class="rounded-lg shadow-lg p-4 max-w-sm w-11/12" style="background-color: #f2eceb;">
+<div id="confirmModal" class="hidden fixed inset-0 flex items-center justify-center bg-black/40 z-50 p-4">
+  <div class="rounded-lg shadow-lg p-4 max-w-sm w-full my-auto" style="background-color: #f2eceb;">
     <div class="text-sm mb-3">
       <div class="font-semibold" style="color: #422d1e;">Discard changes?</div>
       <div class="text-xs" style="color: #422d1e; opacity: 0.7;">You have unsaved changes. Are you sure you want to close without saving?</div>
@@ -394,8 +415,8 @@
 </div>
 
 <!-- Success modal -->
-<div id="successModal" class="hidden fixed inset-0 flex items-center justify-center bg-black/40 z-50">
-  <div class="rounded-lg shadow-lg p-6 max-w-md w-11/12" style="background-color: #f2eceb;">
+<div id="successModal" class="hidden fixed inset-0 flex items-center justify-center bg-black/40 z-50 p-4 overflow-y-auto">
+  <div class="rounded-lg shadow-lg p-6 max-w-md w-full my-auto" style="background-color: #f2eceb;">
     <div class="text-center">
       <div class="mb-4">
         <img id="successUserIcon" src="" alt="User status" class="w-32 h-32 mx-auto" />
@@ -413,8 +434,8 @@
 </div>
 
 <!-- Exit Prompt Modal -->
-<div id="exitPromptModal" class="hidden fixed inset-0 flex items-center justify-center bg-black/40 z-50">
-  <div class="rounded-lg shadow-lg p-6 max-w-lg w-11/12 max-h-[80vh] flex flex-col" style="background-color: #f2eceb;">
+<div id="exitPromptModal" class="hidden fixed inset-0 flex items-center justify-center bg-black/40 z-50 p-4 overflow-y-auto">
+  <div class="rounded-lg shadow-lg p-6 max-w-lg w-full my-auto max-h-[90vh] flex flex-col" style="background-color: #f2eceb;">
     <div class="mb-4">
       <h3 class="text-xl font-bold mb-2" style="color: #422d1e;">Did you spot any birds?</h3>
       <p class="text-sm" style="color: #422d1e; opacity: 0.7;">You passed through the following swoop zones. Please update each one:</p>
@@ -1027,7 +1048,7 @@
     selectedReportPrec = [];
 
     detailsModal.innerHTML = `
-      <div class="rounded-lg w-full max-w-2xl mx-4 relative" style="background-color: #f2eceb;">
+      <div class="rounded-lg w-full max-w-2xl mx-auto my-auto max-h-[95vh] overflow-y-auto relative" style="background-color: #f2eceb;">
         <div class="p-6">
           <!-- Header -->
           <div class="flex justify-between items-center mb-4">
@@ -1247,6 +1268,7 @@
 
     // Show modal
     detailsModal.classList.remove('hidden');
+    document.body.classList.add('modal-open');
 
     // Set up form submission
     reportForm.addEventListener('submit', handleAddReport);
@@ -1378,6 +1400,7 @@
     
     // Show modal
     spotModal.classList.remove('hidden');
+    document.body.classList.add('modal-open');
     
     // Set default location to map center
     const center = map.getCenter();
@@ -1423,6 +1446,7 @@
   function closeSpotModalImmediate(){
     // Hide the modal
     spotModal.classList.add('hidden');
+    document.body.classList.remove('modal-open');
     
     // Clean up map
     if(tempMarker) {
@@ -1477,15 +1501,54 @@
 
   // geo locate - Find Me button
   geoBtn.addEventListener('click', ()=>{
-    if(!navigator.geolocation) return toast('Geolocation not supported');
-    navigator.geolocation.getCurrentPosition(p=>{
-      selectedLocation = { lat: p.coords.latitude, lng: p.coords.longitude };
-      coordsField.value = `${selectedLocation.lat.toFixed(6)}, ${selectedLocation.lng.toFixed(6)}`;
-      addressInfo.textContent = 'Located device coordinates';
-      if(tempMarker) try{ map.removeLayer(tempMarker); } catch(e){}
-      tempMarker = L.marker([selectedLocation.lat, selectedLocation.lng]).addTo(map);
-      map.setView([selectedLocation.lat, selectedLocation.lng], 16);
-    }, err => toast('GPS error: ' + err.message));
+    if(!navigator.geolocation) {
+      toast('Geolocation is not supported by your browser');
+      addressInfo.textContent = 'Geolocation not supported';
+      return;
+    }
+    
+    // Show loading state
+    addressInfo.textContent = 'Getting your location...';
+    
+    navigator.geolocation.getCurrentPosition(
+      // Success callback
+      p => {
+        selectedLocation = { lat: p.coords.latitude, lng: p.coords.longitude };
+        coordsField.value = `${selectedLocation.lat.toFixed(6)}, ${selectedLocation.lng.toFixed(6)}`;
+        addressInfo.textContent = 'Located device coordinates successfully';
+        if(tempMarker) try{ map.removeLayer(tempMarker); } catch(e){}
+        tempMarker = L.marker([selectedLocation.lat, selectedLocation.lng]).addTo(map);
+        map.setView([selectedLocation.lat, selectedLocation.lng], 16);
+      }, 
+      // Error callback
+      err => {
+        console.error('Geolocation error:', err);
+        let errorMsg = '';
+        
+        switch(err.code) {
+          case err.PERMISSION_DENIED:
+            errorMsg = 'Location permission denied. Please enable location access in your browser settings.';
+            break;
+          case err.POSITION_UNAVAILABLE:
+            errorMsg = 'Location information unavailable. Please check your device settings.';
+            break;
+          case err.TIMEOUT:
+            errorMsg = 'Location request timed out. Please try again.';
+            break;
+          default:
+            errorMsg = err.message || 'Unknown error occurred';
+        }
+        
+        addressInfo.textContent = errorMsg;
+        toast('GPS error: ' + errorMsg, 4000);
+      },
+      // Options
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    );
   });
 
   // submit create spot
@@ -1543,6 +1606,7 @@
   // ----------------------------
   closeDetails.addEventListener('click', ()=> {
     detailsModal.classList.add('hidden');
+    document.body.classList.remove('modal-open');
     activeDetailsSpotId = null;
     // cleanup UI arrays
     selectedReportBird = []; selectedReportHuman = []; selectedReportPrec = [];
@@ -1550,6 +1614,7 @@
     // If there are still spots to address in the exit prompt, show it again
     if(spotsToAddress.length > 0) {
       exitPromptModal.classList.remove('hidden');
+      document.body.classList.add('modal-open');
     }
   });
 
@@ -1722,6 +1787,7 @@
     
     renderExitPromptList();
     exitPromptModal.classList.remove('hidden');
+    document.body.classList.add('modal-open');
   }
   
   function renderExitPromptList() {
@@ -1815,10 +1881,12 @@
     if(spotsToAddress.length > 0) {
       if(confirm(`You haven't addressed ${spotsToAddress.length} spot${spotsToAddress.length === 1 ? '' : 's'}. Close anyway?`)) {
         exitPromptModal.classList.add('hidden');
+        document.body.classList.remove('modal-open');
         spotsToAddress = [];
       }
     } else {
       exitPromptModal.classList.add('hidden');
+      document.body.classList.remove('modal-open');
       spotsToAddress = [];
     }
   });
@@ -2116,11 +2184,13 @@
     successMessage.innerHTML = message;
     goodEggMessage.style.display = 'block'; // Show the "good egg" message for general success
     successModal.classList.remove('hidden');
+    document.body.classList.add('modal-open');
   }
 
   // Close success modal
   closeSuccessModal.addEventListener('click', () => {
     successModal.classList.add('hidden');
+    document.body.classList.remove('modal-open');
   });
 
   // Show safe passage modal
@@ -2129,6 +2199,7 @@
     successMessage.innerHTML = `I'm so glad you didn't spot <span class="font-bold text-blue-600">${escapeHtml(birdName)}</span>. You must be a lucky egg!`;
     goodEggMessage.style.display = 'none'; // Hide the "good egg" message for safe passage
     successModal.classList.remove('hidden');
+    document.body.classList.add('modal-open');
   }
 
   // ----------------------------
@@ -2163,11 +2234,49 @@
   // Use GPS & clear spots
   // ----------------------------
   useGPSBtn.addEventListener('click', ()=> {
-    if(!navigator.geolocation) return toast('Geolocation not supported');
-    navigator.geolocation.getCurrentPosition(p => {
-      map.setView([p.coords.latitude, p.coords.longitude], 15);
-      checkLocation(p.coords.latitude, p.coords.longitude);
-    }, err => toast('GPS error: ' + err.message));
+    if(!navigator.geolocation) {
+      toast('Geolocation is not supported by your browser');
+      return;
+    }
+    
+    // Show loading state
+    toast('Getting your location...');
+    
+    navigator.geolocation.getCurrentPosition(
+      // Success callback
+      p => {
+        map.setView([p.coords.latitude, p.coords.longitude], 15);
+        checkLocation(p.coords.latitude, p.coords.longitude);
+        toast('Location found!');
+      }, 
+      // Error callback
+      err => {
+        console.error('Geolocation error:', err);
+        let errorMsg = 'GPS error: ';
+        
+        switch(err.code) {
+          case err.PERMISSION_DENIED:
+            errorMsg += 'Location permission denied. Please enable location access in your browser settings.';
+            break;
+          case err.POSITION_UNAVAILABLE:
+            errorMsg += 'Location information unavailable. Please check your device settings.';
+            break;
+          case err.TIMEOUT:
+            errorMsg += 'Location request timed out. Please try again.';
+            break;
+          default:
+            errorMsg += err.message || 'Unknown error occurred';
+        }
+        
+        toast(errorMsg, 4000); // Show error for 4 seconds
+      },
+      // Options
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    );
   });
 
   clearSpotsBtn.addEventListener('click', ()=> {

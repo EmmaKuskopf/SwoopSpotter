@@ -11,6 +11,7 @@ CREATE TABLE public.profiles (
   display_name TEXT,
   email TEXT UNIQUE,
   avatar_url TEXT,
+  bio TEXT CHECK (length(bio) <= 200),
   total_spots_created INTEGER DEFAULT 0,
   total_reports_created INTEGER DEFAULT 0,
   reputation_score INTEGER DEFAULT 0,

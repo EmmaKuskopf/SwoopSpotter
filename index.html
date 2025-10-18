@@ -12,6 +12,9 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
+<!-- Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
   :root {
     --color-light: #f2eceb;
@@ -206,6 +209,16 @@
     <button id="openAddBtn" class="fab bird-add-btn" title="Add Swoop Spot">
       <img src="Assets/Icons/bird_background.svg" alt="">
       <span class="plus-icon">+</span>
+    </button>
+  </div>
+
+  <!-- Add Swoop Spot button below map -->
+  <div class="mt-4 flex justify-center gap-2 flex-wrap">
+    <button id="addSpotBelowMap" class="px-6 py-2 rounded text-white font-medium" style="background-color: #422d1e;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+      + Add Swoop Spot
+    </button>
+    <button id="testVibrateBtn" class="px-4 py-2 rounded text-sm border" style="border-color: #d4cac7; color: #422d1e;" onmouseover="this.style.backgroundColor='#e8e2e1'" onmouseout="this.style.backgroundColor='transparent'">
+      Test Vibration 📳
     </button>
   </div>
 
@@ -471,6 +484,19 @@
 <script>
 (() => {
   // ----------------------------
+  // Supabase Configuration
+  // ----------------------------
+  const SUPABASE_URL = 'https://ghoipwkezxiyjkgikfyw.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdob2lwd2tlenhpeWprZ2lrZnl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA1NDcyNzQsImV4cCI6MjA3NjEyMzI3NH0.T-Sxyq4hv1U1DI5NHD6k30bHWjO0i5BTMeaUAuFRifg';
+  
+  // Initialize Supabase client
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  
+  // Sync state
+  let isSyncing = false;
+  let syncEnabled = true; // Can be toggled for offline mode
+  
+  // ----------------------------
   // Setup map + icons + DOM refs
   // ----------------------------
   // Initialize map with a slight delay to ensure DOM is ready
@@ -658,8 +684,65 @@
   function escapeHtml(s){ if(s==null) return ''; return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'); }
 
   // ----------------------------
-  // Persistence
+  // Persistence (Supabase + localStorage fallback)
   // ----------------------------
+  
+  // Save spot to Supabase
+  async function saveSpotToSupabase(spot) {
+    if (!syncEnabled) return;
+    
+    try {
+      isSyncing = true;
+      
+      // Prepare spot data (exclude UI elements)
+      const spotData = {
+        id: spot.id,
+        name: spot.name,
+        species: spot.species,
+        lat: Number(spot.lat),
+        lng: Number(spot.lng),
+        risk: spot.risk
+      };
+      
+      // Upsert spot (insert or update)
+      const { data: spotResult, error: spotError } = await supabase
+        .from('spots')
+        .upsert(spotData)
+        .select();
+      
+      if (spotError) throw spotError;
+      
+      // Save reports for this spot
+      if (spot.reports && spot.reports.length > 0) {
+        const reportsData = spot.reports.map(r => ({
+          id: r.id,
+          spot_id: spot.id,
+          alert_level: r.alertLevel,
+          bird_behaviour: r.birdBehaviour || [],
+          human_behaviour: r.humanBehaviour || [],
+          precautions: r.precautions || [],
+          extra_details: r.extraDetails || '',
+          timestamp: r.timestamp
+        }));
+        
+        const { error: reportsError } = await supabase
+          .from('reports')
+          .upsert(reportsData);
+        
+        if (reportsError) throw reportsError;
+      }
+      
+      console.log('✅ Spot synced to Supabase:', spot.name);
+      
+    } catch (error) {
+      console.error('❌ Error saving to Supabase:', error);
+      toast('Sync error - saved locally', 2000);
+    } finally {
+      isSyncing = false;
+    }
+  }
+  
+  // Save all spots to localStorage (backup)
   function saveAll(){
     try {
       const serial = spots.map(s => {
@@ -669,11 +752,157 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(serial));
     } catch(e){ console.warn(e); }
   }
+  
+  // Load all spots from Supabase
+  async function loadAllFromSupabase() {
+    if (!syncEnabled) {
+      loadAll(); // Fallback to localStorage
+      return;
+    }
+    
+    try {
+      toast('Loading spots from cloud...', 1000);
+      
+      // Fetch all spots with their reports
+      const { data: spotsData, error } = await supabase
+        .from('spots')
+        .select(`
+          *,
+          reports (*)
+        `)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      // Clear existing spots
+      spots.forEach(s => {
+        try {
+          map.removeLayer(s.marker);
+          map.removeLayer(s.circle);
+        } catch(e) {}
+      });
+      spots = [];
+      
+      // Create spots from Supabase data
+      if (spotsData && spotsData.length > 0) {
+        spotsData.forEach(spotData => {
+          // Convert Supabase format to app format
+          const spot = {
+            id: spotData.id,
+            name: spotData.name,
+            species: spotData.species,
+            lat: Number(spotData.lat),
+            lng: Number(spotData.lng),
+            risk: spotData.risk,
+            reports: (spotData.reports || []).map(r => ({
+              id: r.id,
+              alertLevel: r.alert_level,
+              birdBehaviour: r.bird_behaviour || [],
+              humanBehaviour: r.human_behaviour || [],
+              precautions: r.precautions || [],
+              extraDetails: r.extra_details || '',
+              timestamp: r.timestamp
+            }))
+          };
+          
+          createSpotFromData(spot, true);
+        });
+        
+        toast(`Loaded ${spotsData.length} spots from cloud`, 2000);
+      } else {
+        toast('No spots found - add your first!', 2000);
+      }
+      
+      // Save to localStorage as backup
+      saveAll();
+      
+    } catch (error) {
+      console.error('❌ Error loading from Supabase:', error);
+      toast('Loading from local storage...', 2000);
+      loadAll(); // Fallback to localStorage
+    }
+  }
+  
+  // Load from localStorage (fallback/offline)
   function loadAll(){
     try {
       const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
       raw.forEach(r => createSpotFromData(r, true));
     } catch(e){ console.warn(e); }
+  }
+  
+  // Subscribe to real-time updates
+  function subscribeToRealtimeUpdates() {
+    if (!syncEnabled) return;
+    
+    // Subscribe to spots table changes
+    const spotsChannel = supabase
+      .channel('spots-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'spots'
+        },
+        (payload) => {
+          console.log('🔄 Spot changed:', payload);
+          handleSpotRealTimeUpdate(payload);
+        }
+      )
+      .subscribe();
+    
+    // Subscribe to reports table changes
+    const reportsChannel = supabase
+      .channel('reports-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'reports'
+        },
+        (payload) => {
+          console.log('🔄 Report changed:', payload);
+          handleReportRealTimeUpdate(payload);
+        }
+      )
+      .subscribe();
+  }
+  
+  // Handle real-time spot updates
+  function handleSpotRealTimeUpdate(payload) {
+    const { eventType, new: newSpot, old: oldSpot } = payload;
+    
+    if (eventType === 'INSERT') {
+      // New spot added by another user
+      const existingSpot = spots.find(s => s.id === newSpot.id);
+      if (!existingSpot) {
+        toast(`New spot: ${newSpot.name}`, 2000);
+        loadAllFromSupabase(); // Reload to get the new spot with reports
+      }
+    } else if (eventType === 'UPDATE') {
+      // Spot updated
+      loadAllFromSupabase(); // Reload to get updates
+    } else if (eventType === 'DELETE') {
+      // Spot deleted
+      const spot = spots.find(s => s.id === oldSpot.id);
+      if (spot) {
+        try {
+          map.removeLayer(spot.marker);
+          map.removeLayer(spot.circle);
+        } catch(e) {}
+        spots = spots.filter(s => s.id !== oldSpot.id);
+        renderAlerts();
+        saveAll();
+      }
+    }
+  }
+  
+  // Handle real-time report updates
+  function handleReportRealTimeUpdate(payload) {
+    // When a report changes, reload the affected spot
+    loadAllFromSupabase();
   }
 
   // ----------------------------
@@ -960,7 +1189,10 @@
     marker.on('click', ()=> showSpotQuickAlert(spot));
 
     spots.push(spot);
-    if(!skipSave) saveAll();
+    if(!skipSave) {
+      saveAll(); // Save to localStorage
+      saveSpotToSupabase(spot); // Sync to Supabase
+    }
     renderAlerts();
     return spot;
   }
@@ -1413,6 +1645,12 @@
     openCreateSpotModal();
   });
 
+  // Add event listener for the button below the map
+  const addSpotBelowMap = document.getElementById('addSpotBelowMap');
+  addSpotBelowMap.addEventListener('click', ()=>{
+    openCreateSpotModal();
+  });
+
   function openCreateSpotModal(){
     // reset all form fields and state
     selectedLocation = null;
@@ -1693,7 +1931,8 @@
       }).addTo(map);
     }
     
-    saveAll();
+    saveAll(); // Save to localStorage
+    saveSpotToSupabase(s); // Sync to Supabase
     
     // Show success modal with bird behavior context (isNewSpot=false for additional reports)
     showSuccessModal(s.name, s.species, selectedReportBird, false);
@@ -1958,6 +2197,8 @@
 
   // Play alert sound and vibrate (for mobile)
   function playAlertNotification() {
+    console.log('🔔 Alert notification triggered');
+    
     // Play alert sound
     try {
       const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -1983,17 +2224,29 @@
       gainNode2.gain.value = 0.3;
       oscillator2.start(audioContext.currentTime + 0.25);
       oscillator2.stop(audioContext.currentTime + 0.45);
+      
+      console.log('✅ Audio alert played');
     } catch(e) {
-      console.warn('Audio alert failed:', e);
+      console.warn('❌ Audio alert failed:', e);
     }
     
     // Vibrate (mobile devices)
     if ('vibrate' in navigator) {
       try {
-        // Pattern: vibrate 200ms, pause 100ms, vibrate 200ms
-        navigator.vibrate([200, 100, 200]);
+        // More aggressive pattern for better noticeability
+        // Pattern: vibrate 300ms, pause 100ms, vibrate 300ms, pause 100ms, vibrate 300ms
+        const vibrationPattern = [300, 100, 300, 100, 300];
+        const result = navigator.vibrate(vibrationPattern);
+        console.log('📳 Vibration triggered:', result ? 'Success' : 'Failed or not supported');
       } catch(e) {
-        console.warn('Vibration failed:', e);
+        console.warn('❌ Vibration failed:', e);
+      }
+    } else {
+      console.log('❌ Vibration API not supported on this device');
+      // iOS doesn't support vibration API
+      // Show toast notification instead
+      if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
+        console.log('ℹ️ iOS detected - vibration not available via web');
       }
     }
   }
@@ -2420,43 +2673,95 @@
     spots = []; saveAll(); renderAlerts(); hideCenteredAlert(); toast('Cleared all swoop spots');
   });
 
+  // Test vibration button
+  const testVibrateBtn = document.getElementById('testVibrateBtn');
+  testVibrateBtn.addEventListener('click', ()=> {
+    console.log('📳 Testing vibration...');
+    
+    if ('vibrate' in navigator) {
+      toast('Testing vibration...', 1000);
+      
+      // Test vibration
+      const vibrationPattern = [300, 100, 300, 100, 300];
+      const result = navigator.vibrate(vibrationPattern);
+      
+      console.log('Vibration API called, result:', result);
+      
+      if (result) {
+        setTimeout(() => {
+          toast('Vibration triggered! Did you feel it?', 3000);
+        }, 1000);
+      } else {
+        toast('Vibration API returned false - may not be supported', 3000);
+      }
+    } else {
+      console.log('Vibration API not available');
+      
+      // Check if iOS
+      if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
+        toast('⚠️ iOS does not support web vibration API', 3000);
+      } else {
+        toast('⚠️ Vibration not supported on this browser', 3000);
+      }
+    }
+  });
+
   // ----------------------------
   // Initial load default spot if none
   // ----------------------------
   // initialize tag UIs once at startup
   initializeAllTagUIs();
 
-  loadAll();
-  if(spots.length === 0){
-    createSpotFromData({
-      id: uid(),
-      name: 'South Bank Swoop',
-      species: 'Magpie',
-      lat: -27.4789,
-      lng: 153.0234,
-      radius: 150,
-      risk: 'Take caution',
-      reports: [{
+  // Load spots from Supabase (with fallback to localStorage)
+  (async () => {
+    await loadAllFromSupabase();
+    
+    // Subscribe to real-time updates
+    subscribeToRealtimeUpdates();
+    
+    // If no spots loaded, create a default example spot
+    if(spots.length === 0){
+      const defaultSpot = {
         id: uid(),
-        timestamp: new Date().toISOString(),
-        birdBehaviour: ['swoop'],
-        humanBehaviour: ['walking'],
-        precautions: ['Hat'],
-        extra: 'Peak swoop season',
-        alertLevel: 'Take caution'
-      }]
-    }, false);
-    saveAll();
-  }
-  renderAlerts();
+        name: 'South Bank Swoop',
+        species: 'Magpie',
+        lat: -27.4789,
+        lng: 153.0234,
+        radius: 150,
+        risk: 'Take caution',
+        reports: [{
+          id: uid(),
+          timestamp: new Date().toISOString(),
+          birdBehaviour: ['swoop'],
+          humanBehaviour: ['walking'],
+          precautions: ['Hat'],
+          extraDetails: 'Peak swoop season',
+          alertLevel: 'Take caution'
+        }]
+      };
+      createSpotFromData(defaultSpot, false);
+      saveAll();
+    }
+    renderAlerts();
+  })();
 
   // re-run initialization each time modals open/close so UI arrays & handlers are fresh
   openAddBtn.addEventListener('click', initializeAllTagUIs);
+  addSpotBelowMap.addEventListener('click', initializeAllTagUIs);
   closeSpotModal.addEventListener('click', initializeAllTagUIs);
   closeDetails.addEventListener('click', initializeAllTagUIs);
 
   // expose some for debugging
-  window.SwoopSpotter = { spots, map, openCreateSpotModal, openDetailsModal, checkLocation };
+  window.SwoopSpotter = { 
+    spots, 
+    map, 
+    openCreateSpotModal, 
+    openDetailsModal, 
+    checkLocation,
+    supabase, // Expose for debugging
+    loadAllFromSupabase, // Expose for manual refresh
+    syncEnabled // Expose to toggle sync
+  };
 
 })(); // IIFE end
 </script>

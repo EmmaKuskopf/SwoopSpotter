@@ -202,7 +202,6 @@
       <span id="trackBtnText">Start Tracking</span>
     </button>
     <button id="useGPSBtn" class="text-sm px-4 py-2 rounded text-white" style="background-color: #422d1e;">Find Me</button>
-    <button id="clearSpotsBtn" class="text-sm px-4 py-2 rounded border text-red-600" style="border-color: #d4cac7;">Clear All Spots</button>
   </div>
 
   <div id="map" class="shadow rounded relative">
@@ -593,7 +592,6 @@
   const trackLocationBtn = document.getElementById('trackLocationBtn');
   const trackBtnText = document.getElementById('trackBtnText');
   const useGPSBtn = document.getElementById('useGPSBtn');
-  const clearSpotsBtn = document.getElementById('clearSpotsBtn');
 
   const playSim = document.getElementById('playSim');
   const stopSim = document.getElementById('stopSim');
@@ -2666,12 +2664,6 @@
         maximumAge: 0
       }
     );
-  });
-
-  clearSpotsBtn.addEventListener('click', ()=> {
-    if(!confirm('Clear all saved swoop spots?')) return;
-    spots.forEach(s=>{ try{ map.removeLayer(s.marker); map.removeLayer(s.circle); } catch(e){} });
-    spots = []; saveAll(); renderAlerts(); hideCenteredAlert(); toast('Cleared all swoop spots');
   });
 
   // Test vibration button

@@ -566,6 +566,142 @@
   </button>
 </div>
 
+<!-- Profile Modal -->
+<div id="profileModal" class="hidden fixed inset-0 flex items-center justify-center bg-black/40 z-50 p-4">
+  <div class="rounded-lg shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto" style="background-color: #f2eceb;">
+    <div class="p-6">
+      <!-- Header -->
+      <div class="flex justify-between items-center mb-6">
+        <h3 class="text-2xl font-bold" style="color: #422d1e;">My Profile</h3>
+        <button id="closeProfileModal" class="text-2xl" style="color: #422d1e; opacity: 0.7;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">&times;</button>
+      </div>
+      
+      <!-- Profile Tabs -->
+      <div class="flex gap-2 mb-6" style="border-bottom: 1px solid #d4cac7;">
+        <button id="profileStatsTab" class="profile-tab active px-4 py-2 font-medium border-b-2" style="border-color: #422d1e; color: #422d1e;">
+          📊 Stats
+        </button>
+        <button id="profileEditTab" class="profile-tab px-4 py-2 font-medium border-b-2 border-transparent" style="color: #422d1e; opacity: 0.6;">
+          ✏️ Edit Profile
+        </button>
+      </div>
+      
+      <!-- Stats Content -->
+      <div id="profileStatsContent" class="space-y-4">
+        <!-- Profile Header -->
+        <div class="flex items-center gap-4 p-4 rounded-lg" style="background-color: #e8e2e1;">
+          <div class="w-20 h-20 rounded-full flex items-center justify-center text-3xl" style="background-color: #422d1e; color: #f2eceb;" id="profileAvatar">
+            👤
+          </div>
+          <div class="flex-1">
+            <h4 class="text-xl font-bold" style="color: #422d1e;" id="profileDisplayName">Loading...</h4>
+            <p class="text-sm" style="color: #422d1e; opacity: 0.7;" id="profileEmail">email@example.com</p>
+            <p class="text-xs mt-1" style="color: #422d1e; opacity: 0.6;" id="profileJoined">Member since: Loading...</p>
+          </div>
+        </div>
+        
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-2 gap-4">
+          <!-- Spots Created -->
+          <div class="p-4 rounded-lg text-center" style="background-color: #e8e2e1;">
+            <div class="text-3xl font-bold" style="color: #422d1e;" id="statSpotsCreated">0</div>
+            <div class="text-sm mt-1" style="color: #422d1e; opacity: 0.7;">Spots Created</div>
+          </div>
+          
+          <!-- Reports Created -->
+          <div class="p-4 rounded-lg text-center" style="background-color: #e8e2e1;">
+            <div class="text-3xl font-bold" style="color: #422d1e;" id="statReportsCreated">0</div>
+            <div class="text-sm mt-1" style="color: #422d1e; opacity: 0.7;">Reports Created</div>
+          </div>
+          
+          <!-- Reputation -->
+          <div class="p-4 rounded-lg text-center" style="background-color: #e8e2e1;">
+            <div class="text-3xl font-bold" style="color: #422d1e;" id="statReputation">0</div>
+            <div class="text-sm mt-1" style="color: #422d1e; opacity: 0.7;">Reputation Score</div>
+          </div>
+          
+          <!-- Rank -->
+          <div class="p-4 rounded-lg text-center" style="background-color: #e8e2e1;">
+            <div class="text-3xl font-bold" style="color: #422d1e;" id="statRank">-</div>
+            <div class="text-sm mt-1" style="color: #422d1e; opacity: 0.7;">Community Rank</div>
+          </div>
+        </div>
+        
+        <!-- Badges/Status -->
+        <div class="p-4 rounded-lg" style="background-color: #e8e2e1;">
+          <h5 class="font-medium mb-2" style="color: #422d1e;">Badges & Status</h5>
+          <div class="flex flex-wrap gap-2" id="profileBadges">
+            <!-- Badges will be added dynamically -->
+          </div>
+        </div>
+        
+        <!-- Recent Activity -->
+        <div class="p-4 rounded-lg" style="background-color: #e8e2e1;">
+          <h5 class="font-medium mb-3" style="color: #422d1e;">Recent Contributions</h5>
+          <div id="profileRecentActivity" class="space-y-2">
+            <!-- Activity will be loaded dynamically -->
+          </div>
+        </div>
+      </div>
+      
+      <!-- Edit Profile Content -->
+      <div id="profileEditContent" class="hidden space-y-4">
+        <form id="profileEditForm" class="space-y-4">
+          <!-- Display Name -->
+          <div>
+            <label class="block text-sm font-medium mb-1" style="color: #422d1e;">Display Name</label>
+            <input type="text" id="editDisplayName" required class="w-full rounded p-2" style="border: 1px solid #d4cac7; background-color: #fff;" placeholder="Your name">
+          </div>
+          
+          <!-- Avatar Emoji Picker -->
+          <div>
+            <label class="block text-sm font-medium mb-2" style="color: #422d1e;">Avatar Emoji</label>
+            <div class="grid grid-cols-8 gap-2" id="emojiPicker">
+              <button type="button" class="emoji-btn text-2xl p-2 rounded hover:bg-gray-200" data-emoji="👤">👤</button>
+              <button type="button" class="emoji-btn text-2xl p-2 rounded hover:bg-gray-200" data-emoji="😊">😊</button>
+              <button type="button" class="emoji-btn text-2xl p-2 rounded hover:bg-gray-200" data-emoji="🐦">🐦</button>
+              <button type="button" class="emoji-btn text-2xl p-2 rounded hover:bg-gray-200" data-emoji="🦅">🦅</button>
+              <button type="button" class="emoji-btn text-2xl p-2 rounded hover:bg-gray-200" data-emoji="🦆">🦆</button>
+              <button type="button" class="emoji-btn text-2xl p-2 rounded hover:bg-gray-200" data-emoji="🦜">🦜</button>
+              <button type="button" class="emoji-btn text-2xl p-2 rounded hover:bg-gray-200" data-emoji="🦉">🦉</button>
+              <button type="button" class="emoji-btn text-2xl p-2 rounded hover:bg-gray-200" data-emoji="🐧">🐧</button>
+              <button type="button" class="emoji-btn text-2xl p-2 rounded hover:bg-gray-200" data-emoji="🌟">🌟</button>
+              <button type="button" class="emoji-btn text-2xl p-2 rounded hover:bg-gray-200" data-emoji="⭐">⭐</button>
+              <button type="button" class="emoji-btn text-2xl p-2 rounded hover:bg-gray-200" data-emoji="🔥">🔥</button>
+              <button type="button" class="emoji-btn text-2xl p-2 rounded hover:bg-gray-200" data-emoji="⚡">⚡</button>
+              <button type="button" class="emoji-btn text-2xl p-2 rounded hover:bg-gray-200" data-emoji="🎯">🎯</button>
+              <button type="button" class="emoji-btn text-2xl p-2 rounded hover:bg-gray-200" data-emoji="🏆">🏆</button>
+              <button type="button" class="emoji-btn text-2xl p-2 rounded hover:bg-gray-200" data-emoji="💪">💪</button>
+              <button type="button" class="emoji-btn text-2xl p-2 rounded hover:bg-gray-200" data-emoji="🎨">🎨</button>
+            </div>
+            <input type="hidden" id="selectedAvatar" value="👤">
+          </div>
+          
+          <!-- Bio (optional) -->
+          <div>
+            <label class="block text-sm font-medium mb-1" style="color: #422d1e;">Bio (optional)</label>
+            <textarea id="editBio" rows="3" class="w-full rounded p-2" style="border: 1px solid #d4cac7; background-color: #fff;" placeholder="Tell us about yourself..."></textarea>
+            <p class="text-xs mt-1" style="color: #422d1e; opacity: 0.6;">Max 200 characters</p>
+          </div>
+          
+          <!-- Save Button -->
+          <div class="flex gap-2">
+            <button type="submit" class="flex-1 px-4 py-2 text-white rounded" style="background-color: #422d1e;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+              💾 Save Changes
+            </button>
+            <button type="button" id="cancelEditProfile" class="px-4 py-2 rounded" style="background-color: #d4cac7; color: #422d1e;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+              Cancel
+            </button>
+          </div>
+          
+          <div id="profileEditError" class="hidden text-sm text-red-600"></div>
+          <div id="profileEditSuccess" class="hidden text-sm text-green-600"></div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 (() => {
   // ----------------------------
@@ -704,6 +840,21 @@
   const userMenuStats = document.getElementById('userMenuStats');
   const userMenuProfile = document.getElementById('userMenuProfile');
   const userMenuSignOut = document.getElementById('userMenuSignOut');
+  
+  // Profile Modal Elements
+  const profileModal = document.getElementById('profileModal');
+  const closeProfileModal = document.getElementById('closeProfileModal');
+  const profileStatsTab = document.getElementById('profileStatsTab');
+  const profileEditTab = document.getElementById('profileEditTab');
+  const profileStatsContent = document.getElementById('profileStatsContent');
+  const profileEditContent = document.getElementById('profileEditContent');
+  const profileEditForm = document.getElementById('profileEditForm');
+  const editDisplayName = document.getElementById('editDisplayName');
+  const selectedAvatar = document.getElementById('selectedAvatar');
+  const editBio = document.getElementById('editBio');
+  const profileEditError = document.getElementById('profileEditError');
+  const profileEditSuccess = document.getElementById('profileEditSuccess');
+  const cancelEditProfile = document.getElementById('cancelEditProfile');
 
   const trackLocationBtn = document.getElementById('trackLocationBtn');
   const trackBtnText = document.getElementById('trackBtnText');
@@ -745,7 +896,7 @@
     "Birdy Sanders", "Nest Potato", "Flap Jackson", "Beaker Bonanza",
     "Sergeant Swoop", "Admiral Airborne", "Doctor Doodle", "Judge Jitters",
     "Mayor Feathers", "Sheriff Screech", "Detective Talon", "Colonel Crest",
-    "General Wings", "Lieutenant Chirp", "Commander Cluck", "Private Peep",
+    "General Wings", "Lieutenant Chirp", "Commander Cluck", "Private Peck",
     "Zippy Zephyr", "Gusty Gale", "Breezy Buddy", "Windy Wanderer",
     "Talon Trouble", "Skyward Sam", "Aerial Ace", "Hover Helper",
     "Perch Patrol", "Branch Boss", "Treetop Terror", "Canopy Captain",
@@ -988,6 +1139,204 @@
     } catch (error) {
       console.error('Sign out error:', error);
       toast('Error signing out', 2000);
+    }
+  }
+
+  // ----------------------------
+  // Profile Modal Functions
+  // ----------------------------
+  
+  async function openProfileModal() {
+    if (!currentUser) {
+      toast('Please sign in first', 2000);
+      return;
+    }
+    
+    // Load fresh profile data
+    await loadUserProfile();
+    
+    // Populate profile header
+    document.getElementById('profileDisplayName').textContent = userProfile?.display_name || currentUser.email.split('@')[0];
+    document.getElementById('profileEmail').textContent = currentUser.email;
+    document.getElementById('profileAvatar').textContent = userProfile?.avatar_url || '👤';
+    
+    // Format join date
+    const joinDate = new Date(currentUser.created_at);
+    document.getElementById('profileJoined').textContent = `Member since: ${joinDate.toLocaleDateString()}`;
+    
+    // Update stats
+    document.getElementById('statSpotsCreated').textContent = userProfile?.total_spots_created || 0;
+    document.getElementById('statReportsCreated').textContent = userProfile?.total_reports_created || 0;
+    document.getElementById('statReputation').textContent = userProfile?.reputation_score || 0;
+    
+    // Calculate rank
+    const reputation = userProfile?.reputation_score || 0;
+    let rank = 'Newcomer';
+    if (reputation >= 500) rank = '🏆 Expert';
+    else if (reputation >= 250) rank = '⭐ Advanced';
+    else if (reputation >= 100) rank = '🌟 Intermediate';
+    else if (reputation >= 25) rank = '🐦 Beginner';
+    document.getElementById('statRank').textContent = rank;
+    
+    // Populate badges
+    populateProfileBadges();
+    
+    // Load recent activity
+    await loadRecentActivity();
+    
+    // Populate edit form
+    editDisplayName.value = userProfile?.display_name || currentUser.email.split('@')[0];
+    selectedAvatar.value = userProfile?.avatar_url || '👤';
+    editBio.value = userProfile?.bio || '';
+    
+    // Update emoji picker selection
+    document.querySelectorAll('.emoji-btn').forEach(btn => {
+      btn.style.cssText = btn.dataset.emoji === selectedAvatar.value 
+        ? 'background-color: #422d1e; color: #f2eceb;'
+        : '';
+    });
+    
+    // Show modal on stats tab
+    profileStatsTab.click();
+    profileModal.classList.remove('hidden');
+  }
+  
+  function populateProfileBadges() {
+    const badgesContainer = document.getElementById('profileBadges');
+    badgesContainer.innerHTML = '';
+    
+    const badges = [];
+    if (userProfile?.is_verified) badges.push('✅ Verified');
+    if (userProfile?.is_moderator) badges.push('🛡️ Moderator');
+    if ((userProfile?.total_spots_created || 0) >= 10) badges.push('📍 Mapper');
+    if ((userProfile?.total_reports_created || 0) >= 25) badges.push('📝 Reporter');
+    if ((userProfile?.reputation_score || 0) >= 100) badges.push('⭐ Contributor');
+    
+    if (badges.length === 0) {
+      badgesContainer.innerHTML = '<span style="color: #422d1e; opacity: 0.6;" class="text-sm">No badges yet. Keep contributing!</span>';
+    } else {
+      badges.forEach(badge => {
+        const badgeEl = document.createElement('span');
+        badgeEl.className = 'px-3 py-1 rounded text-sm';
+        badgeEl.style.cssText = 'background-color: #422d1e; color: #f2eceb;';
+        badgeEl.textContent = badge;
+        badgesContainer.appendChild(badgeEl);
+      });
+    }
+  }
+  
+  function closeProfileModalFn() {
+    profileModal.classList.add('hidden');
+    profileEditError.classList.add('hidden');
+    profileEditSuccess.classList.add('hidden');
+  }
+  
+  async function loadRecentActivity() {
+    const activityContainer = document.getElementById('profileRecentActivity');
+    activityContainer.innerHTML = '<span style="color: #422d1e; opacity: 0.6;" class="text-sm">Loading...</span>';
+    
+    try {
+      const { data: recentSpots, error: spotsError } = await supabase
+        .from('spots')
+        .select('id, name, species, created_at')
+        .eq('user_id', currentUser.id)
+        .order('created_at', { ascending: false })
+        .limit(5);
+      
+      if (spotsError) throw spotsError;
+      
+      if (!recentSpots || recentSpots.length === 0) {
+        activityContainer.innerHTML = '<span style="color: #422d1e; opacity: 0.6;" class="text-sm">No recent activity</span>';
+        return;
+      }
+      
+      activityContainer.innerHTML = '';
+      recentSpots.forEach(spot => {
+        const activityEl = document.createElement('div');
+        activityEl.className = 'flex items-start gap-2 text-sm';
+        activityEl.style.cssText = 'color: #422d1e;';
+        
+        const date = new Date(spot.created_at);
+        const timeAgo = getTimeAgo(date);
+        
+        activityEl.innerHTML = `
+          <span>📍</span>
+          <div class="flex-1">
+            <span class="font-medium">${spot.name}</span>
+            <span style="opacity: 0.7;"> - ${spot.species}</span>
+            <br>
+            <span style="opacity: 0.6;" class="text-xs">${timeAgo}</span>
+          </div>
+        `;
+        activityContainer.appendChild(activityEl);
+      });
+    } catch (error) {
+      console.error('Error loading recent activity:', error);
+      activityContainer.innerHTML = '<span style="color: #422d1e; opacity: 0.6;" class="text-sm">Error loading activity</span>';
+    }
+  }
+  
+  function getTimeAgo(date) {
+    const now = new Date();
+    const seconds = Math.floor((now - date) / 1000);
+    
+    if (seconds < 60) return 'just now';
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+    if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
+    return date.toLocaleDateString();
+  }
+  
+  async function updateUserProfile(e) {
+    e.preventDefault();
+    
+    profileEditError.classList.add('hidden');
+    profileEditSuccess.classList.add('hidden');
+    
+    const newDisplayName = editDisplayName.value.trim();
+    const newAvatar = selectedAvatar.value;
+    const newBio = editBio.value.trim().substring(0, 200);
+    
+    if (!newDisplayName) {
+      profileEditError.textContent = 'Display name is required';
+      profileEditError.classList.remove('hidden');
+      return;
+    }
+    
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          display_name: newDisplayName,
+          avatar_url: newAvatar,
+          bio: newBio
+        })
+        .eq('id', currentUser.id);
+      
+      if (error) throw error;
+      
+      userProfile = {
+        ...userProfile,
+        display_name: newDisplayName,
+        avatar_url: newAvatar,
+        bio: newBio
+      };
+      
+      updateAuthUI();
+      
+      profileEditSuccess.textContent = 'Profile updated successfully!';
+      profileEditSuccess.classList.remove('hidden');
+      
+      setTimeout(() => {
+        profileStatsTab.click();
+        document.getElementById('profileDisplayName').textContent = newDisplayName;
+        document.getElementById('profileAvatar').textContent = newAvatar;
+      }, 1000);
+      
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      profileEditError.textContent = 'Error updating profile. Please try again.';
+      profileEditError.classList.remove('hidden');
     }
   }
 
@@ -3101,15 +3450,68 @@
     userMenuDropdown.classList.add('hidden');
   });
   
-  // Placeholder for stats and profile - will implement later
+  // Menu actions - Stats and Profile
   userMenuStats.addEventListener('click', () => {
-    toast('Stats feature coming soon!', 2000);
+    openProfileModal();
     userMenuDropdown.classList.add('hidden');
   });
   
   userMenuProfile.addEventListener('click', () => {
-    toast('Profile feature coming soon!', 2000);
+    openProfileModal();
     userMenuDropdown.classList.add('hidden');
+  });
+  
+  // Profile Modal Event Listeners
+  closeProfileModal.addEventListener('click', closeProfileModalFn);
+  
+  // Tab switching
+  profileStatsTab.addEventListener('click', () => {
+    profileStatsTab.classList.add('active');
+    profileStatsTab.style.cssText = 'border-color: #422d1e; color: #422d1e; opacity: 1;';
+    profileEditTab.classList.remove('active');
+    profileEditTab.style.cssText = 'color: #422d1e; opacity: 0.6; border-color: transparent;';
+    
+    profileStatsContent.classList.remove('hidden');
+    profileEditContent.classList.add('hidden');
+  });
+  
+  profileEditTab.addEventListener('click', () => {
+    profileEditTab.classList.add('active');
+    profileEditTab.style.cssText = 'border-color: #422d1e; color: #422d1e; opacity: 1;';
+    profileStatsTab.classList.remove('active');
+    profileStatsTab.style.cssText = 'color: #422d1e; opacity: 0.6; border-color: transparent;';
+    
+    profileEditContent.classList.remove('hidden');
+    profileStatsContent.classList.add('hidden');
+  });
+  
+  // Emoji picker
+  document.querySelectorAll('.emoji-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const emoji = btn.dataset.emoji;
+      selectedAvatar.value = emoji;
+      
+      // Update visual selection
+      document.querySelectorAll('.emoji-btn').forEach(b => {
+        b.style.cssText = '';
+      });
+      btn.style.cssText = 'background-color: #422d1e; color: #f2eceb;';
+    });
+  });
+  
+  // Profile edit form
+  profileEditForm.addEventListener('submit', updateUserProfile);
+  
+  cancelEditProfile.addEventListener('click', () => {
+    profileStatsTab.click();
+  });
+  
+  // Close modal when clicking outside
+  profileModal.addEventListener('click', (e) => {
+    if (e.target === profileModal) {
+      closeProfileModalFn();
+    }
   });
 
   // ----------------------------

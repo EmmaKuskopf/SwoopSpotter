@@ -2228,7 +2228,10 @@
     return `
       <div class="space-y-2">
         <div class="font-medium ${levelClass}">${escapeHtml(level)}</div>
-        <div class="text-sm text-gray-600">${new Date(report.timestamp).toLocaleString()}</div>
+        <div class="text-sm text-gray-600">
+          ${new Date(report.timestamp).toLocaleString()}
+          ${report.created_by_name ? ` • Reported by ${escapeHtml(report.created_by_name)}` : ''}
+        </div>
         <div class="text-sm"><b>Bird behavior:</b> ${escapeHtml((report.birdBehaviour||[]).join(', '))}</div>
         <div class="text-sm"><b>Human activity:</b> ${escapeHtml((report.humanBehaviour||[]).join(', '))}</div>
         <div class="text-sm"><b>Precautions:</b> ${escapeHtml((report.precautions||[]).join(', '))}</div>
@@ -2266,7 +2269,10 @@
             <div class="p-3 rounded bg-white border-l-4 shadow-sm ${cls}">
               <div class="flex justify-between items-start mb-2">
                 <div class="font-medium ${textColor}">${escapeHtml(level)}</div>
-                <div class="text-xs text-gray-500">${new Date(report.timestamp).toLocaleString()}</div>
+                <div class="text-xs text-gray-500">
+                  ${new Date(report.timestamp).toLocaleString()}
+                  ${report.created_by_name ? `<br>by ${escapeHtml(report.created_by_name)}` : ''}
+                </div>
               </div>
               <div class="space-y-2">
                 <div class="text-sm">
@@ -2304,18 +2310,22 @@
     const tabButtons = detailsModal.querySelectorAll('.tab-btn');
     const tabContents = detailsModal.querySelectorAll('.tab-content');
 
-    // First update all tab buttons
+    // Update all tab buttons with inline styles
     tabButtons.forEach(btn => {
       if (btn.dataset.tab === tabId) {
-        btn.classList.add('border-blue-500', 'text-blue-600', 'active');
-        btn.classList.remove('text-gray-500', 'border-transparent');
+        btn.classList.add('active');
+        btn.style.borderColor = '#422d1e';
+        btn.style.color = '#422d1e';
+        btn.style.opacity = '1';
       } else {
-        btn.classList.remove('border-blue-500', 'text-blue-600', 'active');
-        btn.classList.add('text-gray-500', 'border-transparent');
+        btn.classList.remove('active');
+        btn.style.borderColor = 'transparent';
+        btn.style.color = '#422d1e';
+        btn.style.opacity = '0.6';
       }
     });
 
-    // Then update all tab contents
+    // Update all tab contents
     tabContents.forEach(content => {
       if (content.id === `${tabId}Tab`) {
         content.classList.add('active');

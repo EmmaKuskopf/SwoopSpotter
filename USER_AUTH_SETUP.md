@@ -236,9 +236,53 @@ This allows:
 - Verify email settings in Supabase → Authentication → Email Templates
 - Make sure "Enable Email Confirmations" is ON
 
+### Email confirmation link expired or failed
+**Problem:** Clicked the confirmation link but got an error like "access_denied" or "otp_expired"
+
+**Causes:**
+- Confirmation links expire after 24 hours by default
+- Redirect URL may not be configured correctly
+
+**Solutions:**
+
+**Option 1: Manually confirm the user (Quickest)**
+1. Go to Supabase Dashboard → **Authentication** → **Users**
+2. Find the user account
+3. Look for the user details/edit view
+4. Find **"Email Confirmed At"** field or similar
+5. Set the current timestamp or toggle "Email Confirmed" to ON
+6. User can now sign in immediately!
+
+**Option 2: Disable email confirmation for development (Recommended)**
+1. Go to **Authentication** → **Providers** → **Email**
+2. Find **"Confirm email"** toggle
+3. Turn it **OFF**
+4. Save changes
+5. New signups will work instantly without needing email confirmation
+6. Re-enable it later when ready for production
+
+**Option 3: Configure redirect URLs properly**
+1. Go to **Authentication** → **URL Configuration** (or **Settings**)
+2. Set **Site URL**: `https://emmakuskopf.github.io/SwoopSpotter/`
+3. Add **Redirect URLs**:
+   - `https://emmakuskopf.github.io/SwoopSpotter/**`
+   - `http://localhost:5500/**` (for local testing)
+   - `http://127.0.0.1:5500/**` (for local testing)
+4. Save changes
+5. New confirmation emails will have working links
+
+**Option 4: Extend confirmation link expiry**
+1. Go to **Authentication** → **Settings** (or **Email Auth**)
+2. Look for link expiration settings
+3. Increase the expiration time if available
+4. Save changes
+
+**Note:** For development, Option 2 (disabling confirmation) is easiest and lets you test faster!
+
 ### "Invalid login credentials"
 - Wrong email or password
 - Email may not be confirmed yet (check inbox)
+- If email confirmation is enabled, manually confirm user in Supabase (see above)
 - Try password reset (future feature)
 
 ### User button not appearing after sign in
@@ -250,6 +294,22 @@ This allows:
 - You must be signed in to create spots now
 - Check that RLS policies were created correctly
 - Verify user_id is being set in saveSpotToSupabase()
+
+### Profile display name shows email instead of actual name
+**Problem:** User menu shows email address instead of display name
+
+**Causes:**
+- Profile trigger didn't capture display_name from user_metadata
+- Profile created before display_name was set
+
+**Solutions:**
+1. Go to Supabase → **Table Editor** → **profiles**
+2. Find the user's profile row
+3. Edit the **display_name** column
+4. Set it to the desired name
+5. User needs to sign out and back in to see the change
+
+**Prevention:** The JavaScript now has a fallback that automatically updates the profile if display_name is missing!
 
 ---
 

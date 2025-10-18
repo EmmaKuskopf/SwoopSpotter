@@ -832,6 +832,14 @@
     
     if (profile) {
       userProfile = profile;
+      console.log('Profile loaded:', profile);
+    } else {
+      console.log('No profile found, user metadata:', user.user_metadata);
+      // Profile might not exist yet, use metadata as fallback
+      userProfile = {
+        display_name: user.user_metadata?.display_name || user.email.split('@')[0],
+        email: user.email
+      };
     }
     
     // Update UI
@@ -840,7 +848,7 @@
     // Reload spots with user context
     await loadAllFromSupabase();
     
-    toast(`Welcome back, ${userProfile?.display_name || user.email}!`, 2000);
+    toast(`Welcome back, ${userProfile?.display_name || user.email.split('@')[0]}!`, 2000);
   }
   
   // Update UI based on auth state
@@ -850,11 +858,19 @@
       signInButton.classList.add('hidden');
       userButton.classList.remove('hidden');
       userButton.classList.add('flex');
-      userButtonName.textContent = userProfile?.display_name || currentUser.email.split('@')[0];
+      
+      // Get display name from profile or user metadata or email
+      const displayName = userProfile?.display_name || 
+                         currentUser.user_metadata?.display_name || 
+                         currentUser.email.split('@')[0];
+      
+      userButtonName.textContent = displayName;
       
       // Update menu
-      userMenuName.textContent = userProfile?.display_name || 'User';
+      userMenuName.textContent = displayName;
       userMenuEmail.textContent = currentUser.email;
+      
+      console.log('UI updated with display name:', displayName);
     } else {
       // Show sign in, hide user button
       signInButton.classList.remove('hidden');
@@ -909,11 +925,51 @@
       
       if (error) throw error;
       
+      // If user was created, ensure profile has correct display name
+      if (data.user) {
+        // Wait a bit for trigger to fire, then check/update profile
+        setTimeout(async () => {
+          try {
+            const { data: existingProfile } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', data.user.id)
+              .single();
+            
+            if (existingProfile && !existingProfile.display_name) {
+              // Update profile with correct display name
+              await supabase
+                .from('profiles')
+                .update({ display_name: name })
+                .eq('id', data.user.id);
+              console.log('Profile display name updated to:', name);
+            } else if (!existingProfile) {
+              // Create profile manually if trigger didn't work
+              await supabase
+                .from('profiles')
+                .insert({
+                  id: data.user.id,
+                  email: email,
+                  display_name: name
+                });
+              console.log('Profile created manually with display name:', name);
+            }
+          } catch (profileError) {
+            console.warn('Profile update/create failed:', profileError);
+          }
+        }, 1000);
+      }
+      
       authModal.classList.add('hidden');
       signUpError.classList.add('hidden');
       signUpForm.reset();
       
-      toast('Account created! Please check your email to verify.', 4000);
+      // Check if email confirmation is required
+      if (data.user && !data.session) {
+        toast('Account created! Please check your email to verify.', 4000);
+      } else {
+        toast('Account created! You can now start creating spots.', 3000);
+      }
       
       return { success: true };
     } catch (error) {

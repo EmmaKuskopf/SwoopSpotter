@@ -28,6 +28,12 @@ CREATE POLICY "Profiles are viewable by everyone"
   ON public.profiles FOR SELECT
   USING (true);
 
+-- Users can insert their own profile (for manual profile creation)
+CREATE POLICY "Users can insert own profile"
+  ON public.profiles FOR INSERT
+  TO authenticated
+  WITH CHECK (auth.uid() = id);
+
 -- Users can only update their own profile
 CREATE POLICY "Users can update own profile"
   ON public.profiles FOR UPDATE

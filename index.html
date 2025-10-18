@@ -190,8 +190,20 @@
 <body class="min-h-screen">
 
 <header class="shadow sticky top-0 z-50" style="background-color: #f2eceb;">
-  <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-center">
+  <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+    <div class="flex-1"></div>
     <img src="Assets/Logo/Logo-Horizontal.svg" alt="Swoop Spotter Logo" class="h-8" />
+    <div class="flex-1 flex justify-end">
+      <!-- User Button (shown when signed in) -->
+      <button id="userButton" class="hidden items-center gap-2 px-3 py-1.5 rounded" style="background-color: #e8e2e1; color: #422d1e;" onmouseover="this.style.backgroundColor='#dcd6d5'" onmouseout="this.style.backgroundColor='#e8e2e1'">
+        <span id="userButtonName">User</span>
+        <span class="text-xs">▾</span>
+      </button>
+      <!-- Sign In Button (shown when signed out) -->
+      <button id="signInButton" class="items-center gap-2 px-4 py-1.5 rounded text-white" style="background-color: #422d1e;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+        Sign In
+      </button>
+    </div>
   </div>
 </header>
 
@@ -480,6 +492,80 @@
   </div>
 </div>
 
+<!-- Auth Modal -->
+<div id="authModal" class="hidden fixed inset-0 flex items-center justify-center bg-black/40 z-50 p-4">
+  <div class="rounded-lg shadow-lg p-6 max-w-md w-full" style="background-color: #f2eceb;">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-xl font-bold" style="color: #422d1e;" id="authModalTitle">Sign In</h3>
+      <button id="closeAuthModal" class="text-2xl" style="color: #422d1e; opacity: 0.7;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">&times;</button>
+    </div>
+    
+    <!-- Auth Tabs -->
+    <div class="flex gap-2 mb-4" style="border-bottom: 1px solid #d4cac7;">
+      <button id="signInTab" class="auth-tab active px-4 py-2 font-medium border-b-2" style="border-color: #422d1e; color: #422d1e;">
+        Sign In
+      </button>
+      <button id="signUpTab" class="auth-tab px-4 py-2 font-medium border-b-2 border-transparent" style="color: #422d1e; opacity: 0.6;">
+        Sign Up
+      </button>
+    </div>
+    
+    <!-- Sign In Form -->
+    <form id="signInForm" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium mb-1" style="color: #422d1e;">Email</label>
+        <input type="email" id="signInEmail" required class="w-full rounded p-2" style="border: 1px solid #d4cac7; background-color: #fff;" placeholder="your@email.com">
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1" style="color: #422d1e;">Password</label>
+        <input type="password" id="signInPassword" required class="w-full rounded p-2" style="border: 1px solid #d4cac7; background-color: #fff;" placeholder="••••••••">
+      </div>
+      <div id="signInError" class="hidden text-sm text-red-600"></div>
+      <button type="submit" class="w-full px-4 py-2 text-white rounded" style="background-color: #422d1e;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+        Sign In
+      </button>
+    </form>
+    
+    <!-- Sign Up Form -->
+    <form id="signUpForm" class="space-y-4 hidden">
+      <div>
+        <label class="block text-sm font-medium mb-1" style="color: #422d1e;">Display Name</label>
+        <input type="text" id="signUpName" required class="w-full rounded p-2" style="border: 1px solid #d4cac7; background-color: #fff;" placeholder="Your name">
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1" style="color: #422d1e;">Email</label>
+        <input type="email" id="signUpEmail" required class="w-full rounded p-2" style="border: 1px solid #d4cac7; background-color: #fff;" placeholder="your@email.com">
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1" style="color: #422d1e;">Password</label>
+        <input type="password" id="signUpPassword" required minlength="6" class="w-full rounded p-2" style="border: 1px solid #d4cac7; background-color: #fff;" placeholder="••••••••">
+        <p class="text-xs mt-1" style="color: #422d1e; opacity: 0.6;">Minimum 6 characters</p>
+      </div>
+      <div id="signUpError" class="hidden text-sm text-red-600"></div>
+      <button type="submit" class="w-full px-4 py-2 text-white rounded" style="background-color: #422d1e;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+        Sign Up
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- User Menu Dropdown -->
+<div id="userMenuDropdown" class="hidden absolute top-16 right-4 rounded-lg shadow-lg p-2 z-50" style="background-color: #f2eceb; border: 1px solid #d4cac7; min-width: 200px;">
+  <div class="px-3 py-2 border-b" style="border-color: #d4cac7;">
+    <div class="font-medium" style="color: #422d1e;" id="userMenuName">User Name</div>
+    <div class="text-xs" style="color: #422d1e; opacity: 0.6;" id="userMenuEmail">email@example.com</div>
+  </div>
+  <button id="userMenuStats" class="w-full text-left px-3 py-2 text-sm rounded hover:bg-gray-100" style="color: #422d1e;">
+    📊 My Stats
+  </button>
+  <button id="userMenuProfile" class="w-full text-left px-3 py-2 text-sm rounded hover:bg-gray-100" style="color: #422d1e;">
+    ⚙️ Profile
+  </button>
+  <button id="userMenuSignOut" class="w-full text-left px-3 py-2 text-sm rounded hover:bg-gray-100 text-red-600">
+    🚪 Sign Out
+  </button>
+</div>
+
 <script>
 (() => {
   // ----------------------------
@@ -490,6 +576,12 @@
   
   // Initialize Supabase client
   const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  
+  // ----------------------------
+  // Authentication State
+  // ----------------------------
+  let currentUser = null;
+  let userProfile = null;
   
   // Sync state
   let isSyncing = false;
@@ -589,6 +681,30 @@
   const exitPromptList = document.getElementById('exitPromptList');
   const closeExitPrompt = document.getElementById('closeExitPrompt');
 
+  // Auth UI refs
+  const authModal = document.getElementById('authModal');
+  const closeAuthModal = document.getElementById('closeAuthModal');
+  const signInTab = document.getElementById('signInTab');
+  const signUpTab = document.getElementById('signUpTab');
+  const signInForm = document.getElementById('signInForm');
+  const signUpForm = document.getElementById('signUpForm');
+  const signInEmail = document.getElementById('signInEmail');
+  const signInPassword = document.getElementById('signInPassword');
+  const signInError = document.getElementById('signInError');
+  const signUpName = document.getElementById('signUpName');
+  const signUpEmail = document.getElementById('signUpEmail');
+  const signUpPassword = document.getElementById('signUpPassword');
+  const signUpError = document.getElementById('signUpError');
+  const signInButton = document.getElementById('signInButton');
+  const userButton = document.getElementById('userButton');
+  const userButtonName = document.getElementById('userButtonName');
+  const userMenuDropdown = document.getElementById('userMenuDropdown');
+  const userMenuName = document.getElementById('userMenuName');
+  const userMenuEmail = document.getElementById('userMenuEmail');
+  const userMenuStats = document.getElementById('userMenuStats');
+  const userMenuProfile = document.getElementById('userMenuProfile');
+  const userMenuSignOut = document.getElementById('userMenuSignOut');
+
   const trackLocationBtn = document.getElementById('trackLocationBtn');
   const trackBtnText = document.getElementById('trackBtnText');
   const useGPSBtn = document.getElementById('useGPSBtn');
@@ -683,6 +799,143 @@
   function escapeHtml(s){ if(s==null) return ''; return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'); }
 
   // ----------------------------
+  // Authentication Functions
+  // ----------------------------
+  
+  // Check auth state on load
+  async function initAuth() {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      await handleAuthStateChange(session.user);
+    }
+    
+    // Listen for auth changes
+    supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        await handleAuthStateChange(session.user);
+      } else if (event === 'SIGNED_OUT') {
+        handleSignOut();
+      }
+    });
+  }
+  
+  // Handle user sign in
+  async function handleAuthStateChange(user) {
+    currentUser = user;
+    
+    // Fetch user profile
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+    
+    if (profile) {
+      userProfile = profile;
+    }
+    
+    // Update UI
+    updateAuthUI();
+    
+    // Reload spots with user context
+    await loadAllFromSupabase();
+    
+    toast(`Welcome back, ${userProfile?.display_name || user.email}!`, 2000);
+  }
+  
+  // Update UI based on auth state
+  function updateAuthUI() {
+    if (currentUser) {
+      // Show user button, hide sign in
+      signInButton.classList.add('hidden');
+      userButton.classList.remove('hidden');
+      userButton.classList.add('flex');
+      userButtonName.textContent = userProfile?.display_name || currentUser.email.split('@')[0];
+      
+      // Update menu
+      userMenuName.textContent = userProfile?.display_name || 'User';
+      userMenuEmail.textContent = currentUser.email;
+    } else {
+      // Show sign in, hide user button
+      signInButton.classList.remove('hidden');
+      userButton.classList.add('hidden');
+      userMenuDropdown.classList.add('hidden');
+    }
+  }
+  
+  // Handle sign out
+  function handleSignOut() {
+    currentUser = null;
+    userProfile = null;
+    updateAuthUI();
+    toast('Signed out successfully', 2000);
+  }
+  
+  // Sign in with email/password
+  async function signIn(email, password) {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password
+      });
+      
+      if (error) throw error;
+      
+      authModal.classList.add('hidden');
+      signInError.classList.add('hidden');
+      signInForm.reset();
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Sign in error:', error);
+      signInError.textContent = error.message;
+      signInError.classList.remove('hidden');
+      return { success: false, error };
+    }
+  }
+  
+  // Sign up with email/password
+  async function signUp(name, email, password) {
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: email,
+        password: password,
+        options: {
+          data: {
+            display_name: name
+          }
+        }
+      });
+      
+      if (error) throw error;
+      
+      authModal.classList.add('hidden');
+      signUpError.classList.add('hidden');
+      signUpForm.reset();
+      
+      toast('Account created! Please check your email to verify.', 4000);
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Sign up error:', error);
+      signUpError.textContent = error.message;
+      signUpError.classList.remove('hidden');
+      return { success: false, error };
+    }
+  }
+  
+  // Sign out
+  async function signOutUser() {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+    } catch (error) {
+      console.error('Sign out error:', error);
+      toast('Error signing out', 2000);
+    }
+  }
+
+  // ----------------------------
   // Persistence (Supabase + localStorage fallback)
   // ----------------------------
   
@@ -700,7 +953,9 @@
         species: spot.species,
         lat: Number(spot.lat),
         lng: Number(spot.lng),
-        risk: spot.risk
+        risk: spot.risk,
+        user_id: currentUser?.id || null,
+        created_by_name: currentUser ? (userProfile?.display_name || currentUser.email.split('@')[0]) : null
       };
       
       // Upsert spot (insert or update)
@@ -721,7 +976,9 @@
           human_behaviour: r.humanBehaviour || [],
           precautions: r.precautions || [],
           extra_details: r.extraDetails || '',
-          timestamp: r.timestamp
+          timestamp: r.timestamp,
+          user_id: r.user_id || currentUser?.id || null,
+          created_by_name: r.created_by_name || (currentUser ? (userProfile?.display_name || currentUser.email.split('@')[0]) : null)
         }));
         
         const { error: reportsError } = await supabase
@@ -1243,7 +1500,9 @@
         humanBehaviour: selectedRHuman.slice(),
         precautions: selectedRPrec.slice(),
         extra: reextra.value.trim(),
-        alertLevel: computeAlertFromBirds(selectedRBird)
+        alertLevel: computeAlertFromBirds(selectedRBird),
+        user_id: currentUser?.id || null,
+        created_by_name: currentUser ? (userProfile?.display_name || currentUser.email.split('@')[0]) : 'Anonymous'
       };
 
       // determine spot risk based on initial report (same immediate raise)
@@ -1901,7 +2160,9 @@
       humanBehaviour: selectedReportHuman.slice(),
       precautions: selectedReportPrec.slice(),
       extra: repExtraField ? repExtraField.value.trim() : '',
-      alertLevel: computeAlertFromBirds(selectedReportBird)
+      alertLevel: computeAlertFromBirds(selectedReportBird),
+      user_id: currentUser?.id || null,
+      created_by_name: currentUser ? (userProfile?.display_name || currentUser.email.split('@')[0]) : 'Anonymous'
     };
     
     // Add report to spot
@@ -2700,10 +2961,109 @@
   });
 
   // ----------------------------
+  // ----------------------------
+  // Auth UI Event Listeners
+  // ----------------------------
+  
+  // Open auth modal
+  signInButton.addEventListener('click', () => {
+    authModal.classList.remove('hidden');
+    signInForm.classList.remove('hidden');
+    signUpForm.classList.add('hidden');
+    signInTab.classList.add('active');
+    signUpTab.classList.remove('active');
+    signInError.classList.add('hidden');
+    signUpError.classList.add('hidden');
+  });
+  
+  // Close auth modal
+  closeAuthModal.addEventListener('click', () => {
+    authModal.classList.add('hidden');
+    signInForm.reset();
+    signUpForm.reset();
+    signInError.classList.add('hidden');
+    signUpError.classList.add('hidden');
+  });
+  
+  // Tab switching
+  signInTab.addEventListener('click', () => {
+    signInForm.classList.remove('hidden');
+    signUpForm.classList.add('hidden');
+    signInTab.classList.add('active');
+    signInTab.style.borderColor = '#422d1e';
+    signInTab.style.opacity = '1';
+    signUpTab.classList.remove('active');
+    signUpTab.style.borderColor = 'transparent';
+    signUpTab.style.opacity = '0.6';
+    signInError.classList.add('hidden');
+    signUpError.classList.add('hidden');
+  });
+  
+  signUpTab.addEventListener('click', () => {
+    signUpForm.classList.remove('hidden');
+    signInForm.classList.add('hidden');
+    signUpTab.classList.add('active');
+    signUpTab.style.borderColor = '#422d1e';
+    signUpTab.style.opacity = '1';
+    signInTab.classList.remove('active');
+    signInTab.style.borderColor = 'transparent';
+    signInTab.style.opacity = '0.6';
+    signInError.classList.add('hidden');
+    signUpError.classList.add('hidden');
+  });
+  
+  // Sign in form submit
+  signInForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    await signIn(signInEmail.value, signInPassword.value);
+  });
+  
+  // Sign up form submit
+  signUpForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    await signUp(signUpName.value, signUpEmail.value, signUpPassword.value);
+  });
+  
+  // User button - toggle menu
+  userButton.addEventListener('click', (e) => {
+    e.stopPropagation();
+    userMenuDropdown.classList.toggle('hidden');
+  });
+  
+  // Close menu when clicking outside
+  document.addEventListener('click', () => {
+    userMenuDropdown.classList.add('hidden');
+  });
+  
+  userMenuDropdown.addEventListener('click', (e) => {
+    e.stopPropagation();
+  });
+  
+  // Menu actions
+  userMenuSignOut.addEventListener('click', async () => {
+    await signOutUser();
+    userMenuDropdown.classList.add('hidden');
+  });
+  
+  // Placeholder for stats and profile - will implement later
+  userMenuStats.addEventListener('click', () => {
+    toast('Stats feature coming soon!', 2000);
+    userMenuDropdown.classList.add('hidden');
+  });
+  
+  userMenuProfile.addEventListener('click', () => {
+    toast('Profile feature coming soon!', 2000);
+    userMenuDropdown.classList.add('hidden');
+  });
+
+  // ----------------------------
   // Initial load default spot if none
   // ----------------------------
   // initialize tag UIs once at startup
   initializeAllTagUIs();
+  
+  // Initialize authentication
+  initAuth();
 
   // Load spots from Supabase (with fallback to localStorage)
   (async () => {

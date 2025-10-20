@@ -767,7 +767,23 @@
     else iconName = 'swoop_low.svg';
     return `<img src="Assets/Icons/${iconName}" width="48" height="48" alt="Bird icon" class="rounded-lg">`;
   }
-  const userIcon = L.divIcon({ className:'user-marker', html: `<img src="Assets/Icons/user.svg" width="36" height="36" alt="User icon">`, iconSize:[36,36], iconAnchor:[18,34] });
+  
+  // Function to get user icon based on their profile avatar
+  function getUserIcon() {
+    // Get avatar filename from profile (e.g., "user_3.svg")
+    const avatarFilename = userProfile?.avatar_url || 'user.svg';
+    // Construct full path based on whether it's a user avatar or default icon
+    const avatarPath = avatarFilename.startsWith('user_') 
+      ? `Assets/Users Icons/${avatarFilename}` 
+      : `Assets/Icons/${avatarFilename}`;
+    
+    return L.divIcon({ 
+      className:'', // Empty className to avoid default Leaflet divIcon styles
+      html: `<img src="${avatarPath}" width="36" height="36" alt="User icon">`, 
+      iconSize:[36,36], 
+      iconAnchor:[18,18] 
+    });
+  }
 
   // DOM refs
   const openAddBtn = document.getElementById('openAddBtn');
@@ -938,6 +954,31 @@
   }
   
   function uid(){ return 's_' + Math.random().toString(36).slice(2,9); }
+
+  // Format timestamp to show relative time
+  function formatTimeAgo(timestamp) {
+    const now = Date.now();
+    const then = new Date(timestamp).getTime();
+    const diff = now - then;
+    
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+    
+    if (days > 0) {
+      return `${days} day${days > 1 ? 's' : ''} ago`;
+    }
+    
+    if (hours > 0) {
+      const remainingMinutes = minutes % 60;
+      if (remainingMinutes > 0) {
+        return `${hours} hour${hours > 1 ? 's' : ''} ${remainingMinutes} minute${remainingMinutes > 1 ? 's' : ''} ago`;
+      }
+      return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    }
+    
+    return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+  }
 
   // Debounce helper
   function debounce(func, wait) {
@@ -1349,6 +1390,15 @@
       };
       
       updateAuthUI();
+      
+      // Update user marker icon on map
+      if (userMarker) {
+        try {
+          userMarker.setIcon(getUserIcon());
+        } catch(e) {
+          console.error('Error updating user marker icon:', e);
+        }
+      }
       
       profileEditSuccess.textContent = 'Profile updated successfully!';
       profileEditSuccess.classList.remove('hidden');
@@ -2684,7 +2734,7 @@
   let visitedSpots = new Set(); // Track spots visited during current journey
   
   function checkLocation(lat,lng){
-    if(userMarker){ try{ userMarker.setLatLng([lat,lng]); } catch(e){} } else { userMarker = L.marker([lat,lng], { icon: userIcon }).addTo(map); }
+    if(userMarker){ try{ userMarker.setLatLng([lat,lng]); } catch(e){} } else { userMarker = L.marker([lat,lng], { icon: getUserIcon() }).addTo(map); }
     
     // Find all spots the user is currently inside
     let insideSpots = [];
@@ -2855,6 +2905,13 @@
 
   // Show quick alert for spot from list
   function showSpotQuickAlert(s) {
+    // Get latest report timestamp
+    let lastReportedText = '';
+    if (s.reports && s.reports.length > 0) {
+      const latestReport = s.reports[s.reports.length - 1];
+      lastReportedText = `<div class="text-xs text-gray-500 mt-1">Last reported: ${formatTimeAgo(latestReport.timestamp)}</div>`;
+    }
+    
     alertBox.innerHTML = `
       <div class="flex items-start justify-between gap-4">
         <div>
@@ -2863,6 +2920,7 @@
             ${escapeHtml(s.risk)}
           </div>
           <div class="text-xs text-gray-600 mt-1">${s.reports.length} report${s.reports.length === 1 ? '' : 's'}</div>
+          ${lastReportedText}
         </div>
         <div class="flex items-center gap-2">
           <button id="showMoreBtn" class="text-xs bg-yellow-500 hover:bg-yellow-600 text-white rounded px-3 py-1.5">Show More</button>
@@ -3192,7 +3250,7 @@
       for(let i=0;i<=steps;i++) simPath.push({ lat: g1.lat + (g2.lat - g1.lat)*(i/steps), lng: g1.lng + (g2.lng - g1.lng)*(i/steps) });
       simIndex = 0;
       if(userMarker) try{ map.removeLayer(userMarker); } catch(e){}
-      userMarker = L.marker([simPath[0].lat, simPath[0].lng], { icon: userIcon }).addTo(map);
+      userMarker = L.marker([simPath[0].lat, simPath[0].lng], { icon: getUserIcon() }).addTo(map);
       if(simTimer) clearInterval(simTimer);
       simTimer = setInterval(()=> {
         simIndex++;

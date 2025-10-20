@@ -196,7 +196,6 @@
     <div class="flex-1 flex justify-end">
       <!-- User Button (shown when signed in) -->
       <button id="userButton" class="hidden items-center gap-2 px-3 py-1.5 rounded" style="background-color: #e8e2e1; color: #422d1e;" onmouseover="this.style.backgroundColor='#dcd6d5'" onmouseout="this.style.backgroundColor='#e8e2e1'">
-        <img src="Assets/Icons/user.svg" alt="User" style="width: 20px; height: 20px;">
         <span id="userButtonName">User</span>
         <span class="text-xs">▾</span>
       </button>
@@ -1081,18 +1080,12 @@
       
       userButtonName.textContent = displayName;
       
-      // Update user button avatar
-      const userButtonAvatar = userButton.querySelector('img');
-      const avatarUrl = userProfile?.avatar_url || 'user_1.svg';
-      if (userButtonAvatar) {
-        userButtonAvatar.src = `Assets/Users Icons/${avatarUrl}`;
-      }
-      
       // Update menu
       userMenuName.textContent = displayName;
       userMenuEmail.textContent = currentUser.email;
       
       // Update menu avatar
+      const avatarUrl = userProfile?.avatar_url || 'user_1.svg';
       const userMenuAvatar = document.getElementById('userMenuAvatar');
       if (userMenuAvatar) {
         userMenuAvatar.src = `Assets/Users Icons/${avatarUrl}`;
@@ -2196,6 +2189,7 @@
       // Just increment the safe passage counter
       if (!s.safePassageCount) s.safePassageCount = 0;
       s.safePassageCount++;
+      s.lastSafePassage = new Date().toISOString();
       
       saveAll();
       
@@ -2864,6 +2858,7 @@
     // Increment safe passage count
     if (!spot.safePassageCount) spot.safePassageCount = 0;
     spot.safePassageCount++;
+    spot.lastSafePassage = new Date().toISOString();
     saveAll();
     
     // Remove from spots to address
@@ -2912,6 +2907,12 @@
       lastReportedText = `<div class="text-xs text-gray-500 mt-1">Last reported: ${formatTimeAgo(latestReport.timestamp)}</div>`;
     }
     
+    // Get last safe passage timestamp
+    let lastSafePassageText = '';
+    if (s.lastSafePassage) {
+      lastSafePassageText = `<div class="text-xs text-gray-500 mt-1">Last safe passage: ${formatTimeAgo(s.lastSafePassage)}</div>`;
+    }
+    
     alertBox.innerHTML = `
       <div class="flex items-start justify-between gap-4">
         <div>
@@ -2921,6 +2922,7 @@
           </div>
           <div class="text-xs text-gray-600 mt-1">${s.reports.length} report${s.reports.length === 1 ? '' : 's'}</div>
           ${lastReportedText}
+          ${lastSafePassageText}
         </div>
         <div class="flex items-center gap-2">
           <button id="showMoreBtn" class="text-xs bg-yellow-500 hover:bg-yellow-600 text-white rounded px-3 py-1.5">Show More</button>

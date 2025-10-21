@@ -228,6 +228,9 @@
     <button id="addSpotBelowMap" class="px-6 py-2 rounded text-white font-medium" style="background-color: #422d1e;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
       + Add Swoop Spot
     </button>
+    <button id="safetyTipsBtn" class="px-6 py-2 rounded text-white font-medium" style="background-color: #10B981;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+      🛡️ Safety Tips
+    </button>
     <button id="testVibrateBtn" class="px-4 py-2 rounded text-sm border" style="border-color: #d4cac7; color: #422d1e;" onmouseover="this.style.backgroundColor='#e8e2e1'" onmouseout="this.style.backgroundColor='transparent'">
       Test Vibration 📳
     </button>
@@ -492,6 +495,38 @@
   </div>
 </div>
 
+<!-- Safety Tips Modal -->
+<div id="safetyTipsModal" class="hidden fixed inset-0 flex items-center justify-center bg-black/40 z-50 p-4 overflow-y-auto">
+  <div class="rounded-lg shadow-lg w-full max-w-2xl mx-auto my-auto" style="background-color: #f2eceb;">
+    <div class="p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-bold" style="color: #422d1e;">Safety Tips</h3>
+        <button id="closeSafetyTips" class="text-2xl" style="color: #422d1e; opacity: 0.7;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">&times;</button>
+      </div>
+      
+      <!-- Species selector -->
+      <div class="mb-4">
+        <label class="block text-sm font-medium mb-2" style="color: #422d1e;">Select bird species for specific tips:</label>
+        <select id="tipsSpeciesSelect" class="w-full rounded-lg p-2" style="padding: 8px 12px; border-radius: 8px; border: 1px solid #d4cac7; background-color: #fff; color: #422d1e;">
+          <option value="general">General Tips (All Birds)</option>
+          <option value="Magpie">Magpie</option>
+          <option value="Magpie-Lark">Magpie-Lark</option>
+          <option value="Masked Lapwing (plover)">Masked Lapwing (Plover)</option>
+          <option value="Butcherbird">Butcherbird</option>
+          <option value="Crow">Crow</option>
+          <option value="Noisy Miner">Noisy Miner</option>
+          <option value="Noisy Friarbird">Noisy Friarbird</option>
+        </select>
+      </div>
+      
+      <!-- Tips content -->
+      <div id="tipsContent" class="space-y-4" style="color: #422d1e;">
+        <!-- Will be populated by JavaScript -->
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Auth Modal -->
 <div id="authModal" class="hidden fixed inset-0 flex items-center justify-center bg-black/40 z-50 p-4">
   <div class="rounded-lg shadow-lg p-6 max-w-md w-full" style="background-color: #f2eceb;">
@@ -566,7 +601,7 @@
   </button>
   <button id="userMenuProfile" class="w-full text-left px-3 py-2 text-sm rounded hover:bg-gray-100 flex items-center gap-2" style="color: #422d1e;">
     <img src="Assets/Icons/user.svg" alt="Profile" style="width: 18px; height: 18px;">
-    Profile
+    Edit Profile
   </button>
   <button id="userMenuSignOut" class="w-full text-left px-3 py-2 text-sm rounded hover:bg-gray-100 text-red-600 flex items-center gap-2">
     <img src="Assets/Icons/logout.svg" alt="Sign Out" style="width: 18px; height: 18px;">
@@ -838,6 +873,13 @@
   const exitPromptList = document.getElementById('exitPromptList');
   const closeExitPrompt = document.getElementById('closeExitPrompt');
 
+  // Safety Tips refs
+  const safetyTipsModal = document.getElementById('safetyTipsModal');
+  const closeSafetyTips = document.getElementById('closeSafetyTips');
+  const safetyTipsBtn = document.getElementById('safetyTipsBtn');
+  const tipsSpeciesSelect = document.getElementById('tipsSpeciesSelect');
+  const tipsContent = document.getElementById('tipsContent');
+
   // Auth UI refs
   const authModal = document.getElementById('authModal');
   const closeAuthModal = document.getElementById('closeAuthModal');
@@ -898,6 +940,151 @@
   const BIRD_BEHAVIOURS = ["noisy","swoop","close swoop","made contact + uninjured","made contact + injured"];
   const HUMAN_BEHAVIOURS = ["walking","running","cycling","riding e-scooter","alone","with others","with pram","with children","in group","other"];
   const PRECAUTIONS = ["Hat","Sunglasses","Umbrella","Helmet","Helmet with Cable Ties","Made Eye Contact","None"];
+
+  // Safety tips data
+  const SAFETY_TIPS = {
+    general: {
+      title: "General Bird Swooping Safety",
+      description: "These tips apply to most swooping birds during nesting season (typically August to November in Australia).",
+      tips: [
+        "Avoid the area if possible during nesting season",
+        "Travel in groups - birds usually target individuals",
+        "Wear a broad-brimmed hat or helmet",
+        "Carry an open umbrella above your head",
+        "Wear sunglasses or safety glasses to protect your eyes",
+        "Don't run - move calmly and quickly through the area",
+        "Face the bird and maintain eye contact while moving away",
+        "Dismount from bikes and scooters and walk through swooping zones",
+        "Attach cable ties or pipe cleaners to your helmet to deter birds",
+        "Take an alternate route if available",
+        "Don't attempt to harm or provoke the bird - they're protecting their nest",
+        "Report aggressive birds to local authorities"
+      ]
+    },
+    Magpie: {
+      title: "Australian Magpie Safety Tips",
+      description: "Magpies are highly territorial during breeding season and account for most swooping incidents. They have excellent memory and may target specific individuals.",
+      tips: [
+        "Magpies remember faces - if swooped, avoid that area for several weeks",
+        "Walk, don't run - running triggers their chase instinct",
+        "Wear a broad-brimmed hat and sunglasses",
+        "Attach cable ties or zip ties to your helmet (very effective for magpies)",
+        "Draw eyes on the back of your hat or helmet",
+        "Dismount your bike and walk it through the area",
+        "Travel in groups - magpies rarely swoop groups",
+        "Make eye contact and face the bird as you move away",
+        "Don't wave your arms or swing objects - this may provoke more attacks",
+        "Feed magpies in your yard outside nesting season to build positive associations",
+        "Most magpies only swoop for 4-6 weeks during nesting",
+        "Only 10% of male magpies actually swoop humans"
+      ]
+    },
+    "Magpie-Lark": {
+      title: "Magpie-Lark (Peewee) Safety Tips",
+      description: "Magpie-larks are smaller but can be very aggressive defenders of their territory. Despite the name, they're not related to magpies.",
+      tips: [
+        "Wear a hat or helmet for head protection",
+        "These birds are persistent but less dangerous than magpies",
+        "Move quickly but calmly through the area",
+        "Don't stop or linger near their nesting tree",
+        "They typically swoop within 50 meters of their nest",
+        "Face the bird and maintain eye contact",
+        "Carry an umbrella or stick held above your head",
+        "They're very protective but rarely make contact",
+        "Nesting season is shorter than magpies (usually 3-4 weeks of swooping)"
+      ]
+    },
+    "Masked Lapwing (plover)": {
+      title: "Masked Lapwing (Plover) Safety Tips",
+      description: "Plovers nest on the ground and are extremely protective of their eggs and chicks. They have distinctive yellow facial wattles and wing spurs.",
+      tips: [
+        "Watch for their distinctive alarm call - a loud, urgent cry",
+        "Look for ground nests (small depressions) and give them wide berth",
+        "Don't approach chicks - parents will attack",
+        "Plovers dive-bomb and may make contact with their wing spurs",
+        "Walk calmly around the area - running triggers attacks",
+        "Use an umbrella or raised object for protection",
+        "Wear a hat and glasses - they aim for the head",
+        "Take an alternate route if possible",
+        "If nesting near your property, mark the area with signs",
+        "Keep pets away - dogs are a major trigger",
+        "They're ground nesters so watch where you walk",
+        "Most aggressive when eggs are about to hatch or chicks are young"
+      ]
+    },
+    Butcherbird: {
+      title: "Butcherbird Safety Tips",
+      description: "Butcherbirds have powerful beaks and can be aggressive when defending territory. They're less common swoopers than magpies but more dangerous.",
+      tips: [
+        "Wear thick hat or helmet - their beaks are very strong",
+        "Protect your eyes with sunglasses or safety glasses",
+        "Move quickly through the area",
+        "Don't stop or make sudden movements",
+        "They often swoop silently without warning",
+        "Travel in groups for safety",
+        "Carry an umbrella or stick above your head",
+        "Face the bird and back away slowly if confronted",
+        "Avoid areas where you've been swooped previously",
+        "Their swooping period is usually shorter (2-3 weeks)",
+        "They may make contact and can draw blood",
+        "Report aggressive birds to wildlife authorities"
+      ]
+    },
+    Crow: {
+      title: "Australian Raven/Crow Safety Tips",
+      description: "Ravens and crows are intelligent birds that swoop when protecting nests. They're less common swoopers but very persistent.",
+      tips: [
+        "Wear a hat and eye protection",
+        "These birds have excellent memory - avoid areas where swooped",
+        "Move quickly but don't run",
+        "Face the bird and maintain eye contact",
+        "Use an umbrella for overhead protection",
+        "Travel in groups when possible",
+        "Don't feed crows during nesting season",
+        "They may swoop repeatedly in one area",
+        "Their beaks can cause injury",
+        "Respect their intelligence - they remember threats",
+        "Draw eyes on your hat to deter attacks",
+        "Report persistent swooping to local council"
+      ]
+    },
+    "Noisy Miner": {
+      title: "Noisy Miner Safety Tips",
+      description: "Noisy Miners are aggressive, territorial birds that nest in colonies. They're smaller but swoop in groups.",
+      tips: [
+        "Wear a hat for basic protection",
+        "Move quickly through the area",
+        "These birds are persistent but rarely dangerous",
+        "They may swoop repeatedly but seldom make contact",
+        "Travel in groups - though they may still swoop",
+        "Don't stop near flowering trees (their food source)",
+        "Use an umbrella if available",
+        "Face the birds as you move away",
+        "Their swooping is more harassment than attack",
+        "Keep moving - they swoop to drive you away",
+        "Protect your eyes just in case",
+        "They defend territories year-round, not just nesting season"
+      ]
+    },
+    "Noisy Friarbird": {
+      title: "Noisy Friarbird Safety Tips",
+      description: "Noisy Friarbirds are large, aggressive honeyeaters that defend feeding and nesting territories vigorously.",
+      tips: [
+        "Wear a hat and eye protection",
+        "These large birds can be quite aggressive",
+        "Move quickly through flowering tree areas",
+        "Don't linger near their food sources (nectar)",
+        "They may make contact with claws",
+        "Travel in groups for safety",
+        "Use an umbrella for overhead protection",
+        "Face the bird and back away",
+        "Avoid areas with active nests",
+        "Their large size makes their swoops more intimidating",
+        "Keep children and pets away from nesting areas",
+        "Report dangerous individuals to wildlife authorities"
+      ]
+    }
+  };
 
   // state
   let spots = []; // spot objects with reports array
@@ -1265,8 +1452,8 @@
   // Profile Modal Functions
   // ----------------------------
   
-  async function openProfileModal() {
-    console.log('openProfileModal called', { currentUser, userProfile });
+  async function openProfileModal(defaultTab = 'stats') {
+    console.log('openProfileModal called', { currentUser, userProfile, defaultTab });
     
     if (!currentUser) {
       toast('Please sign in first', 2000);
@@ -1320,8 +1507,12 @@
       }
     });
     
-    // Show modal on stats tab
-    profileStatsTab.click();
+    // Show modal on specified tab
+    if (defaultTab === 'edit') {
+      profileEditTab.click();
+    } else {
+      profileStatsTab.click();
+    }
     profileModal.classList.remove('hidden');
   }
   
@@ -2674,6 +2865,11 @@
     if(spotsToAddress.length > 0) {
       exitPromptModal.classList.remove('hidden');
       document.body.classList.add('modal-open');
+    } else if (exitPromptModal && !exitPromptModal.classList.contains('hidden')) {
+      // If all spots are addressed and the exit prompt was open, close it with a thank you message
+      exitPromptModal.classList.add('hidden');
+      document.body.classList.remove('modal-open');
+      toast('All spots addressed! Thank you for your feedback.', 2000);
     }
   });
 
@@ -2920,8 +3116,15 @@
     // Remove from spots to address
     spotsToAddress = spotsToAddress.filter(s => s.id !== spotId);
     
-    // Re-render the list
-    renderExitPromptList();
+    // If all spots addressed, close the exit prompt modal
+    if (spotsToAddress.length === 0) {
+      exitPromptModal.classList.add('hidden');
+      document.body.classList.remove('modal-open');
+      toast('All spots addressed! Thank you for your feedback.', 2000);
+    } else {
+      // Re-render the list
+      renderExitPromptList();
+    }
     
     // Show success modal for safe passage
     showSafePassageModal(spot.name);
@@ -2980,9 +3183,14 @@
           ${lastReportedText}
           ${lastSafePassageText}
         </div>
-        <div class="flex items-center gap-2">
-          <button id="showMoreBtn" class="text-xs bg-yellow-500 hover:bg-yellow-600 text-white rounded px-3 py-1.5">Show More</button>
-          <button id="closeAlertBtn" class="text-xs border rounded px-3 py-1.5">Close</button>
+        <div class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <button id="showMoreBtn" class="text-xs bg-yellow-500 hover:bg-yellow-600 text-white rounded px-3 py-1.5">Show More</button>
+            <button id="closeAlertBtn" class="text-xs border rounded px-3 py-1.5">Close</button>
+          </div>
+          <button id="safetyTipsAlertBtn" class="text-xs bg-green-600 hover:bg-green-700 text-white rounded px-3 py-1.5 w-full">
+            🛡️ Safety Tips
+          </button>
         </div>
       </div>
     `;
@@ -2994,6 +3202,7 @@
     requestAnimationFrame(() => {
       const showMoreBtn = document.getElementById('showMoreBtn');
       const closeAlertBtn = document.getElementById('closeAlertBtn');
+      const safetyTipsAlertBtn = document.getElementById('safetyTipsAlertBtn');
       
       if (showMoreBtn) {
         showMoreBtn.addEventListener('click', () => {
@@ -3007,6 +3216,14 @@
         closeAlertBtn.addEventListener('click', () => {
           alertBox.style.display = 'none';
           alertBox.classList.remove('show');
+        });
+      }
+      
+      if (safetyTipsAlertBtn) {
+        safetyTipsAlertBtn.addEventListener('click', () => {
+          alertBox.style.display = 'none';
+          alertBox.classList.remove('show');
+          openSafetyTipsModal(s.species);
         });
       }
     });
@@ -3137,7 +3354,10 @@
           <div class="font-semibold">${escapeHtml(s.name)}</div>
           <div class="text-gray-600">${escapeHtml(s.species)}</div>
           <div class="font-medium ${textColor}">${escapeHtml(s.risk)}</div>
-          <button class="show-more-btn mt-2 text-xs bg-yellow-500 hover:bg-yellow-600 text-white rounded px-3 py-1" data-spot-id="${s.id}">Show More</button>
+          <div class="flex gap-2 mt-2">
+            <button class="show-more-btn text-xs bg-yellow-500 hover:bg-yellow-600 text-white rounded px-3 py-1" data-spot-id="${s.id}">Show More</button>
+            <button class="safety-tips-btn text-xs bg-green-600 hover:bg-green-700 text-white rounded px-3 py-1" data-species="${escapeHtml(s.species)}">🛡️ Tips</button>
+          </div>
         </div>
         <div class="flex gap-2">
           <button id="clearAlertBtn" class="flex-1 text-xs border rounded px-3 py-1">Clear Alert</button>
@@ -3153,6 +3373,14 @@
         showMoreBtn.onclick = () => {
           hideCenteredAlert();
           openDetailsModal(s.id);
+        };
+      }
+      
+      const safetyTipsBtn = alertBox.querySelector('.safety-tips-btn');
+      if(safetyTipsBtn) {
+        safetyTipsBtn.onclick = () => {
+          hideCenteredAlert();
+          openSafetyTipsModal(s.species);
         };
       }
       
@@ -3183,7 +3411,10 @@
                 <div class="font-semibold">${escapeHtml(spot.name)}</div>
                 <div class="text-gray-600">${escapeHtml(spot.species)}</div>
                 <div class="font-medium ${textColor}">${escapeHtml(spot.risk)}</div>
-                <button class="show-more-btn mt-2 text-xs bg-yellow-500 hover:bg-yellow-600 text-white rounded px-3 py-1" data-spot-id="${spot.id}">Show More</button>
+                <div class="flex gap-2 mt-2">
+                  <button class="show-more-btn text-xs bg-yellow-500 hover:bg-yellow-600 text-white rounded px-3 py-1" data-spot-id="${spot.id}">Show More</button>
+                  <button class="safety-tips-btn text-xs bg-green-600 hover:bg-green-700 text-white rounded px-3 py-1" data-species="${escapeHtml(spot.species)}">🛡️ Tips</button>
+                </div>
               </div>
             `;
           }).join('')}
@@ -3202,6 +3433,15 @@
           const spotId = btn.dataset.spotId;
           hideCenteredAlert();
           openDetailsModal(spotId);
+        };
+      });
+      
+      // Attach event handlers for all Safety Tips buttons
+      alertBox.querySelectorAll('.safety-tips-btn').forEach(btn => {
+        btn.onclick = () => {
+          const species = btn.dataset.species;
+          hideCenteredAlert();
+          openSafetyTipsModal(species);
         };
       });
       
@@ -3293,6 +3533,99 @@
     successModal.classList.remove('hidden');
     document.body.classList.add('modal-open');
   }
+
+  // ----------------------------
+  // Safety Tips Functions
+  // ----------------------------
+  
+  function openSafetyTipsModal(species = 'general') {
+    // Set the species in the dropdown
+    tipsSpeciesSelect.value = species;
+    
+    // Display the tips
+    displaySafetyTips(species);
+    
+    // Show the modal
+    safetyTipsModal.classList.remove('hidden');
+    document.body.classList.add('modal-open');
+  }
+  
+  function displaySafetyTips(species) {
+    const tips = SAFETY_TIPS[species] || SAFETY_TIPS.general;
+    
+    let html = `
+      <div class="mb-4">
+        <h4 class="text-lg font-bold mb-2" style="color: #422d1e;">${escapeHtml(tips.title)}</h4>
+        <p class="text-sm mb-4" style="color: #422d1e; opacity: 0.8;">${escapeHtml(tips.description)}</p>
+      </div>
+      <div class="space-y-3">
+    `;
+    
+    tips.tips.forEach((tip, index) => {
+      html += `
+        <div class="flex items-start gap-3 p-3 rounded" style="background-color: #fff; border-left: 3px solid #10B981;">
+          <span class="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white" style="background-color: #10B981;">
+            ${index + 1}
+          </span>
+          <p class="text-sm" style="color: #422d1e;">${escapeHtml(tip)}</p>
+        </div>
+      `;
+    });
+    
+    html += `
+      </div>
+      <div class="mt-6 p-4 rounded" style="background-color: #FEF3C7; border-left: 3px solid #F59E0B;">
+        <p class="text-sm font-medium" style="color: #92400E;">
+          ⚠️ Remember: These birds are protected native wildlife. They're defending their nests, not attacking maliciously. 
+          Never harm or attempt to remove nesting birds. Contact local wildlife authorities if a bird poses a serious danger.
+        </p>
+      </div>
+      
+      <div class="mt-6 p-4 rounded" style="background-color: #E0F2FE; border-left: 3px solid #0284C7;">
+        <h5 class="text-sm font-bold mb-2" style="color: #0C4A6E;">📚 Information Sources</h5>
+        <div class="text-xs space-y-1" style="color: #0C4A6E;">
+          <p><strong>Australian Government - Department of Climate Change, Energy, the Environment and Water</strong></p>
+          <p class="ml-3">Wildlife protection guidelines and native bird behavior information</p>
+          
+          <p class="mt-2"><strong>Birdlife Australia</strong></p>
+          <p class="ml-3">National bird conservation organization - swooping bird education and safety advice</p>
+          
+          <p class="mt-2"><strong>Australian Museum</strong></p>
+          <p class="ml-3">Scientific research on Australian bird species behavior and nesting patterns</p>
+          
+          <p class="mt-2"><strong>NSW Environment and Heritage</strong></p>
+          <p class="ml-3">State-based wildlife management and public safety guidelines</p>
+          
+          <p class="mt-2"><strong>Magpie Alert & MagpieAlert.com</strong></p>
+          <p class="ml-3">Community-sourced data and research on magpie swooping patterns</p>
+          
+          <p class="mt-2"><strong>Queensland Museum</strong></p>
+          <p class="ml-3">Educational resources on Queensland bird species and behavior</p>
+          
+          <p class="mt-2"><strong>Local Council Wildlife Services</strong></p>
+          <p class="ml-3">ACT, NSW, VIC, QLD council guidelines for managing swooping birds in urban areas</p>
+          
+          <p class="mt-3 italic" style="opacity: 0.8;">This information is compiled from publicly available wildlife safety resources and scientific literature. Always follow local authority advice and report dangerous wildlife encounters to your local council or wildlife rescue services.</p>
+        </div>
+      </div>
+    `;
+    
+    tipsContent.innerHTML = html;
+  }
+  
+  // Safety tips modal event listeners
+  closeSafetyTips.addEventListener('click', () => {
+    safetyTipsModal.classList.add('hidden');
+    document.body.classList.remove('modal-open');
+  });
+  
+  safetyTipsBtn.addEventListener('click', () => {
+    openSafetyTipsModal('general');
+  });
+  
+  tipsSpeciesSelect.addEventListener('change', (e) => {
+    displaySafetyTips(e.target.value);
+  });
 
   // ----------------------------
   // Walk simulator (straight line)
@@ -3598,19 +3931,22 @@
   });
   
   // Menu actions
-  userMenuSignOut.addEventListener('click', async () => {
+  userMenuSignOut.addEventListener('click', async (e) => {
+    e.stopPropagation();
     await signOutUser();
     userMenuDropdown.classList.add('hidden');
   });
   
   // Menu actions - Stats and Profile
-  userMenuStats.addEventListener('click', () => {
-    openProfileModal();
+  userMenuStats.addEventListener('click', (e) => {
+    e.stopPropagation();
+    openProfileModal('stats');
     userMenuDropdown.classList.add('hidden');
   });
   
-  userMenuProfile.addEventListener('click', () => {
-    openProfileModal();
+  userMenuProfile.addEventListener('click', (e) => {
+    e.stopPropagation();
+    openProfileModal('edit');
     userMenuDropdown.classList.add('hidden');
   });
   
@@ -3658,16 +3994,26 @@
   // Profile edit form
   profileEditForm.addEventListener('submit', updateUserProfile);
   
-  cancelEditProfile.addEventListener('click', () => {
+  cancelEditProfile.addEventListener('click', (e) => {
+    e.preventDefault();
     profileStatsTab.click();
   });
   
   // Close modal when clicking outside
   profileModal.addEventListener('click', (e) => {
     if (e.target === profileModal) {
+      e.stopPropagation();
       closeProfileModalFn();
     }
   });
+  
+  // Prevent clicks inside modal content from closing it
+  const profileModalContent = profileModal.querySelector('.rounded-lg');
+  if (profileModalContent) {
+    profileModalContent.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
+  }
 
   // ----------------------------
   // Initial load default spot if none

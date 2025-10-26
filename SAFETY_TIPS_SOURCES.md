@@ -95,29 +95,7 @@ The safety tips and information provided in SwoopSpotter are compiled from reput
 
 ---
 
-### 5. Magpie Alert & MagpieAlert.com
-
-**Focus:** Community-sourced data and research on magpie swooping patterns
-
-**Website:** https://www.magpiealert.com/
-
-**Key Information:**
-- Real-time community reporting of swooping incidents
-- Heat maps of swooping hotspots
-- Crowdsourced swooping behavior data
-- Seasonal pattern analysis
-
-**Data Used:**
-- Swooping incident statistics
-- Geographic distribution of aggressive birds
-- Temporal patterns (peak swooping times and seasons)
-- Community-verified safety recommendations
-
-**Note:** This community database provides valuable real-world data on swooping incidents and complements scientific research.
-
----
-
-### 6. Queensland Museum
+### 5. Queensland Museum
 
 **Focus:** Educational resources on Queensland bird species and behavior
 
@@ -139,7 +117,7 @@ The safety tips and information provided in SwoopSpotter are compiled from reput
 
 ---
 
-### 7. Local Council Wildlife Services
+### 6. Local Council Wildlife Services
 
 **Focus:** ACT, NSW, VIC, QLD council guidelines for managing swooping birds in urban areas
 
@@ -175,7 +153,9 @@ The safety tips and information provided in SwoopSpotter are compiled from reput
 
 ## Additional Scientific & Educational Resources
 
-### 8. CSIRO (Commonwealth Scientific and Industrial Research Organisation)
+---
+
+### 7. CSIRO (Commonwealth Scientific and Industrial Research Organisation)
 
 **Website:** https://www.csiro.au/
 
@@ -186,7 +166,7 @@ The safety tips and information provided in SwoopSpotter are compiled from reput
 
 ---
 
-### 9. University Research Institutions
+### 8. University Research Institutions
 
 **Notable Contributors:**
 - **Australian National University (ANU)** - Wildlife behavior research
@@ -200,7 +180,7 @@ The safety tips and information provided in SwoopSpotter are compiled from reput
 
 ---
 
-### 10. Wildlife Rescue and Care Organizations
+### 9. Wildlife Rescue and Care Organizations
 
 **Organizations:**
 - **WIRES (NSW Wildlife Information, Rescue and Education Service)**
@@ -220,7 +200,7 @@ The safety tips and information provided in SwoopSpotter are compiled from reput
 **Sourced from:**
 - BirdLife Australia swooping bird fact sheets
 - Local council public safety advisories
-- Community-reported effective strategies (Magpie Alert)
+- Community-reported effective strategies from wildlife organizations
 
 **Key Recommendations Include:**
 - Hat and eye protection
@@ -237,7 +217,7 @@ The safety tips and information provided in SwoopSpotter are compiled from reput
 - Australian Museum species fact sheet
 - BirdLife Australia magpie behavior research
 - University studies on magpie cognition and memory
-- Magpie Alert community data
+- Wildlife rescue organizations' field observations
 
 **Key Facts:**
 - Only ~10% of male magpies swoop
@@ -280,9 +260,9 @@ The safety tips and information provided in SwoopSpotter are compiled from reput
 ### Citizen Science Programs
 
 **Programs:**
-- **Magpie Alert** - Real-time swooping incident reporting
 - **BirdLife Australia Atlas** - Bird distribution and behavior data
 - **iNaturalist Australia** - Species observations and behavior notes
+- **Local council reporting systems** - Community swooping incident tracking
 
 **Value:**
 - Ground-truth data on swooping locations

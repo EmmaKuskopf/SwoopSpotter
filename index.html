@@ -64,6 +64,11 @@
   }
   #alertBox { position: fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index: 1000000; background:#fff7ed; color: var(--color-dark); border:2px solid #f59e0b; border-radius:0.5rem; padding:0.75rem 1rem; max-width:92%; width:460px; box-shadow: 0 10px 30px rgba(66,45,30,.22); opacity:0; pointer-events:none; transition:opacity .26s ease; display:none; }
   #alertBox.show { display:block; opacity:1; pointer-events:auto; }
+  /* Risk level colors for alert box */
+  #alertBox.risk-danger { background: #fee2e2; border-color: #ef4444; }
+  #alertBox.risk-caution { background: #fff7ed; border-color: #f59e0b; }
+  #alertBox.risk-low { background: #dcfce7; border-color: #22c55e; }
+  #alertBox.risk-calm { background: #dbeafe; border-color: #3b82f6; }
   .required::after { content: ' *'; color: #ef4444; font-weight:700; margin-left:6px; }
   /* report feed coloring */
   .report-low { border-left: 4px solid #10B981; }
@@ -672,6 +677,17 @@
       
       <!-- Edit Profile Content -->
       <div id="profileEditContent" class="hidden space-y-4">
+        <!-- Welcome Message for New Users -->
+        <div id="newUserWelcome" class="hidden p-4 rounded" style="background-color: #e8f5e9; border: 1px solid #4caf50;">
+          <div class="flex items-start gap-3">
+            <span style="font-size: 24px;">👋</span>
+            <div>
+              <h4 class="font-semibold" style="color: #2e7d32;">Welcome to SwoopSpotter!</h4>
+              <p class="text-sm mt-1" style="color: #1b5e20;">Personalize your profile by choosing an avatar and adding a bio. This helps other users recognize your contributions to the community!</p>
+            </div>
+          </div>
+        </div>
+        
         <form id="profileEditForm" class="space-y-4">
           <!-- Display Name -->
           <div>
@@ -1298,7 +1314,20 @@
     // Reload spots with user context
     await loadAllFromSupabase();
     
-    toast(`Welcome back, ${userProfile?.display_name || user.email.split('@')[0]}!`, 2000);
+    // Check if this is a new user signup
+    const isNewUser = sessionStorage.getItem('newUserSignup') === 'true';
+    
+    if (isNewUser) {
+      // Clear the flag
+      sessionStorage.removeItem('newUserSignup');
+      
+      // Open profile modal on edit tab for new users
+      setTimeout(() => {
+        openProfileModal('edit', true);
+      }, 500);
+    } else {
+      toast(`Welcome back, ${userProfile?.display_name || user.email.split('@')[0]}!`, 2000);
+    }
   }
   
   // Update UI based on auth state
@@ -1425,7 +1454,9 @@
       if (data.user && !data.session) {
         toast('Account created! Please check your email to verify.', 4000);
       } else {
-        toast('Account created! You can now start creating spots.', 3000);
+        // Mark this as a new signup to trigger profile setup flow
+        sessionStorage.setItem('newUserSignup', 'true');
+        toast('Welcome! Let\'s set up your profile.', 3000);
       }
       
       return { success: true };
@@ -1452,8 +1483,8 @@
   // Profile Modal Functions
   // ----------------------------
   
-  async function openProfileModal(defaultTab = 'stats') {
-    console.log('openProfileModal called', { currentUser, userProfile, defaultTab });
+  async function openProfileModal(defaultTab = 'stats', isNewUser = false) {
+    console.log('openProfileModal called', { currentUser, userProfile, defaultTab, isNewUser });
     
     if (!currentUser) {
       toast('Please sign in first', 2000);
@@ -1506,6 +1537,16 @@
         btn.style.backgroundColor = '';
       }
     });
+    
+    // Show/hide new user welcome message
+    const newUserWelcome = document.getElementById('newUserWelcome');
+    if (newUserWelcome) {
+      if (isNewUser) {
+        newUserWelcome.classList.remove('hidden');
+      } else {
+        newUserWelcome.classList.add('hidden');
+      }
+    }
     
     // Show modal on specified tab
     if (defaultTab === 'edit') {
@@ -3172,6 +3213,18 @@
       lastSafePassageText = `<div class="text-xs text-gray-500 mt-1">Last safe passage: ${formatTimeAgo(s.lastSafePassage)}</div>`;
     }
     
+    // Determine risk class for alert box styling
+    let riskClass = 'risk-caution'; // default yellow
+    if (s.risk === 'Danger - Avoid') {
+      riskClass = 'risk-danger';
+    } else if (s.risk === 'Take caution') {
+      riskClass = 'risk-caution';
+    } else if (s.risk === 'Calm - All clear') {
+      riskClass = 'risk-calm';
+    } else if (s.risk === 'Low risk') {
+      riskClass = 'risk-low';
+    }
+    
     alertBox.innerHTML = `
       <div class="flex items-start justify-between gap-4">
         <div>
@@ -3185,7 +3238,7 @@
         </div>
         <div class="flex flex-col gap-2">
           <div class="flex items-center gap-2">
-            <button id="showMoreBtn" class="text-xs bg-yellow-500 hover:bg-yellow-600 text-white rounded px-3 py-1.5">Show More</button>
+            <button id="showMoreBtn" class="text-xs text-white rounded px-3 py-1.5" style="background-color: #422d1e;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">Show More</button>
             <button id="closeAlertBtn" class="text-xs border rounded px-3 py-1.5">Close</button>
           </div>
           <button id="safetyTipsAlertBtn" class="text-xs bg-green-600 hover:bg-green-700 text-white rounded px-3 py-1.5 w-full">
@@ -3194,6 +3247,11 @@
         </div>
       </div>
     `;
+    
+    // Remove all risk classes first
+    alertBox.classList.remove('risk-danger', 'risk-caution', 'risk-calm', 'risk-low');
+    // Add the appropriate risk class
+    alertBox.classList.add(riskClass);
     
     alertBox.classList.add('show');
     alertBox.style.display = 'block';
@@ -3346,6 +3404,18 @@
                        s.risk === 'Take caution' ? 'text-yellow-700' : 
                        'text-green-700';
       
+      // Determine risk class for alert box styling
+      let riskClass = 'risk-caution';
+      if (s.risk === 'Danger - Avoid') {
+        riskClass = 'risk-danger';
+      } else if (s.risk === 'Take caution') {
+        riskClass = 'risk-caution';
+      } else if (s.risk === 'Calm - All clear') {
+        riskClass = 'risk-calm';
+      } else if (s.risk === 'Low risk') {
+        riskClass = 'risk-low';
+      }
+      
       alertBox.innerHTML = `
         <div class="text-sm font-semibold mb-2">
           ⚠️ Swooping zone detected!
@@ -3355,7 +3425,7 @@
           <div class="text-gray-600">${escapeHtml(s.species)}</div>
           <div class="font-medium ${textColor}">${escapeHtml(s.risk)}</div>
           <div class="flex gap-2 mt-2">
-            <button class="show-more-btn text-xs bg-yellow-500 hover:bg-yellow-600 text-white rounded px-3 py-1" data-spot-id="${s.id}">Show More</button>
+            <button class="show-more-btn text-xs text-white rounded px-3 py-1" style="background-color: #422d1e;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'" data-spot-id="${s.id}">Show More</button>
             <button class="safety-tips-btn text-xs bg-green-600 hover:bg-green-700 text-white rounded px-3 py-1" data-species="${escapeHtml(s.species)}">🛡️ Tips</button>
           </div>
         </div>
@@ -3364,6 +3434,10 @@
         </div>
       `;
 
+      // Remove all risk classes first, then add the appropriate one
+      alertBox.classList.remove('risk-danger', 'risk-caution', 'risk-calm', 'risk-low');
+      alertBox.classList.add(riskClass);
+      
       alertBox.classList.add('show');
       alertBox.style.display = 'block';
 
@@ -3392,6 +3466,19 @@
     } else {
       // Multiple spots - show list with Show More button for each
       const highestRisk = spotArray[0].risk;
+      
+      // Determine risk class for alert box styling based on highest risk
+      let riskClass = 'risk-caution';
+      if (highestRisk === 'Danger - Avoid') {
+        riskClass = 'risk-danger';
+      } else if (highestRisk === 'Take caution') {
+        riskClass = 'risk-caution';
+      } else if (highestRisk === 'Calm - All clear') {
+        riskClass = 'risk-calm';
+      } else if (highestRisk === 'Low risk') {
+        riskClass = 'risk-low';
+      }
+      
       alertBox.innerHTML = `
         <div class="text-sm font-semibold mb-2">
           ⚠️ Multiple swooping zones detected! Highest risk: 
@@ -3412,7 +3499,7 @@
                 <div class="text-gray-600">${escapeHtml(spot.species)}</div>
                 <div class="font-medium ${textColor}">${escapeHtml(spot.risk)}</div>
                 <div class="flex gap-2 mt-2">
-                  <button class="show-more-btn text-xs bg-yellow-500 hover:bg-yellow-600 text-white rounded px-3 py-1" data-spot-id="${spot.id}">Show More</button>
+                  <button class="show-more-btn text-xs text-white rounded px-3 py-1" style="background-color: #422d1e;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'" data-spot-id="${spot.id}">Show More</button>
                   <button class="safety-tips-btn text-xs bg-green-600 hover:bg-green-700 text-white rounded px-3 py-1" data-species="${escapeHtml(spot.species)}">🛡️ Tips</button>
                 </div>
               </div>
@@ -3424,6 +3511,10 @@
         </div>
       `;
 
+      // Remove all risk classes first, then add the appropriate one
+      alertBox.classList.remove('risk-danger', 'risk-caution', 'risk-calm', 'risk-low');
+      alertBox.classList.add(riskClass);
+      
       alertBox.classList.add('show');
       alertBox.style.display = 'block';
 
@@ -3457,6 +3548,8 @@
   function hideCenteredAlert() {
     alertBox.style.display = 'none';
     alertBox.classList.remove('show');
+    // Remove all risk classes when hiding
+    alertBox.classList.remove('risk-danger', 'risk-caution', 'risk-calm', 'risk-low');
   }
 
   // Show success modal after creating a spot or adding a report

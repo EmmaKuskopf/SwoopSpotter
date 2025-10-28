@@ -210,6 +210,53 @@ The safety tips and information provided in SwoopSpotter are compiled from reput
 
 ---
 
+### Preventative & Rapport-Building Strategies
+
+**Purpose:** Pre-season education to reduce swooping incidents through positive bird-human relationships
+
+**Sourced from:**
+- **BirdLife Australia** - "Living with Magpies" education program emphasizing coexistence
+- **Australian Museum** - Research on bird memory and territorial behavior patterns
+- **University of Queensland** - Studies on magpie cognition showing facial recognition capabilities
+- **NSW Environment and Heritage** - Wildlife coexistence guidelines and habitat provision
+- **Local Council Wildlife Services** - Community programs for reducing human-wildlife conflict
+- **WIRES & Wildlife Victoria** - Long-term wildlife care insights on habituation patterns
+
+**Evidence-Based Strategies:**
+
+1. **Familiarity and Habituation**
+   - Source: University research on magpie behavior and cognition
+   - Finding: Birds recognize and remember regular, non-threatening humans
+   - Application: Regular walking routes before nesting season reduces aggression
+
+2. **Memory and Recognition**
+   - Source: Australian Museum behavioral research, UQ cognition studies
+   - Finding: Magpies can remember individual human faces for years
+   - Application: Positive pre-season interactions create lasting associations
+
+3. **Habitat Provision**
+   - Source: BirdLife Australia conservation guidelines, state environment departments
+   - Finding: Birds with adequate habitat and resources show reduced territorial aggression
+   - Application: Native plantings and water sources support healthy bird populations
+
+4. **Ground-Nesting Species Management**
+   - Source: Queensland Museum, local council plover management programs
+   - Finding: Accidental nest disturbance is a major trigger for plover aggression
+   - Application: Marking nesting areas and keeping lawns longer prevents conflicts
+
+5. **Generational Behavior Transmission**
+   - Source: CSIRO wildlife research, university behavioral studies
+   - Finding: Crows and magpies teach offspring about specific threats and safe humans
+   - Application: Long-term positive interactions benefit multiple generations
+
+**Implementation in SwoopSpotter:**
+- Pre-season warning system (30 days before breeding) educates users proactively
+- Species-specific tips based on documented behaviors
+- Focus on non-harmful, evidence-based coexistence strategies
+- All recommendations comply with wildlife protection legislation
+
+---
+
 ### Species-Specific Information
 
 #### Magpies (Australian Magpie - *Gymnorhina tibicen*)

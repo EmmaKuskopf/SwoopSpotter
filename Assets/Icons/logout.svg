@@ -7,16 +7,17 @@
       }
     </style>
     <linearGradient id="linear-gradient" x1="17.94" y1="28.09" x2="3.71" y2="3.43" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#bc4f79"/>
-      <stop offset=".11" stop-color="#b45179"/>
-      <stop offset=".27" stop-color="#9f5879"/>
-      <stop offset=".47" stop-color="#7c637a"/>
-      <stop offset=".7" stop-color="#4b727b"/>
-      <stop offset=".94" stop-color="#0e857c"/>
-      <stop offset="1" stop-color="#008a7d"/>
+      <stop offset="0" stop-color="#f99d1e"/>
+      <stop offset=".11" stop-color="#f5a045"/>
+      <stop offset=".25" stop-color="#f2a46e"/>
+      <stop offset=".4" stop-color="#efa791"/>
+      <stop offset=".54" stop-color="#eca9ab"/>
+      <stop offset=".69" stop-color="#ebabbe"/>
+      <stop offset=".84" stop-color="#eaacca"/>
+      <stop offset="1" stop-color="#eaadce"/>
     </linearGradient>
   </defs>
   <g id="Layer_1-2" data-name="Layer 1">
-    <path class="cls-1" d="M11.2,0C6.36,0,1.12,7.19,0,13.42h8.35l.03-3.21,11.95,7.03-12.06,6.83.03-3.21H.28c1.17,5.49,4.5,9.11,10.92,9.11,8.19,0,11.42-5.97,11.42-14.25,0-7.05-5.79-15.73-11.42-15.73Z"/>
+    <path class="cls-1" d="M11.2,0C6.36,0,1.12,7.19,0,13.42h8.35l.03-3.21,9.48,6.72-9.6,7.14.03-3.21H.28c1.17,5.49,4.5,9.11,10.92,9.11,8.19,0,11.42-5.97,11.42-14.25,0-7.05-5.79-15.73-11.42-15.73Z"/>
   </g>
 </svg>

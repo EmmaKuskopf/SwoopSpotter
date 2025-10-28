@@ -233,8 +233,9 @@
     <button id="addSpotBelowMap" class="px-6 py-2 rounded text-white font-medium" style="background-color: #422d1e;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
       + Add Swoop Spot
     </button>
-    <button id="safetyTipsBtn" class="px-6 py-2 rounded text-white font-medium" style="background-color: #10B981;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
-      🛡️ Safety Tips
+    <button id="safetyTipsBtn" class="px-6 py-2 rounded text-white font-medium flex items-center gap-2" style="background-color: #10B981;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+      <img src="Assets/Icons/tips.svg" alt="Tips" style="width: 20px; height: 20px; filter: brightness(0) invert(1);">
+      Safety Tips
     </button>
     <button id="testVibrateBtn" class="px-4 py-2 rounded text-sm border" style="border-color: #d4cac7; color: #422d1e;" onmouseover="this.style.backgroundColor='#e8e2e1'" onmouseout="this.style.backgroundColor='transparent'">
       Test Vibration 📳
@@ -528,6 +529,13 @@
       <div id="tipsContent" class="space-y-4" style="color: #422d1e;">
         <!-- Will be populated by JavaScript -->
       </div>
+      
+      <!-- Close button at bottom -->
+      <div class="mt-6 text-center">
+        <button id="closeSafetyTipsBottom" class="px-6 py-2 text-white rounded font-medium" style="background-color: #422d1e;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+          Close
+        </button>
+      </div>
     </div>
   </div>
 </div>
@@ -801,6 +809,7 @@
       case '#10B981': iconName = 'swoop_low.svg'; break;
       case '#F59E0B': iconName = 'swoop_caution.svg'; break;
       case '#EF4444': iconName = 'swoop_danger.svg'; break;
+      case '#3b82f6': iconName = 'calm.svg'; break; // Blue for calm
       default: iconName = 'swoop_calm.svg';
     }
     return `<img src="Assets/Icons/${iconName}" width="36" height="36" alt="Bird icon">`;
@@ -809,12 +818,14 @@
     let col = '#10B981'; // low risk (green)
     if(level === 'Take caution') col = '#F59E0B'; // caution (amber)
     if(level === 'Danger - Avoid') col = '#EF4444'; // danger (red)
+    if(level === 'Calm - All clear') col = '#3b82f6'; // calm (blue)
     return L.divIcon({ className:'bird-marker', html: birdSVG(col), iconSize:[36,36], iconAnchor:[18,18] });
   }
   function getBirdIconSVG(level){
     let iconName;
     if(level === 'Danger - Avoid') iconName = 'swoop_danger.svg';
     else if(level === 'Take caution') iconName = 'swoop_caution.svg';
+    else if(level === 'Calm - All clear') iconName = 'calm.svg';
     else iconName = 'swoop_low.svg';
     return `<img src="Assets/Icons/${iconName}" width="48" height="48" alt="Bird icon" class="rounded-lg">`;
   }
@@ -956,6 +967,84 @@
   const BIRD_BEHAVIOURS = ["noisy","swoop","close swoop","made contact + uninjured","made contact + injured"];
   const HUMAN_BEHAVIOURS = ["walking","running","cycling","riding e-scooter","alone","with others","with pram","with children","in group","other"];
   const PRECAUTIONS = ["Hat","Sunglasses","Umbrella","Helmet","Helmet with Cable Ties","Made Eye Contact","None"];
+
+  // Swooping season data (month ranges: 1 = January, 12 = December)
+  const SWOOPING_SEASONS = {
+    "Magpie": { start: 8, end: 11 },  // August to November
+    "Magpie-lark": { start: 8, end: 11 },  // August to November
+    "Masked Lapwing": { start: 6, end: 12 },  // June to December (longer season)
+    "Butcherbird": { start: 8, end: 11 },  // August to November
+    "Crow": { start: 8, end: 10 },  // August to October
+    "Noisy Miner": { start: 7, end: 11 },  // July to November
+    "Noisy Friarbird": { start: 9, end: 12 }  // September to December
+  };
+
+  // Days to wait after last report before auto-calming
+  const AUTO_CALM_DAYS = 10;
+  
+  // Days of inactivity before hiding a spot (30 days = 1 month)
+  const HIDE_AFTER_DAYS = 30;
+  
+  // Days before season start to reactivate spots with preventative warning (30 days = 1 month)
+  const PRESEASON_WARNING_DAYS = 30;
+  
+  // Preventative tips for building rapport with birds (shown for pre-season warnings)
+  // All tips sourced from documented organizations - see SAFETY_TIPS_SOURCES.md
+  const PREVENTATIVE_TIPS = {
+    general: [
+      "Walk the same routes regularly so birds become familiar with you",
+      "Plant native trees and shrubs to provide nesting habitat",
+      "Provide fresh water sources year-round",
+      "Keep pets supervised or indoors during nesting seasons",
+      "Avoid disturbing nests or approaching nesting birds",
+      "Learn to recognize bird alarm calls and give space when heard"
+    ],
+    Magpie: [
+      "Feed magpies outside nesting season to build positive associations",
+      "Magpies remember individual human faces for years",
+      "Walk past regularly before nesting season - familiarity reduces aggression",
+      "Avoid feeding during breeding season (August-November)",
+      "Only ~10% of male magpies swoop - consistent presence helps birds recognize you",
+      "Give respectful distance to known nesting trees year-round"
+    ],
+    "Magpie-lark": [
+      "Provide water sources - magpie-larks love bathing",
+      "Plant native shrubs that attract insects",
+      "Avoid loud noises or sudden movements near their territory",
+      "Become a familiar presence before breeding season begins"
+    ],
+    "Masked Lapwing": [
+      "Keep lawns slightly longer to protect ground nests",
+      "Mark known nesting areas to avoid accidental disturbance",
+      "Keep dogs leashed in areas where plovers nest",
+      "Learn their distinctive alarm calls and respect warning signals",
+      "Plovers protect ground nests - wide berth year-round builds trust"
+    ],
+    Butcherbird: [
+      "Respect their territory - butcherbirds are highly territorial",
+      "Provide high perches and hunting opportunities",
+      "Maintain respectful distance from known nesting areas",
+      "Consistent non-threatening presence reduces defensive behavior"
+    ],
+    Crow: [
+      "Crows have exceptional memory and recognize individual humans",
+      "Never threaten or harm crows - they remember and communicate threats",
+      "Consistent friendly behavior builds long-term recognition",
+      "Crows teach offspring about threats - positive associations last generations"
+    ],
+    "Noisy Miner": [
+      "Plant native flowering plants that attract insects and nectar",
+      "Miners are highly communal - respect the entire colony's space",
+      "Provide water sources year-round",
+      "Consistent presence during non-breeding times reduces aggression"
+    ],
+    "Noisy Friarbird": [
+      "Plant native flowering trees - friarbirds feed on nectar",
+      "Provide water sources for drinking and bathing",
+      "Maintain respectful distance from flowering trees during breeding",
+      "Friarbirds are less aggressive than other species - calm presence helps"
+    ]
+  };
 
   // Safety tips data
   const SAFETY_TIPS = {
@@ -2169,8 +2258,24 @@
   function createSpotFromData(data, skipSave=false){
     if(!data.id) data.id = uid();
     if(!Array.isArray(data.reports)) data.reports = [];
+    if(!data.createdAt) data.createdAt = new Date().toISOString(); // Add creation date if missing
+    
+    // Check if spot should be hidden due to inactivity
+    if (shouldHideSpot(data.reports, data.species || data.birdSpecies)) {
+      return null; // Don't create/show this spot
+    }
+    
+    // Check if spot should show pre-season warning
+    const showPreseasonMsg = shouldShowPreseasonWarning(data.reports, data.species || data.birdSpecies, data.createdAt);
+    
     // compute risk if absent
-    if(!data.risk) data.risk = computeSpotRiskFromReports(data.reports);
+    if(!data.risk) data.risk = computeSpotRiskFromReports(data.reports, data.species || data.birdSpecies);
+    
+    // If showing pre-season warning, override to Calm and mark it
+    if (showPreseasonMsg) {
+      data.risk = 'Calm - All clear';
+      data.isPreseason = true;
+    }
     
     const lat = Number(data.lat), lng = Number(data.lng);
     const marker = L.marker([lat,lng], { icon: getBirdIcon(data.risk) }).addTo(map);
@@ -2178,8 +2283,8 @@
     
     const circle = L.circle([lat,lng], { 
       radius: radius,
-      color: data.risk === 'Danger - Avoid' ? '#EF4444' : data.risk === 'Take caution' ? '#F59E0B' : '#10B981',
-      fillColor: data.risk === 'Danger - Avoid' ? '#FEE2E2' : data.risk === 'Take caution' ? '#FEF3C7' : '#DCFCE7',
+      color: data.risk === 'Danger - Avoid' ? '#EF4444' : data.risk === 'Take caution' ? '#F59E0B' : data.risk === 'Calm - All clear' ? '#3b82f6' : '#10B981',
+      fillColor: data.risk === 'Danger - Avoid' ? '#FEE2E2' : data.risk === 'Take caution' ? '#FEF3C7' : data.risk === 'Calm - All clear' ? '#dbeafe' : '#DCFCE7',
       fillOpacity: 0.35 
     }).addTo(map);
 
@@ -2193,6 +2298,8 @@
       risk: data.risk,
       reports: data.reports.slice(),
       safePassageCount: data.safePassageCount || 0,
+      createdAt: data.createdAt,
+      isPreseason: showPreseasonMsg || false,
       marker, circle
     };
 
@@ -2261,7 +2368,7 @@
       };
 
       // determine spot risk based on initial report (same immediate raise)
-      const spotRisk = computeSpotRiskFromReports([report]);
+      const spotRisk = computeSpotRiskFromReports([report], birdSpecies.value);
 
       // Generate unique random name within 5km radius
       const birdName = getUniqueName(latlng.lat, latlng.lng);
@@ -2275,7 +2382,8 @@
         address: latlng.display || addressField.value.trim() || '',
         radius: spotRisk === 'Danger - Avoid' ? 100 : spotRisk === 'Take caution' ? 80 : 50,
         risk: spotRisk,
-        reports: [report]
+        reports: [report],
+        createdAt: new Date().toISOString() // Track creation date for lifecycle management
       };
 
       createSpotFromData(spotData, false);
@@ -2289,7 +2397,12 @@
   }
 
   // compute new overall spot risk from array of reports
-  function computeSpotRiskFromReports(reportsArray){
+  function computeSpotRiskFromReports(reportsArray, species = ''){
+    // Check if the spot should be auto-calmed (season ended + 10 days since last report)
+    if (shouldAutoCalm(reportsArray, species)) {
+      return 'Calm - All clear';
+    }
+    
     // Highest priority: any contact (injured/uninjured) => Danger
     for(const r of reportsArray){
       if(Array.isArray(r.birdBehaviour) && (r.birdBehaviour.includes('made contact + injured') || r.birdBehaviour.includes('made contact + uninjured'))) return 'Danger - Avoid';
@@ -2298,6 +2411,119 @@
     for(const r of reportsArray){ if(Array.isArray(r.birdBehaviour) && r.birdBehaviour.includes('close swoop')) return 'Take caution'; }
     // else Low
     return 'Low risk';
+  }
+
+  // Check if a spot should be automatically marked as calm
+  function shouldAutoCalm(reportsArray, species) {
+    if (!reportsArray || reportsArray.length === 0) return false;
+    if (!species) return false;
+    
+    // Get the swooping season for this species
+    const season = SWOOPING_SEASONS[species];
+    if (!season) return false; // Unknown species, can't auto-calm
+    
+    // Get current date
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1; // 1-based month
+    
+    // Check if we're past the swooping season
+    const isPastSeason = currentMonth > season.end || currentMonth < season.start;
+    if (!isPastSeason) return false; // Still in swooping season
+    
+    // Find the most recent report
+    const sortedReports = [...reportsArray].sort((a, b) => {
+      const timeA = new Date(a.timestamp).getTime();
+      const timeB = new Date(b.timestamp).getTime();
+      return timeB - timeA; // Most recent first
+    });
+    
+    const lastReport = sortedReports[0];
+    if (!lastReport) return false;
+    
+    // Check if it's been at least 10 days since the last report
+    const lastReportDate = new Date(lastReport.timestamp);
+    const daysSinceLastReport = (now.getTime() - lastReportDate.getTime()) / (1000 * 60 * 60 * 24);
+    
+    return daysSinceLastReport >= AUTO_CALM_DAYS;
+  }
+  
+  // Check if a spot should be hidden due to inactivity (1 month after last report, outside nesting season)
+  function shouldHideSpot(reportsArray, species) {
+    if (!reportsArray || reportsArray.length === 0) return false;
+    if (!species) return false;
+    
+    const season = SWOOPING_SEASONS[species];
+    if (!season) return false;
+    
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1;
+    const currentYear = now.getFullYear();
+    
+    // Check if we're outside nesting season
+    const isOutsideSeason = currentMonth > season.end || currentMonth < season.start;
+    if (!isOutsideSeason) return false; // Still in or near nesting season
+    
+    // Find most recent report
+    const sortedReports = [...reportsArray].sort((a, b) => 
+      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
+    
+    const lastReport = sortedReports[0];
+    if (!lastReport) return false;
+    
+    const lastReportDate = new Date(lastReport.timestamp);
+    const daysSinceLastReport = (now.getTime() - lastReportDate.getTime()) / (1000 * 60 * 60 * 24);
+    
+    // Hide if inactive for more than 30 days and we're well past nesting season
+    return daysSinceLastReport >= HIDE_AFTER_DAYS;
+  }
+  
+  // Check if a spot should be reactivated with pre-season warning
+  function shouldShowPreseasonWarning(reportsArray, species, createdAt) {
+    if (!species) return false;
+    
+    const season = SWOOPING_SEASONS[species];
+    if (!season) return false;
+    
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1;
+    const currentYear = now.getFullYear();
+    
+    // Calculate days until season starts
+    let monthsUntilSeason;
+    if (currentMonth < season.start) {
+      // Same year - simple calculation
+      monthsUntilSeason = season.start - currentMonth;
+    } else {
+      // Next year - wrap around
+      monthsUntilSeason = (12 - currentMonth) + season.start;
+    }
+    
+    // Approximate: 1 month = 30 days
+    const daysUntilSeason = monthsUntilSeason * 30;
+    
+    // Check if spot was created last year (or earlier)
+    const spotCreatedDate = new Date(createdAt);
+    const spotCreatedYear = spotCreatedDate.getFullYear();
+    const isFromPreviousYear = spotCreatedYear < currentYear;
+    
+    // Show warning if:
+    // 1. Spot is from a previous year
+    // 2. We're within 30 days of next nesting season
+    // 3. Currently outside nesting season
+    const isOutsideSeason = currentMonth > season.end || currentMonth < season.start;
+    
+    return isFromPreviousYear && isOutsideSeason && daysUntilSeason <= PRESEASON_WARNING_DAYS;
+  }
+  
+  // Get the month name when nesting season begins
+  function getSeasonStartMonth(species) {
+    const season = SWOOPING_SEASONS[species];
+    if (!season) return 'Unknown';
+    
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                        'July', 'August', 'September', 'October', 'November', 'December'];
+    return monthNames[season.start - 1];
   }
 
   // ----------------------------
@@ -2478,7 +2704,7 @@
       detailsModal.classList.add('hidden');
       
       // Show success modal for safe passage
-      showSafePassageModal(s.name);
+      showSafePassageModal(s.name, s.risk);
     });
 
     // Report form handling
@@ -2572,7 +2798,7 @@
           No reports yet. Be the first to report bird activity at this location!
         </div>
         <div class="mt-4 text-center">
-          <button class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 add-report-btn">
+          <button class="text-white px-4 py-2 rounded add-report-btn" style="background-color: #422d1e;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
             Add Report
           </button>
         </div>
@@ -2624,7 +2850,7 @@
         }).join('')}
       </div>
       <div class="mt-4 text-center">
-        <button class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 add-report-btn">
+        <button class="text-white px-4 py-2 rounded add-report-btn" style="background-color: #422d1e;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
           Add New Report
         </button>
       </div>
@@ -2948,7 +3174,7 @@
     s.reports.push(rep);
     
     // Recompute overall spot risk
-    const newRisk = computeSpotRiskFromReports(s.reports);
+    const newRisk = computeSpotRiskFromReports(s.reports, s.species);
     if(newRisk !== s.risk) {
       s.risk = newRisk;
       // Update marker icon and circle
@@ -2964,8 +3190,8 @@
       s.radius = radius;
       s.circle = L.circle([s.lat, s.lng], { 
         radius: radius,
-        color: newRisk === 'Danger - Avoid' ? '#EF4444' : newRisk === 'Take caution' ? '#F59E0B' : '#10B981',
-        fillColor: newRisk === 'Danger - Avoid' ? '#FEE2E2' : newRisk === 'Take caution' ? '#FEF3C7' : '#DCFCE7',
+        color: newRisk === 'Danger - Avoid' ? '#EF4444' : newRisk === 'Take caution' ? '#F59E0B' : newRisk === 'Calm - All clear' ? '#3b82f6' : '#10B981',
+        fillColor: newRisk === 'Danger - Avoid' ? '#FEE2E2' : newRisk === 'Take caution' ? '#FEF3C7' : newRisk === 'Calm - All clear' ? '#dbeafe' : '#DCFCE7',
         fillOpacity: 0.35 
       }).addTo(map);
     }
@@ -3118,7 +3344,7 @@
             <button class="safe-passage-btn text-xs px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded whitespace-nowrap" data-spot-id="${spot.id}">
               Safe Passage
             </button>
-            <button class="add-report-exit-btn text-xs px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded whitespace-nowrap" data-spot-id="${spot.id}">
+            <button class="add-report-exit-btn text-xs px-3 py-1.5 text-white rounded whitespace-nowrap" style="background-color: #422d1e;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'" data-spot-id="${spot.id}">
               Add Report
             </button>
           </div>
@@ -3168,7 +3394,7 @@
     }
     
     // Show success modal for safe passage
-    showSafePassageModal(spot.name);
+    showSafePassageModal(spot.name, spot.risk);
   }
   
   function handleAddReportFromExit(spotId) {
@@ -3198,8 +3424,99 @@
     }
   });
 
+  // Show pre-season warning alert with preventative tips
+  function showPreseasonAlert(s) {
+    const seasonStartMonth = getSeasonStartMonth(s.species);
+    const preventativeTips = PREVENTATIVE_TIPS[s.species] || PREVENTATIVE_TIPS.general;
+    
+    // Build preventative tips list
+    let tipsHTML = preventativeTips.slice(0, 5).map(tip => 
+      `<li class="text-xs text-gray-700">${escapeHtml(tip)}</li>`
+    ).join('');
+    
+    alertBox.innerHTML = `
+      <div class="flex flex-col gap-3">
+        <div class="flex items-start justify-between gap-2">
+          <div class="text-sm font-semibold" style="color: #422d1e;">
+            <img src="Assets/Icons/calm.svg" alt="Calm" style="width: 20px; height: 20px; display: inline-block; vertical-align: middle; margin-right: 4px;">
+            Pre-Season Notice
+          </div>
+          <button id="closeAlertBtn" class="text-xl" style="color: #422d1e; opacity: 0.7;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">&times;</button>
+        </div>
+        
+        <div class="text-sm" style="color: #422d1e;">
+          There was a nesting <span class="font-semibold" style="color: #2563eb">${escapeHtml(s.species)}</span> here last year - <span class="font-semibold" style="color: #2563eb">${escapeHtml(s.name)}</span>. 
+          <br><br>
+          Use caution over the coming weeks as nesting season begins in <span class="font-semibold">${seasonStartMonth}</span>.
+        </div>
+        
+        <div class="border-t pt-2" style="border-color: #d4cac7;">
+          <div class="text-xs font-semibold mb-2" style="color: #422d1e;">
+            🌿 Build rapport with local birds:
+          </div>
+          <ul class="list-disc pl-5 space-y-1">
+            ${tipsHTML}
+          </ul>
+        </div>
+        
+        <div class="flex gap-2">
+          <button id="morePreventativeTipsBtn" class="text-xs text-white rounded px-4 py-2 flex-1" style="background-color: #059669;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+            <img src="Assets/Icons/tips.svg" alt="Tips" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 4px; filter: brightness(0) invert(1);">
+            More Preventative Tips
+          </button>
+          <button id="showHistoryBtn" class="text-xs text-white rounded px-4 py-2" style="background-color: #422d1e;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+            View History
+          </button>
+        </div>
+      </div>
+    `;
+    
+    // Use calm color scheme (blue)
+    alertBox.classList.remove('risk-danger', 'risk-caution', 'risk-calm', 'risk-low');
+    alertBox.classList.add('risk-calm');
+    
+    alertBox.classList.add('show');
+    alertBox.style.display = 'block';
+    
+    // Attach event handlers
+    requestAnimationFrame(() => {
+      const closeAlertBtn = document.getElementById('closeAlertBtn');
+      const morePreventativeTipsBtn = document.getElementById('morePreventativeTipsBtn');
+      const showHistoryBtn = document.getElementById('showHistoryBtn');
+      
+      if (closeAlertBtn) {
+        closeAlertBtn.addEventListener('click', () => {
+          alertBox.style.display = 'none';
+          alertBox.classList.remove('show');
+        });
+      }
+      
+      if (morePreventativeTipsBtn) {
+        morePreventativeTipsBtn.addEventListener('click', () => {
+          alertBox.style.display = 'none';
+          alertBox.classList.remove('show');
+          openPreventativeTipsModal(s.species);
+        });
+      }
+      
+      if (showHistoryBtn) {
+        showHistoryBtn.addEventListener('click', () => {
+          alertBox.style.display = 'none';
+          alertBox.classList.remove('show');
+          openDetailsModal(s.id);
+        });
+      }
+    });
+  }
+
   // Show quick alert for spot from list
   function showSpotQuickAlert(s) {
+    // Check if this is a pre-season warning spot
+    if (s.isPreseason) {
+      showPreseasonAlert(s);
+      return;
+    }
+    
     // Get latest report timestamp
     let lastReportedText = '';
     if (s.reports && s.reports.length > 0) {
@@ -3241,8 +3558,9 @@
             <button id="showMoreBtn" class="text-xs text-white rounded px-3 py-1.5" style="background-color: #422d1e;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">Show More</button>
             <button id="closeAlertBtn" class="text-xs border rounded px-3 py-1.5">Close</button>
           </div>
-          <button id="safetyTipsAlertBtn" class="text-xs bg-green-600 hover:bg-green-700 text-white rounded px-3 py-1.5 w-full">
-            🛡️ Safety Tips
+          <button id="safetyTipsAlertBtn" class="text-xs bg-green-600 hover:bg-green-700 text-white rounded px-3 py-1.5 w-full flex items-center justify-center gap-1.5">
+            <img src="Assets/Icons/tips.svg" alt="Tips" style="width: 14px; height: 14px; filter: brightness(0) invert(1);">
+            Safety Tips
           </button>
         </div>
       </div>
@@ -3391,6 +3709,14 @@
     // Handle both single spot and array of spots
     const spotArray = Array.isArray(spots) ? spots : [spots];
     
+    // Check if any spots are pre-season warnings
+    const preseasonSpots = spotArray.filter(s => s.isPreseason);
+    if (preseasonSpots.length > 0) {
+      // Show pre-season alert for the first one (they're all calm anyway)
+      showPreseasonAlert(preseasonSpots[0]);
+      return;
+    }
+    
     // Play sound and vibrate when alert is shown
     playAlertNotification();
     
@@ -3417,8 +3743,9 @@
       }
       
       alertBox.innerHTML = `
-        <div class="text-sm font-semibold mb-2">
-          ⚠️ Swooping zone detected!
+        <div class="text-sm font-semibold mb-2 flex items-center gap-2">
+          <img src="Assets/Icons/alert.svg" alt="Alert" style="width: 20px; height: 20px;">
+          Swooping zone detected!
         </div>
         <div class="border-l-4 ${borderColor} p-3 rounded text-xs mb-2">
           <div class="font-semibold">${escapeHtml(s.name)}</div>
@@ -3426,7 +3753,10 @@
           <div class="font-medium ${textColor}">${escapeHtml(s.risk)}</div>
           <div class="flex gap-2 mt-2">
             <button class="show-more-btn text-xs text-white rounded px-3 py-1" style="background-color: #422d1e;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'" data-spot-id="${s.id}">Show More</button>
-            <button class="safety-tips-btn text-xs bg-green-600 hover:bg-green-700 text-white rounded px-3 py-1" data-species="${escapeHtml(s.species)}">🛡️ Tips</button>
+            <button class="safety-tips-btn text-xs bg-green-600 hover:bg-green-700 text-white rounded px-3 py-1 flex items-center gap-1" data-species="${escapeHtml(s.species)}">
+              <img src="Assets/Icons/tips.svg" alt="Tips" style="width: 12px; height: 12px; filter: brightness(0) invert(1);">
+              Tips
+            </button>
           </div>
         </div>
         <div class="flex gap-2">
@@ -3480,8 +3810,9 @@
       }
       
       alertBox.innerHTML = `
-        <div class="text-sm font-semibold mb-2">
-          ⚠️ Multiple swooping zones detected! Highest risk: 
+        <div class="text-sm font-semibold mb-2 flex items-center gap-2">
+          <img src="Assets/Icons/alert.svg" alt="Alert" style="width: 20px; height: 20px;">
+          Multiple swooping zones detected! Highest risk: 
           <span class="ml-1 ${highestRisk==='Danger - Avoid'?'text-red-600': highestRisk==='Take caution' ? 'text-yellow-600' : 'text-green-600'}">${escapeHtml(highestRisk)}</span>
         </div>
         <div class="max-h-48 overflow-y-auto space-y-2 mb-2">
@@ -3500,7 +3831,10 @@
                 <div class="font-medium ${textColor}">${escapeHtml(spot.risk)}</div>
                 <div class="flex gap-2 mt-2">
                   <button class="show-more-btn text-xs text-white rounded px-3 py-1" style="background-color: #422d1e;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'" data-spot-id="${spot.id}">Show More</button>
-                  <button class="safety-tips-btn text-xs bg-green-600 hover:bg-green-700 text-white rounded px-3 py-1" data-species="${escapeHtml(spot.species)}">🛡️ Tips</button>
+                  <button class="safety-tips-btn text-xs bg-green-600 hover:bg-green-700 text-white rounded px-3 py-1 flex items-center gap-1" data-species="${escapeHtml(spot.species)}">
+                    <img src="Assets/Icons/tips.svg" alt="Tips" style="width: 12px; height: 12px; filter: brightness(0) invert(1);">
+                    Tips
+                  </button>
                 </div>
               </div>
             `;
@@ -3562,43 +3896,53 @@
       birdBehaviours = [];
     }
     
-    // Determine which icon and message to show based on bird behavior
+    // Determine which icon, message, and color to show based on bird behavior
     let iconPath = 'Assets/Icons/user.svg'; // default
     let message = '';
+    let birdNameColor = '#059669'; // default: darker green for low risk (better contrast)
+    
+    // Determine risk level color based on bird behaviors
+    if (birdBehaviours.includes('made contact + injured') || birdBehaviours.includes('made contact + uninjured')) {
+      birdNameColor = '#DC2626'; // darker red for danger
+    } else if (birdBehaviours.includes('close swoop')) {
+      birdNameColor = '#D97706'; // darker orange for caution
+    } else if (birdBehaviours.includes('swoop') || birdBehaviours.includes('noisy') || birdBehaviours.includes('none')) {
+      birdNameColor = '#059669'; // darker green for low risk
+    }
     
     if (isNewSpot) {
       // Messages for creating a new spot
-      message = `Thank you for keeping our community safe from <span class="font-bold text-blue-600">${escapeHtml(birdName)}</span> the <span class="font-bold">${escapeHtml(birdSpecies)}</span>.`;
+      message = `Thank you for keeping our community safe from <span class="font-bold" style="color: ${birdNameColor}">${escapeHtml(birdName)}</span> the <span class="font-bold">${escapeHtml(birdSpecies)}</span>.`;
       
       if (birdBehaviours.includes('made contact + injured')) {
         iconPath = 'Assets/Icons/user_swoopedinjured.svg';
-        message = `Thank you for reporting <span class="font-bold text-blue-600">${escapeHtml(birdName)}</span> the <span class="font-bold">${escapeHtml(birdSpecies)}</span>. We're so sorry to hear you were injured! Please seek medical attention if needed.`;
+        message = `Thank you for reporting <span class="font-bold" style="color: ${birdNameColor}">${escapeHtml(birdName)}</span> the <span class="font-bold">${escapeHtml(birdSpecies)}</span>. We're so sorry to hear you were injured! Please seek medical attention if needed.`;
       } else if (birdBehaviours.includes('made contact + uninjured')) {
         iconPath = 'Assets/Icons/user_swoopeduninjured.svg';
-        message = `Thank you for reporting <span class="font-bold text-blue-600">${escapeHtml(birdName)}</span> the <span class="font-bold">${escapeHtml(birdSpecies)}</span>. Sorry to hear about it swooping you, but we're glad you weren't injured!`;
+        message = `Thank you for reporting <span class="font-bold" style="color: ${birdNameColor}">${escapeHtml(birdName)}</span> the <span class="font-bold">${escapeHtml(birdSpecies)}</span>. Sorry to hear about it swooping you, but we're glad you weren't injured!`;
       } else if (birdBehaviours.includes('close swoop') || birdBehaviours.includes('swoop')) {
         iconPath = 'Assets/Icons/user_swooped.svg';
-        message = `Thank you for reporting <span class="font-bold text-blue-600">${escapeHtml(birdName)}</span> the <span class="font-bold">${escapeHtml(birdSpecies)}</span>. Sorry to hear about the swoop — stay safe out there!`;
+        message = `Thank you for reporting <span class="font-bold" style="color: ${birdNameColor}">${escapeHtml(birdName)}</span> the <span class="font-bold">${escapeHtml(birdSpecies)}</span>. Sorry to hear about the swoop — stay safe out there!`;
       } else if (birdBehaviours.includes('noisy')) {
         iconPath = 'Assets/Icons/user_noisy.svg';
-        message = `Thank you for reporting <span class="font-bold text-blue-600">${escapeHtml(birdName)}</span> the <span class="font-bold">${escapeHtml(birdSpecies)}</span>. Those noisy birds can be quite startling!`;
+        message = `Thank you for reporting <span class="font-bold" style="color: ${birdNameColor}">${escapeHtml(birdName)}</span> the <span class="font-bold">${escapeHtml(birdSpecies)}</span>. Those noisy birds can be quite startling!`;
       }
     } else {
       // Messages for adding a report to an existing spot
-      message = `Thank you for adding a report to <span class="font-bold text-blue-600">${escapeHtml(birdName)}'s</span> Swoop Spot.`;
+      message = `Thank you for adding a report to <span class="font-bold" style="color: ${birdNameColor}">${escapeHtml(birdName)}'s</span> Swoop Spot.`;
       
       if (birdBehaviours.includes('made contact + injured')) {
         iconPath = 'Assets/Icons/user_swoopedinjured.svg';
-        message = `Thank you for updating <span class="font-bold text-blue-600">${escapeHtml(birdName)}'s</span> Swoop Spot. We're so sorry to hear you were injured! Please seek medical attention if needed.`;
+        message = `Thank you for updating <span class="font-bold" style="color: ${birdNameColor}">${escapeHtml(birdName)}'s</span> Swoop Spot. We're so sorry to hear you were injured! Please seek medical attention if needed.`;
       } else if (birdBehaviours.includes('made contact + uninjured')) {
         iconPath = 'Assets/Icons/user_swoopeduninjured.svg';
-        message = `Thank you for updating <span class="font-bold text-blue-600">${escapeHtml(birdName)}'s</span> Swoop Spot. Sorry to hear about it swooping you, but we're glad you weren't injured!`;
+        message = `Thank you for updating <span class="font-bold" style="color: ${birdNameColor}">${escapeHtml(birdName)}'s</span> Swoop Spot. Sorry to hear about it swooping you, but we're glad you weren't injured!`;
       } else if (birdBehaviours.includes('close swoop') || birdBehaviours.includes('swoop')) {
         iconPath = 'Assets/Icons/user_swooped.svg';
-        message = `Thank you for updating <span class="font-bold text-blue-600">${escapeHtml(birdName)}'s</span> Swoop Spot. Sorry to hear about the swoop — stay safe out there!`;
+        message = `Thank you for updating <span class="font-bold" style="color: ${birdNameColor}">${escapeHtml(birdName)}'s</span> Swoop Spot. Sorry to hear about the swoop — stay safe out there!`;
       } else if (birdBehaviours.includes('noisy')) {
         iconPath = 'Assets/Icons/user_noisy.svg';
-        message = `Thank you for updating <span class="font-bold text-blue-600">${escapeHtml(birdName)}'s</span> Swoop Spot. Those noisy birds can be quite startling!`;
+        message = `Thank you for updating <span class="font-bold" style="color: ${birdNameColor}">${escapeHtml(birdName)}'s</span> Swoop Spot. Those noisy birds can be quite startling!`;
       }
     }
     
@@ -3619,9 +3963,22 @@
   });
 
   // Show safe passage modal
-  function showSafePassageModal(birdName) {
+  function showSafePassageModal(birdName, spotRisk = 'Low risk') {
+    // Map spot risk to appropriate color (using darker colors for better contrast)
+    let birdNameColor = '#059669'; // default: darker green for low risk
+    
+    if (spotRisk === 'Danger - Avoid') {
+      birdNameColor = '#DC2626'; // darker red
+    } else if (spotRisk === 'Take caution') {
+      birdNameColor = '#D97706'; // darker orange
+    } else if (spotRisk === 'Calm - All clear') {
+      birdNameColor = '#2563eb'; // darker blue
+    } else {
+      birdNameColor = '#059669'; // darker green for low risk
+    }
+    
     successUserIcon.src = 'Assets/Icons/user_safepassage.svg';
-    successMessage.innerHTML = `I'm so glad you didn't spot <span class="font-bold text-blue-600">${escapeHtml(birdName)}</span>. You must be a lucky egg!`;
+    successMessage.innerHTML = `I'm so glad you didn't spot <span class="font-bold" style="color: ${birdNameColor}">${escapeHtml(birdName)}</span>. You must be a lucky egg!`;
     goodEggMessage.style.display = 'none'; // Hide the "good egg" message for safe passage
     successModal.classList.remove('hidden');
     document.body.classList.add('modal-open');
@@ -3630,6 +3987,66 @@
   // ----------------------------
   // Safety Tips Functions
   // ----------------------------
+  // Safety Tips Functions
+  // ----------------------------
+  
+  function openPreventativeTipsModal(species = 'general') {
+    const tips = PREVENTATIVE_TIPS[species] || PREVENTATIVE_TIPS.general;
+    
+    let html = `
+      <div class="mb-4">
+        <h4 class="text-lg font-bold mb-2" style="color: #422d1e;">🌿 Building Rapport with ${species === 'general' ? 'Local Birds' : escapeHtml(species) + 's'}</h4>
+        <p class="text-sm mb-4" style="color: #422d1e; opacity: 0.8;">
+          These preventative tips can help you build positive relationships with birds in your area before nesting season begins. 
+          Birds have excellent memories and are more likely to tolerate familiar, friendly humans.
+        </p>
+      </div>
+      <div class="space-y-3">
+    `;
+    
+    tips.forEach((tip, index) => {
+      html += `
+        <div class="flex items-start gap-3 p-3 rounded" style="background-color: #fff; border-left: 3px solid #059669;">
+          <span class="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white" style="background-color: #059669;">
+            ${index + 1}
+          </span>
+          <p class="text-sm" style="color: #422d1e;">${escapeHtml(tip)}</p>
+        </div>
+      `;
+    });
+    
+    html += `
+      </div>
+      <div class="mt-6 p-4 rounded" style="background-color: #DCFCE7; border-left: 3px solid #059669;">
+        <p class="text-sm font-medium" style="color: #14532D;">
+          🕊️ Building positive relationships with birds takes time and consistency. Start these practices well before nesting season 
+          for the best results. Remember, you're sharing their habitat - respect and patience go a long way!
+        </p>
+      </div>
+      
+      <div class="mt-4 text-center">
+        <button id="viewSafetyTipsBtn" class="text-white px-6 py-2 rounded font-medium" style="background-color: #422d1e;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+          View Safety Tips (During Nesting Season)
+        </button>
+      </div>
+    `;
+    
+    tipsContent.innerHTML = html;
+    
+    // Show the modal
+    safetyTipsModal.classList.remove('hidden');
+    document.body.classList.add('modal-open');
+    
+    // Set up the button to switch to safety tips
+    requestAnimationFrame(() => {
+      const viewSafetyTipsBtn = document.getElementById('viewSafetyTipsBtn');
+      if (viewSafetyTipsBtn) {
+        viewSafetyTipsBtn.addEventListener('click', () => {
+          displaySafetyTips(species);
+        });
+      }
+    });
+  }
   
   function openSafetyTipsModal(species = 'general') {
     // Set the species in the dropdown
@@ -3705,6 +4122,11 @@
   
   // Safety tips modal event listeners
   closeSafetyTips.addEventListener('click', () => {
+    safetyTipsModal.classList.add('hidden');
+    document.body.classList.remove('modal-open');
+  });
+  
+  document.getElementById('closeSafetyTipsBottom').addEventListener('click', () => {
     safetyTipsModal.classList.add('hidden');
     document.body.classList.remove('modal-open');
   });

@@ -1400,8 +1400,8 @@
     // Update UI
     updateAuthUI();
     
-    // Reload spots with user context
-    await loadAllFromSupabase();
+    // Reload spots with user context (silently since we show welcome message)
+    await loadAllFromSupabase(true);
     
     // Check if this is a new user signup
     const isNewUser = sessionStorage.getItem('newUserSignup') === 'true';
@@ -1854,14 +1854,16 @@
   }
   
   // Load all spots from Supabase
-  async function loadAllFromSupabase() {
+  async function loadAllFromSupabase(silent = false) {
     if (!syncEnabled) {
       loadAll(); // Fallback to localStorage
       return;
     }
     
     try {
-      toast('Loading spots from cloud...', 1000);
+      if (!silent) {
+        toast('Loading spots from cloud...', 1000);
+      }
       
       // Fetch all spots with their reports
       const { data: spotsData, error } = await supabase
@@ -1908,8 +1910,11 @@
           createSpotFromData(spot, true);
         });
         
-        toast(`Loaded ${spotsData.length} spots from cloud`, 2000);
-      } else {
+        // Only show toast if not silent
+        if (!silent) {
+          toast(`Loaded ${spotsData.length} spots from cloud`, 2000);
+        }
+      } else if (!silent) {
         toast('No spots found - add your first!', 2000);
       }
       
@@ -1918,7 +1923,9 @@
       
     } catch (error) {
       console.error('❌ Error loading from Supabase:', error);
-      toast('Loading from local storage...', 2000);
+      if (!silent) {
+        toast('Loading from local storage...', 2000);
+      }
       loadAll(); // Fallback to localStorage
     }
   }
@@ -1979,11 +1986,11 @@
       const existingSpot = spots.find(s => s.id === newSpot.id);
       if (!existingSpot) {
         toast(`New spot: ${newSpot.name}`, 2000);
-        loadAllFromSupabase(); // Reload to get the new spot with reports
+        loadAllFromSupabase(true); // Reload silently
       }
     } else if (eventType === 'UPDATE') {
       // Spot updated
-      loadAllFromSupabase(); // Reload to get updates
+      loadAllFromSupabase(true); // Reload silently
     } else if (eventType === 'DELETE') {
       // Spot deleted
       const spot = spots.find(s => s.id === oldSpot.id);
@@ -2002,7 +2009,7 @@
   // Handle real-time report updates
   function handleReportRealTimeUpdate(payload) {
     // When a report changes, reload the affected spot
-    loadAllFromSupabase();
+    loadAllFromSupabase(true); // Reload silently
   }
 
   // ----------------------------

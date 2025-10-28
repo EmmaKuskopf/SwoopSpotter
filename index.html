@@ -198,12 +198,33 @@
   <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
     <div class="flex-1"></div>
     <img src="Assets/Logo/Logo-Horizontal.svg" alt="Swoop Spotter Logo" class="h-8" />
-    <div class="flex-1 flex justify-end">
+    <div class="flex-1 flex justify-end relative">
       <!-- User Button (shown when signed in) -->
       <button id="userButton" class="hidden items-center gap-2 px-3 py-1.5 rounded" style="background-color: #e8e2e1; color: #422d1e;" onmouseover="this.style.backgroundColor='#dcd6d5'" onmouseout="this.style.backgroundColor='#e8e2e1'">
         <span id="userButtonName">User</span>
         <span class="text-xs">▾</span>
       </button>
+      
+      <!-- User Menu Dropdown -->
+      <div id="userMenuDropdown" class="hidden absolute right-0 top-full mt-2 rounded-lg shadow-xl p-4 z-50" style="background-color: #f2eceb; border: 2px solid #d4cac7; min-width: 200px;">
+        <div class="flex items-center gap-3 mb-3 pb-3" style="border-bottom: 1px solid #d4cac7;">
+          <img id="userMenuAvatar" src="Assets/Users Icons/user_1.svg" alt="Avatar" class="w-10 h-10 rounded-full">
+          <div>
+            <div id="userMenuName" class="font-medium" style="color: #422d1e;">User Name</div>
+            <div id="userMenuEmail" class="text-xs" style="color: #422d1e; opacity: 0.7;">user@email.com</div>
+          </div>
+        </div>
+        <button id="userMenuStats" class="w-full text-left px-3 py-2 rounded mb-1 hover:bg-gray-100" style="color: #422d1e;">
+          View Contributions
+        </button>
+        <button id="userMenuProfile" class="w-full text-left px-3 py-2 rounded mb-1 hover:bg-gray-100" style="color: #422d1e;">
+          Edit Profile
+        </button>
+        <button id="userMenuSignOut" class="w-full text-left px-3 py-2 rounded hover:bg-gray-100" style="color: #422d1e;">
+          Sign Out
+        </button>
+      </div>
+      
       <!-- Sign In Button (shown when signed out) -->
       <button id="signInButton" class="items-center gap-2 px-4 py-1.5 rounded text-white" style="background-color: #422d1e;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
         Sign In
@@ -238,7 +259,10 @@
       Safety Tips
     </button>
     <button id="testVibrateBtn" class="px-4 py-2 rounded text-sm border" style="border-color: #d4cac7; color: #422d1e;" onmouseover="this.style.backgroundColor='#e8e2e1'" onmouseout="this.style.backgroundColor='transparent'">
-      Test Vibration 📳
+      Test Vibration
+    </button>
+    <button id="testDateBtn" class="px-4 py-2 rounded text-sm border" style="border-color: #d4cac7; color: #422d1e;" onmouseover="this.style.backgroundColor='#e8e2e1'" onmouseout="this.style.backgroundColor='transparent'">
+      Test Date
     </button>
   </div>
 
@@ -246,6 +270,56 @@
     <section class="p-3 rounded shadow" style="background-color: #f2eceb;">
       <h2 class="font-semibold mb-2" style="color: #422d1e;">Nearby Alerts</h2>
       <div id="alertsList" class="space-y-2 max-h-56 overflow-auto"></div>
+      
+      <!-- Stats Section -->
+      <div class="mt-4 pt-3 border-t" style="border-color: #d4cac7;">
+        <h3 class="font-semibold text-sm mb-3 flex items-center gap-2" style="color: #422d1e;">
+          <img src="Assets/Menu Icons/Light Mode/menu-stats.svg" width="18" height="18" alt="Stats icon">
+          Activity Stats
+        </h3>
+        
+        <!-- Time Period Tabs -->
+        <div class="flex gap-2 mb-3">
+          <button class="stats-period-tab active flex-1 text-xs py-1 px-2 rounded" data-period="today" style="background-color: #422d1e; color: white;">
+            Today
+          </button>
+          <button class="stats-period-tab flex-1 text-xs py-1 px-2 rounded" data-period="week" style="background-color: transparent; color: #422d1e; border: 1px solid #d4cac7;">
+            This Week
+          </button>
+          <button class="stats-period-tab flex-1 text-xs py-1 px-2 rounded" data-period="season" style="background-color: transparent; color: #422d1e; border: 1px solid #d4cac7;">
+            This Season
+          </button>
+        </div>
+        
+        <!-- Stats Grid -->
+        <div class="space-y-2 text-xs">
+          <!-- Total Reports -->
+          <div class="flex justify-between items-center p-2 rounded" style="background-color: #e8e2e1;">
+            <span style="color: #422d1e;">Total Reports</span>
+            <span class="font-bold" style="color: #422d1e;" id="statTotalReports">0</span>
+          </div>
+          
+          <!-- Safe Passages -->
+          <div class="flex justify-between items-center p-2 rounded" style="background-color: #e8e2e1;">
+            <span style="color: #059669;">✓ Safe Passages</span>
+            <span class="font-bold" style="color: #059669;" id="statSafePassages">0</span>
+          </div>
+          
+          <!-- Injuries -->
+          <div class="flex justify-between items-center p-2 rounded" style="background-color: #e8e2e1;">
+            <span style="color: #DC2626;">⚠ Injuries</span>
+            <span class="font-bold" style="color: #DC2626;" id="statInjuries">0</span>
+          </div>
+          
+          <!-- Bird Species Breakdown -->
+          <div class="p-2 rounded" style="background-color: #e8e2e1;">
+            <div class="font-semibold mb-2" style="color: #422d1e;">By Species:</div>
+            <div id="statSpeciesBreakdown" class="space-y-1 text-xs">
+              <div style="color: #422d1e; opacity: 0.6;">No reports yet</div>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
 
     <section class="p-3 rounded shadow" style="background-color: #f2eceb;">
@@ -501,6 +575,241 @@
   </div>
 </div>
 
+<!-- Test Date Modal -->
+<div id="testDateModal" class="hidden fixed inset-0 flex items-center justify-center bg-black/40 z-50 p-4">
+  <div class="rounded-lg shadow-lg w-full max-w-md mx-auto" style="background-color: #f2eceb;">
+    <div class="p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-bold" style="color: #422d1e;">Test Date Simulation</h3>
+        <button id="closeTestDate" class="text-2xl" style="color: #422d1e; opacity: 0.7;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">&times;</button>
+      </div>
+      
+      <div class="mb-4">
+        <p class="text-sm mb-4" style="color: #422d1e; opacity: 0.8;">
+          Set a test date to see how the app behaves at different times of year. This is useful for testing pre-season warnings and seasonal features.
+        </p>
+        
+        <label class="block text-sm font-medium mb-2" style="color: #422d1e;">Select Test Date:</label>
+        <input type="date" id="testDateInput" class="w-full rounded-lg p-2 mb-2" style="padding: 8px 12px; border-radius: 8px; border: 1px solid #d4cac7; background-color: #fff; color: #422d1e;">
+        
+        <div class="text-xs mb-4" style="color: #422d1e; opacity: 0.6;">
+          <strong>Tips:</strong>
+          <ul class="list-disc pl-5 mt-1">
+            <li>Set to July to see pre-season warnings (30 days before August nesting season)</li>
+            <li>Set to December to see spots marked as "Calm" (after nesting season)</li>
+            <li>Set to September to see active swooping season alerts</li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="flex gap-2">
+        <button id="applyTestDate" class="flex-1 px-4 py-2 text-white rounded font-medium" style="background-color: #422d1e;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+          Apply Test Date
+        </button>
+        <button id="resetTestDate" class="flex-1 px-4 py-2 rounded font-medium" style="background-color: #d4cac7; color: #422d1e;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+          Reset to Today
+        </button>
+      </div>
+      
+      <div id="currentTestDate" class="mt-4 text-sm text-center" style="color: #422d1e;">
+        <!-- Will show current test date or "Using real date" -->
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Auth Modal -->
+<div id="authModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="z-index: 9999;">
+  <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4" style="background-color: #f2eceb; border: 2px solid #d4cac7;">
+    <div class="flex items-center justify-between p-6 border-b" style="border-color: #d4cac7;">
+      <h2 class="text-2xl font-bold" style="color: #422d1e;">Welcome to SwoopSpotter</h2>
+      <button id="closeAuthModal" class="text-gray-500 hover:text-gray-700">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+    
+    <!-- Tabs -->
+    <div class="flex border-b" style="border-color: #d4cac7;">
+      <button id="signInTab" class="flex-1 py-3 px-4 text-center font-medium active" style="border-bottom: 2px solid #422d1e; color: #422d1e;">
+        Sign In
+      </button>
+      <button id="signUpTab" class="flex-1 py-3 px-4 text-center font-medium" style="color: #422d1e; opacity: 0.6;">
+        Sign Up
+      </button>
+    </div>
+    
+    <!-- Sign In Form -->
+    <form id="signInForm" class="p-6">
+      <div class="mb-4">
+        <label class="block text-sm font-medium mb-2" style="color: #422d1e;">Email</label>
+        <input type="email" id="signInEmail" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2" style="border-color: #d4cac7; background-color: white;">
+      </div>
+      <div class="mb-4">
+        <label class="block text-sm font-medium mb-2" style="color: #422d1e;">Password</label>
+        <input type="password" id="signInPassword" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2" style="border-color: #d4cac7; background-color: white;">
+      </div>
+      <div id="signInError" class="hidden mb-4 p-3 rounded" style="background-color: #FEE2E2; color: #991B1B;"></div>
+      <button type="submit" class="w-full text-white py-2 px-4 rounded-lg font-medium" style="background-color: #422d1e;">
+        Sign In
+      </button>
+    </form>
+    
+    <!-- Sign Up Form -->
+    <form id="signUpForm" class="hidden p-6">
+      <div class="mb-4">
+        <label class="block text-sm font-medium mb-2" style="color: #422d1e;">Display Name</label>
+        <input type="text" id="signUpName" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2" style="border-color: #d4cac7; background-color: white;">
+      </div>
+      <div class="mb-4">
+        <label class="block text-sm font-medium mb-2" style="color: #422d1e;">Email</label>
+        <input type="email" id="signUpEmail" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2" style="border-color: #d4cac7; background-color: white;">
+      </div>
+      <div class="mb-4">
+        <label class="block text-sm font-medium mb-2" style="color: #422d1e;">Password</label>
+        <input type="password" id="signUpPassword" required minlength="6" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2" style="border-color: #d4cac7; background-color: white;">
+      </div>
+      <div id="signUpError" class="hidden mb-4 p-3 rounded" style="background-color: #FEE2E2; color: #991B1B;"></div>
+      <button type="submit" class="w-full text-white py-2 px-4 rounded-lg font-medium" style="background-color: #422d1e;">
+        Sign Up
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Profile Modal -->
+<div id="profileModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="z-index: 9999;">
+  <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto" style="background-color: #f2eceb; border: 2px solid #d4cac7;">
+    <div class="flex items-center justify-between p-6 border-b" style="border-color: #d4cac7;">
+      <h2 class="text-2xl font-bold" style="color: #422d1e;">My Profile</h2>
+      <button id="closeProfileModal" class="text-gray-500 hover:text-gray-700">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+    
+    <!-- Profile Header -->
+    <div class="p-6 border-b" style="border-color: #d4cac7;">
+      <div class="flex items-center gap-4">
+        <img id="profileAvatar" src="Assets/Users Icons/user_1.svg" alt="Avatar" class="w-20 h-20 rounded-full">
+        <div>
+          <h3 id="profileDisplayName" class="text-xl font-bold" style="color: #422d1e;"></h3>
+          <p id="profileEmail" class="text-sm" style="color: #422d1e; opacity: 0.7;"></p>
+          <p id="profileJoined" class="text-xs mt-1" style="color: #422d1e; opacity: 0.6;"></p>
+        </div>
+      </div>
+      <p id="profileBio" class="mt-4 text-sm italic" style="color: #422d1e; opacity: 0.8;"></p>
+    </div>
+    
+    <!-- New User Welcome Message -->
+    <div id="newUserWelcome" class="hidden p-4 mx-6 mt-6 rounded" style="background-color: #DCFCE7; border-left: 3px solid #059669;">
+      <p class="text-sm font-medium" style="color: #14532D;">
+        🎉 Welcome to SwoopSpotter! Complete your profile below to personalize your experience.
+      </p>
+    </div>
+    
+    <!-- Tabs -->
+    <div class="flex border-b" style="border-color: #d4cac7;">
+      <button id="profileStatsTab" class="flex-1 py-3 px-4 text-center font-medium active" style="border-bottom: 2px solid #422d1e; color: #422d1e; opacity: 1;">
+        Contributions
+      </button>
+      <button id="profileEditTab" class="flex-1 py-3 px-4 text-center font-medium" style="color: #422d1e; opacity: 0.6; border-color: transparent;">
+        Edit Profile
+      </button>
+    </div>
+    
+    <!-- Stats Content -->
+    <div id="profileStatsContent" class="p-6">
+      <h3 class="text-lg font-bold mb-4" style="color: #422d1e;">Your Contributions</h3>
+      <div class="grid grid-cols-3 gap-4 mb-6">
+        <div class="text-center p-4 rounded" style="background-color: white; border: 2px solid #d4cac7;">
+          <div class="text-3xl font-bold" style="color: #422d1e;" id="statSpotsCreated">0</div>
+          <div class="text-sm" style="color: #422d1e; opacity: 0.7;">Spots Created</div>
+        </div>
+        <div class="text-center p-4 rounded" style="background-color: white; border: 2px solid #d4cac7;">
+          <div class="text-3xl font-bold" style="color: #422d1e;" id="statReportsCreated">0</div>
+          <div class="text-sm" style="color: #422d1e; opacity: 0.7;">Reports Added</div>
+        </div>
+        <div class="text-center p-4 rounded" style="background-color: white; border: 2px solid #d4cac7;">
+          <div class="text-3xl font-bold" style="color: #422d1e;" id="statSafePassages">0</div>
+          <div class="text-sm" style="color: #422d1e; opacity: 0.7;">Safe Passages</div>
+        </div>
+      </div>
+      
+      <h3 class="text-lg font-bold mb-4" style="color: #422d1e;">Recent Activity</h3>
+      <div id="profileRecentActivity" class="space-y-2">
+        <span style="color: #422d1e; opacity: 0.6;" class="text-sm">Loading...</span>
+      </div>
+    </div>
+    
+    <!-- Edit Profile Content -->
+    <div id="profileEditContent" class="hidden p-6">
+      <form id="profileEditForm">
+        <div class="mb-4">
+          <label class="block text-sm font-medium mb-2" style="color: #422d1e;">Display Name</label>
+          <input type="text" id="editDisplayName" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2" style="border-color: #d4cac7; background-color: white;">
+        </div>
+        
+        <div class="mb-4">
+          <label class="block text-sm font-medium mb-2" style="color: #422d1e;">Avatar</label>
+          <input type="hidden" id="selectedAvatar" value="user_1.svg">
+          <div class="grid grid-cols-4 gap-3">
+            <button type="button" class="avatar-btn p-2 rounded border-2 hover:bg-gray-100" data-avatar="user_1.svg" style="border-color: transparent;">
+              <img src="Assets/Users Icons/user_1.svg" alt="Avatar 1" class="w-full h-auto">
+            </button>
+            <button type="button" class="avatar-btn p-2 rounded border-2 hover:bg-gray-100" data-avatar="user_2.svg" style="border-color: transparent;">
+              <img src="Assets/Users Icons/user_2.svg" alt="Avatar 2" class="w-full h-auto">
+            </button>
+            <button type="button" class="avatar-btn p-2 rounded border-2 hover:bg-gray-100" data-avatar="user_3.svg" style="border-color: transparent;">
+              <img src="Assets/Users Icons/user_3.svg" alt="Avatar 3" class="w-full h-auto">
+            </button>
+            <button type="button" class="avatar-btn p-2 rounded border-2 hover:bg-gray-100" data-avatar="user_4.svg" style="border-color: transparent;">
+              <img src="Assets/Users Icons/user_4.svg" alt="Avatar 4" class="w-full h-auto">
+            </button>
+            <button type="button" class="avatar-btn p-2 rounded border-2 hover:bg-gray-100" data-avatar="user_5.svg" style="border-color: transparent;">
+              <img src="Assets/Users Icons/user_5.svg" alt="Avatar 5" class="w-full h-auto">
+            </button>
+            <button type="button" class="avatar-btn p-2 rounded border-2 hover:bg-gray-100" data-avatar="user_6.svg" style="border-color: transparent;">
+              <img src="Assets/Users Icons/user_6.svg" alt="Avatar 6" class="w-full h-auto">
+            </button>
+            <button type="button" class="avatar-btn p-2 rounded border-2 hover:bg-gray-100" data-avatar="user_7.svg" style="border-color: transparent;">
+              <img src="Assets/Users Icons/user_7.svg" alt="Avatar 7" class="w-full h-auto">
+            </button>
+            <button type="button" class="avatar-btn p-2 rounded border-2 hover:bg-gray-100" data-avatar="user_8.svg" style="border-color: transparent;">
+              <img src="Assets/Users Icons/user_8.svg" alt="Avatar 8" class="w-full h-auto">
+            </button>
+            <button type="button" class="avatar-btn p-2 rounded border-2 hover:bg-gray-100" data-avatar="user_9.svg" style="border-color: transparent;">
+              <img src="Assets/Users Icons/user_9.svg" alt="Avatar 9" class="w-full h-auto">
+            </button>
+            <button type="button" class="avatar-btn p-2 rounded border-2 hover:bg-gray-100" data-avatar="user_10.svg" style="border-color: transparent;">
+              <img src="Assets/Users Icons/user_10.svg" alt="Avatar 10" class="w-full h-auto">
+            </button>
+          </div>
+        </div>
+        
+        <div class="mb-4">
+          <label class="block text-sm font-medium mb-2" style="color: #422d1e;">Bio (optional)</label>
+          <textarea id="editBio" rows="3" maxlength="200" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2" style="border-color: #d4cac7; background-color: white;" placeholder="Tell us a bit about yourself..."></textarea>
+          <p class="text-xs mt-1" style="color: #422d1e; opacity: 0.6;">Max 200 characters</p>
+        </div>
+        
+        <div id="profileEditError" class="hidden mb-4 p-3 rounded" style="background-color: #FEE2E2; color: #991B1B;"></div>
+        <div id="profileEditSuccess" class="hidden mb-4 p-3 rounded" style="background-color: #DCFCE7; color: #14532D;"></div>
+        
+        <div class="flex gap-3">
+          <button type="submit" class="flex-1 text-white py-2 px-4 rounded-lg font-medium" style="background-color: #422d1e;">
+            Save Changes
+          </button>
+          <button type="button" id="cancelEditProfile" class="flex-1 py-2 px-4 rounded-lg font-medium" style="background-color: white; border: 2px solid #d4cac7; color: #422d1e;">
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <!-- Safety Tips Modal -->
 <div id="safetyTipsModal" class="hidden fixed inset-0 flex items-center justify-center bg-black/40 z-50 p-4 overflow-y-auto">
   <div class="rounded-lg shadow-lg w-full max-w-2xl mx-auto my-auto" style="background-color: #f2eceb;">
@@ -535,238 +844,6 @@
         <button id="closeSafetyTipsBottom" class="px-6 py-2 text-white rounded font-medium" style="background-color: #422d1e;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
           Close
         </button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Auth Modal -->
-<div id="authModal" class="hidden fixed inset-0 flex items-center justify-center bg-black/40 z-50 p-4">
-  <div class="rounded-lg shadow-lg p-6 max-w-md w-full" style="background-color: #f2eceb;">
-    <div class="flex justify-between items-center mb-4">
-      <h3 class="text-xl font-bold" style="color: #422d1e;" id="authModalTitle">Sign In</h3>
-      <button id="closeAuthModal" class="text-2xl" style="color: #422d1e; opacity: 0.7;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">&times;</button>
-    </div>
-    
-    <!-- Auth Tabs -->
-    <div class="flex gap-2 mb-4" style="border-bottom: 1px solid #d4cac7;">
-      <button id="signInTab" class="auth-tab active px-4 py-2 font-medium border-b-2" style="border-color: #422d1e; color: #422d1e;">
-        Sign In
-      </button>
-      <button id="signUpTab" class="auth-tab px-4 py-2 font-medium border-b-2 border-transparent" style="color: #422d1e; opacity: 0.6;">
-        Sign Up
-      </button>
-    </div>
-    
-    <!-- Sign In Form -->
-    <form id="signInForm" class="space-y-4">
-      <div>
-        <label class="block text-sm font-medium mb-1" style="color: #422d1e;">Email</label>
-        <input type="email" id="signInEmail" required class="w-full rounded p-2" style="border: 1px solid #d4cac7; background-color: #fff;" placeholder="your@email.com">
-      </div>
-      <div>
-        <label class="block text-sm font-medium mb-1" style="color: #422d1e;">Password</label>
-        <input type="password" id="signInPassword" required class="w-full rounded p-2" style="border: 1px solid #d4cac7; background-color: #fff;" placeholder="••••••••">
-      </div>
-      <div id="signInError" class="hidden text-sm text-red-600"></div>
-      <button type="submit" class="w-full px-4 py-2 text-white rounded" style="background-color: #422d1e;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
-        Sign In
-      </button>
-    </form>
-    
-    <!-- Sign Up Form -->
-    <form id="signUpForm" class="space-y-4 hidden">
-      <div>
-        <label class="block text-sm font-medium mb-1" style="color: #422d1e;">Display Name</label>
-        <input type="text" id="signUpName" required class="w-full rounded p-2" style="border: 1px solid #d4cac7; background-color: #fff;" placeholder="Your name">
-      </div>
-      <div>
-        <label class="block text-sm font-medium mb-1" style="color: #422d1e;">Email</label>
-        <input type="email" id="signUpEmail" required class="w-full rounded p-2" style="border: 1px solid #d4cac7; background-color: #fff;" placeholder="your@email.com">
-      </div>
-      <div>
-        <label class="block text-sm font-medium mb-1" style="color: #422d1e;">Password</label>
-        <input type="password" id="signUpPassword" required minlength="6" class="w-full rounded p-2" style="border: 1px solid #d4cac7; background-color: #fff;" placeholder="••••••••">
-        <p class="text-xs mt-1" style="color: #422d1e; opacity: 0.6;">Minimum 6 characters</p>
-      </div>
-      <div id="signUpError" class="hidden text-sm text-red-600"></div>
-      <button type="submit" class="w-full px-4 py-2 text-white rounded" style="background-color: #422d1e;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
-        Sign Up
-      </button>
-    </form>
-  </div>
-</div>
-
-<!-- User Menu Dropdown -->
-<div id="userMenuDropdown" class="hidden absolute top-16 right-4 rounded-lg shadow-lg p-2 z-50" style="background-color: #f2eceb; border: 1px solid #d4cac7; min-width: 220px;">
-  <div class="px-3 py-2 border-b flex items-center gap-3" style="border-color: #d4cac7;">
-    <div class="w-12 h-12 rounded-full flex items-center justify-center" style="background-color: #f2eceb; padding: 6px;">
-      <img id="userMenuAvatar" src="Assets/Users Icons/user_1.svg" alt="User Avatar" style="width: 100%; height: 100%;">
-    </div>
-    <div class="flex-1">
-      <div class="font-medium" style="color: #422d1e;" id="userMenuName">User Name</div>
-      <div class="text-xs" style="color: #422d1e; opacity: 0.6;" id="userMenuEmail">email@example.com</div>
-    </div>
-  </div>
-  <button id="userMenuStats" class="w-full text-left px-3 py-2 text-sm rounded hover:bg-gray-100 flex items-center gap-2" style="color: #422d1e;">
-    <img src="Assets/Icons/user_stats.svg" alt="Stats" style="width: 18px; height: 18px;">
-    My Stats
-  </button>
-  <button id="userMenuProfile" class="w-full text-left px-3 py-2 text-sm rounded hover:bg-gray-100 flex items-center gap-2" style="color: #422d1e;">
-    <img src="Assets/Icons/user.svg" alt="Profile" style="width: 18px; height: 18px;">
-    Edit Profile
-  </button>
-  <button id="userMenuSignOut" class="w-full text-left px-3 py-2 text-sm rounded hover:bg-gray-100 text-red-600 flex items-center gap-2">
-    <img src="Assets/Icons/logout.svg" alt="Sign Out" style="width: 18px; height: 18px;">
-    Sign Out
-  </button>
-</div>
-
-<!-- Profile Modal -->
-<div id="profileModal" class="hidden fixed inset-0 flex items-center justify-center bg-black/40 z-50 p-4">
-  <div class="rounded-lg shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto" style="background-color: #f2eceb;">
-    <div class="p-6">
-      <!-- Header -->
-      <div class="flex justify-between items-center mb-6">
-        <h3 class="text-2xl font-bold" style="color: #422d1e;">My Profile</h3>
-        <button id="closeProfileModal" class="text-2xl" style="color: #422d1e; opacity: 0.7;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">&times;</button>
-      </div>
-      
-      <!-- Profile Tabs -->
-      <div class="flex gap-2 mb-6" style="border-bottom: 1px solid #d4cac7;">
-        <button id="profileStatsTab" class="profile-tab active px-4 py-2 font-medium border-b-2 flex items-center gap-2" style="border-color: #422d1e; color: #422d1e;">
-          <img src="Assets/Icons/user_stats.svg" alt="Stats" style="width: 18px; height: 18px;">
-          Stats
-        </button>
-        <button id="profileEditTab" class="profile-tab px-4 py-2 font-medium border-b-2 border-transparent flex items-center gap-2" style="color: #422d1e; opacity: 0.6;">
-          <img src="Assets/Icons/user.svg" alt="Profile" style="width: 18px; height: 18px;">
-          Edit Profile
-        </button>
-      </div>
-      
-      <!-- Stats Content -->
-      <div id="profileStatsContent" class="space-y-4">
-        <!-- Profile Header -->
-        <div class="flex items-center gap-4 p-4 rounded-lg" style="background-color: #e8e2e1;">
-          <div class="w-20 h-20 rounded-full flex items-center justify-center" style="background-color: #f2eceb; padding: 10px;" id="profileAvatarContainer">
-            <img id="profileAvatar" src="Assets/Users Icons/user_1.svg" alt="User Avatar" style="width: 100%; height: 100%;">
-          </div>
-          <div class="flex-1">
-            <h4 class="text-xl font-bold" style="color: #422d1e;" id="profileDisplayName">Loading...</h4>
-            <p class="text-sm" style="color: #422d1e; opacity: 0.7;" id="profileEmail">email@example.com</p>
-            <p class="text-xs mt-1" style="color: #422d1e; opacity: 0.6;" id="profileJoined">Member since: Loading...</p>
-            <p class="text-sm mt-2 italic" style="color: #422d1e; opacity: 0.8;" id="profileBio"></p>
-          </div>
-        </div>
-        
-        <!-- Statistics Cards -->
-        <div class="grid grid-cols-3 gap-4">
-          <!-- Spots Created -->
-          <div class="p-4 rounded-lg text-center" style="background-color: #e8e2e1;">
-            <div class="text-3xl font-bold" style="color: #422d1e;" id="statSpotsCreated">0</div>
-            <div class="text-sm mt-1" style="color: #422d1e; opacity: 0.7;">Spots Created</div>
-          </div>
-          
-          <!-- Reports Created -->
-          <div class="p-4 rounded-lg text-center" style="background-color: #e8e2e1;">
-            <div class="text-3xl font-bold" style="color: #422d1e;" id="statReportsCreated">0</div>
-            <div class="text-sm mt-1" style="color: #422d1e; opacity: 0.7;">Reports Created</div>
-          </div>
-          
-          <!-- Safe Passages -->
-          <div class="p-4 rounded-lg text-center" style="background-color: #e8e2e1;">
-            <div class="text-3xl font-bold" style="color: #422d1e;" id="statSafePassages">0</div>
-            <div class="text-sm mt-1" style="color: #422d1e; opacity: 0.7;">Safe Passages</div>
-          </div>
-        </div>
-        
-        <!-- Recent Activity -->
-        <div class="p-4 rounded-lg" style="background-color: #e8e2e1;">
-          <h5 class="font-medium mb-3" style="color: #422d1e;">Recent Contributions</h5>
-          <div id="profileRecentActivity" class="space-y-2">
-            <!-- Activity will be loaded dynamically -->
-          </div>
-        </div>
-      </div>
-      
-      <!-- Edit Profile Content -->
-      <div id="profileEditContent" class="hidden space-y-4">
-        <!-- Welcome Message for New Users -->
-        <div id="newUserWelcome" class="hidden p-4 rounded" style="background-color: #e8f5e9; border: 1px solid #4caf50;">
-          <div class="flex items-start gap-3">
-            <span style="font-size: 24px;">👋</span>
-            <div>
-              <h4 class="font-semibold" style="color: #2e7d32;">Welcome to SwoopSpotter!</h4>
-              <p class="text-sm mt-1" style="color: #1b5e20;">Personalize your profile by choosing an avatar and adding a bio. This helps other users recognize your contributions to the community!</p>
-            </div>
-          </div>
-        </div>
-        
-        <form id="profileEditForm" class="space-y-4">
-          <!-- Display Name -->
-          <div>
-            <label class="block text-sm font-medium mb-1" style="color: #422d1e;">Display Name</label>
-            <input type="text" id="editDisplayName" required class="w-full rounded p-2" style="border: 1px solid #d4cac7; background-color: #fff;" placeholder="Your name">
-          </div>
-          
-          <!-- Avatar Picker -->
-          <div>
-            <label class="block text-sm font-medium mb-2" style="color: #422d1e;">Choose Avatar</label>
-            <div class="grid grid-cols-4 gap-3" id="avatarPicker">
-              <button type="button" class="avatar-btn p-2 rounded hover:bg-gray-200 border-2 border-transparent" data-avatar="user_1.svg">
-                <img src="Assets/Users Icons/user_1.svg" alt="Avatar 1" style="width: 100%; height: auto;">
-              </button>
-              <button type="button" class="avatar-btn p-2 rounded hover:bg-gray-200 border-2 border-transparent" data-avatar="user_2.svg">
-                <img src="Assets/Users Icons/user_2.svg" alt="Avatar 2" style="width: 100%; height: auto;">
-              </button>
-              <button type="button" class="avatar-btn p-2 rounded hover:bg-gray-200 border-2 border-transparent" data-avatar="user_3.svg">
-                <img src="Assets/Users Icons/user_3.svg" alt="Avatar 3" style="width: 100%; height: auto;">
-              </button>
-              <button type="button" class="avatar-btn p-2 rounded hover:bg-gray-200 border-2 border-transparent" data-avatar="user_4.svg">
-                <img src="Assets/Users Icons/user_4.svg" alt="Avatar 4" style="width: 100%; height: auto;">
-              </button>
-              <button type="button" class="avatar-btn p-2 rounded hover:bg-gray-200 border-2 border-transparent" data-avatar="user_5.svg">
-                <img src="Assets/Users Icons/user_5.svg" alt="Avatar 5" style="width: 100%; height: auto;">
-              </button>
-              <button type="button" class="avatar-btn p-2 rounded hover:bg-gray-200 border-2 border-transparent" data-avatar="user_6.svg">
-                <img src="Assets/Users Icons/user_6.svg" alt="Avatar 6" style="width: 100%; height: auto;">
-              </button>
-              <button type="button" class="avatar-btn p-2 rounded hover:bg-gray-200 border-2 border-transparent" data-avatar="user_7.svg">
-                <img src="Assets/Users Icons/user_7.svg" alt="Avatar 7" style="width: 100%; height: auto;">
-              </button>
-              <button type="button" class="avatar-btn p-2 rounded hover:bg-gray-200 border-2 border-transparent" data-avatar="user_8.svg">
-                <img src="Assets/Users Icons/user_8.svg" alt="Avatar 8" style="width: 100%; height: auto;">
-              </button>
-              <button type="button" class="avatar-btn p-2 rounded hover:bg-gray-200 border-2 border-transparent" data-avatar="user_9.svg">
-                <img src="Assets/Users Icons/user_9.svg" alt="Avatar 9" style="width: 100%; height: auto;">
-              </button>
-              <button type="button" class="avatar-btn p-2 rounded hover:bg-gray-200 border-2 border-transparent" data-avatar="user_10.svg">
-                <img src="Assets/Users Icons/user_10.svg" alt="Avatar 10" style="width: 100%; height: auto;">
-              </button>
-            </div>
-            <input type="hidden" id="selectedAvatar" value="user_1.svg">
-          </div>
-          
-          <!-- Bio (optional) -->
-          <div>
-            <label class="block text-sm font-medium mb-1" style="color: #422d1e;">Bio (optional)</label>
-            <textarea id="editBio" rows="3" class="w-full rounded p-2" style="border: 1px solid #d4cac7; background-color: #fff;" placeholder="Tell us about yourself..."></textarea>
-            <p class="text-xs mt-1" style="color: #422d1e; opacity: 0.6;">Max 200 characters</p>
-          </div>
-          
-          <!-- Save Button -->
-          <div class="flex gap-2">
-            <button type="submit" class="flex-1 px-4 py-2 text-white rounded" style="background-color: #422d1e;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
-              💾 Save Changes
-            </button>
-            <button type="button" id="cancelEditProfile" class="px-4 py-2 rounded" style="background-color: #d4cac7; color: #422d1e;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
-              Cancel
-            </button>
-          </div>
-          
-          <div id="profileEditError" class="hidden text-sm text-red-600"></div>
-          <div id="profileEditSuccess" class="hidden text-sm text-green-600"></div>
-        </form>
       </div>
     </div>
   </div>
@@ -906,6 +983,15 @@
   const exitPromptList = document.getElementById('exitPromptList');
   const closeExitPrompt = document.getElementById('closeExitPrompt');
 
+  // Test Date refs
+  const testDateBtn = document.getElementById('testDateBtn');
+  const testDateModal = document.getElementById('testDateModal');
+  const closeTestDate = document.getElementById('closeTestDate');
+  const testDateInput = document.getElementById('testDateInput');
+  const applyTestDate = document.getElementById('applyTestDate');
+  const resetTestDate = document.getElementById('resetTestDate');
+  const currentTestDate = document.getElementById('currentTestDate');
+
   // Safety Tips refs
   const safetyTipsModal = document.getElementById('safetyTipsModal');
   const closeSafetyTips = document.getElementById('closeSafetyTips');
@@ -988,10 +1074,7 @@
   // Days to wait after last report before auto-calming
   const AUTO_CALM_DAYS = 10;
   
-  // Days of inactivity before hiding a spot (30 days = 1 month)
-  const HIDE_AFTER_DAYS = 30;
-  
-  // Days before season start to reactivate spots with preventative warning (30 days = 1 month)
+  // Days before season start to show pre-season warning with preventative tips (30 days = 1 month)
   const PRESEASON_WARNING_DAYS = 30;
   
   // Preventative tips for building rapport with birds (shown for pre-season warnings)
@@ -1111,88 +1194,7 @@
       tips: [
         "Watch for their distinctive alarm call - a loud, urgent cry",
         "Look for ground nests (small depressions) and give them wide berth",
-        "Don't approach chicks - parents will attack",
-        "Plovers dive-bomb and may make contact with their wing spurs",
-        "Walk calmly around the area - running triggers attacks",
-        "Use an umbrella or raised object for protection",
-        "Wear a hat and glasses - they aim for the head",
-        "Take an alternate route if possible",
-        "If nesting near your property, mark the area with signs",
-        "Keep pets away - dogs are a major trigger",
-        "They're ground nesters so watch where you walk",
-        "Most aggressive when eggs are about to hatch or chicks are young"
-      ]
-    },
-    Butcherbird: {
-      title: "Butcherbird Safety Tips",
-      description: "Butcherbirds have powerful beaks and can be aggressive when defending territory. They're less common swoopers than magpies but more dangerous.",
-      tips: [
-        "Wear thick hat or helmet - their beaks are very strong",
-        "Protect your eyes with sunglasses or safety glasses",
-        "Move quickly through the area",
-        "Don't stop or make sudden movements",
-        "They often swoop silently without warning",
-        "Travel in groups for safety",
-        "Carry an umbrella or stick above your head",
-        "Face the bird and back away slowly if confronted",
-        "Avoid areas where you've been swooped previously",
-        "Their swooping period is usually shorter (2-3 weeks)",
-        "They may make contact and can draw blood",
-        "Report aggressive birds to wildlife authorities"
-      ]
-    },
-    Crow: {
-      title: "Australian Raven/Crow Safety Tips",
-      description: "Ravens and crows are intelligent birds that swoop when protecting nests. They're less common swoopers but very persistent.",
-      tips: [
-        "Wear a hat and eye protection",
-        "These birds have excellent memory - avoid areas where swooped",
-        "Move quickly but don't run",
-        "Face the bird and maintain eye contact",
-        "Use an umbrella for overhead protection",
-        "Travel in groups when possible",
-        "Don't feed crows during nesting season",
-        "They may swoop repeatedly in one area",
-        "Their beaks can cause injury",
-        "Respect their intelligence - they remember threats",
-        "Draw eyes on your hat to deter attacks",
-        "Report persistent swooping to local council"
-      ]
-    },
-    "Noisy Miner": {
-      title: "Noisy Miner Safety Tips",
-      description: "Noisy Miners are aggressive, territorial birds that nest in colonies. They're smaller but swoop in groups.",
-      tips: [
-        "Wear a hat for basic protection",
-        "Move quickly through the area",
-        "These birds are persistent but rarely dangerous",
-        "They may swoop repeatedly but seldom make contact",
-        "Travel in groups - though they may still swoop",
-        "Don't stop near flowering trees (their food source)",
-        "Use an umbrella if available",
-        "Face the birds as you move away",
-        "Their swooping is more harassment than attack",
-        "Keep moving - they swoop to drive you away",
-        "Protect your eyes just in case",
-        "They defend territories year-round, not just nesting season"
-      ]
-    },
-    "Noisy Friarbird": {
-      title: "Noisy Friarbird Safety Tips",
-      description: "Noisy Friarbirds are large, aggressive honeyeaters that defend feeding and nesting territories vigorously.",
-      tips: [
-        "Wear a hat and eye protection",
-        "These large birds can be quite aggressive",
-        "Move quickly through flowering tree areas",
-        "Don't linger near their food sources (nectar)",
-        "They may make contact with claws",
-        "Travel in groups for safety",
-        "Use an umbrella for overhead protection",
-        "Face the bird and back away",
-        "Avoid areas with active nests",
-        "Their large size makes their swoops more intimidating",
-        "Keep children and pets away from nesting areas",
-        "Report dangerous individuals to wildlife authorities"
+        "Don't approach chicks - parents will attack"
       ]
     }
   };
@@ -1255,7 +1257,7 @@
 
   // Format timestamp to show relative time
   function formatTimeAgo(timestamp) {
-    const now = Date.now();
+    const now = getCurrentDate().getTime();
     const then = new Date(timestamp).getTime();
     const diff = now - then;
     
@@ -1429,20 +1431,22 @@
   function updateAuthUI() {
     if (currentUser) {
       // Show user button, hide sign in
-      signInButton.classList.add('hidden');
-      userButton.classList.remove('hidden');
-      userButton.classList.add('flex');
+      if (signInButton) signInButton.classList.add('hidden');
+      if (userButton) {
+        userButton.classList.remove('hidden');
+        userButton.classList.add('flex');
+      }
       
       // Get display name from profile or user metadata or email
       const displayName = userProfile?.display_name || 
                          currentUser.user_metadata?.display_name || 
                          currentUser.email.split('@')[0];
       
-      userButtonName.textContent = displayName;
+      if (userButtonName) userButtonName.textContent = displayName;
       
       // Update menu
-      userMenuName.textContent = displayName;
-      userMenuEmail.textContent = currentUser.email;
+      if (userMenuName) userMenuName.textContent = displayName;
+      if (userMenuEmail) userMenuEmail.textContent = currentUser.email;
       
       // Update menu avatar
       const avatarUrl = userProfile?.avatar_url || 'user_1.svg';
@@ -1454,9 +1458,9 @@
       console.log('UI updated with display name:', displayName);
     } else {
       // Show sign in, hide user button
-      signInButton.classList.remove('hidden');
-      userButton.classList.add('hidden');
-      userMenuDropdown.classList.add('hidden');
+      if (signInButton) signInButton.classList.remove('hidden');
+      if (userButton) userButton.classList.add('hidden');
+      if (userMenuDropdown) userMenuDropdown.classList.add('hidden');
     }
   }
   
@@ -1478,15 +1482,19 @@
       
       if (error) throw error;
       
-      authModal.classList.add('hidden');
-      signInError.classList.add('hidden');
-      signInForm.reset();
+      if (authModal) authModal.classList.add('hidden');
+      if (signInError) signInError.classList.add('hidden');
+      if (signInForm) signInForm.reset();
       
       return { success: true };
     } catch (error) {
       console.error('Sign in error:', error);
-      signInError.textContent = error.message;
-      signInError.classList.remove('hidden');
+      if (signInError) {
+        signInError.textContent = error.message;
+        signInError.classList.remove('hidden');
+      } else {
+        toast('Sign in error: ' + error.message, 3000);
+      }
       return { success: false, error };
     }
   }
@@ -1541,9 +1549,9 @@
         }, 1000);
       }
       
-      authModal.classList.add('hidden');
-      signUpError.classList.add('hidden');
-      signUpForm.reset();
+      if (authModal) authModal.classList.add('hidden');
+      if (signUpError) signUpError.classList.add('hidden');
+      if (signUpForm) signUpForm.reset();
       
       // Check if email confirmation is required
       if (data.user && !data.session) {
@@ -1557,8 +1565,12 @@
       return { success: true };
     } catch (error) {
       console.error('Sign up error:', error);
-      signUpError.textContent = error.message;
-      signUpError.classList.remove('hidden');
+      if (signUpError) {
+        signUpError.textContent = error.message;
+        signUpError.classList.remove('hidden');
+      } else {
+        toast('Sign up error: ' + error.message, 3000);
+      }
       return { success: false, error };
     }
   }
@@ -1815,6 +1827,66 @@
       // Don't show error to user, just log it
     }
   }
+  
+  // Increment user's spots created count
+  async function incrementUserSpotsCreated() {
+    if (!currentUser) return;
+    
+    try {
+      // Increment the spots counter in the database
+      const { error } = await supabase.rpc('increment_spots_created', {
+        user_id: currentUser.id
+      });
+      
+      if (error) throw error;
+      
+      // Update local userProfile
+      if (userProfile) {
+        userProfile.total_spots_created = (userProfile.total_spots_created || 0) + 1;
+        
+        // Update the displayed stat if profile modal is open
+        const statElement = document.getElementById('statSpotsCreated');
+        if (statElement) {
+          statElement.textContent = userProfile.total_spots_created;
+        }
+      }
+      
+      console.log('✅ Spots created count incremented');
+    } catch (error) {
+      console.error('❌ Error incrementing spots created:', error);
+      // Don't show error to user, just log it
+    }
+  }
+  
+  // Increment user's reports created count
+  async function incrementUserReportsCreated() {
+    if (!currentUser) return;
+    
+    try {
+      // Increment the reports counter in the database
+      const { error } = await supabase.rpc('increment_reports_created', {
+        user_id: currentUser.id
+      });
+      
+      if (error) throw error;
+      
+      // Update local userProfile
+      if (userProfile) {
+        userProfile.total_reports_created = (userProfile.total_reports_created || 0) + 1;
+        
+        // Update the displayed stat if profile modal is open
+        const statElement = document.getElementById('statReportsCreated');
+        if (statElement) {
+          statElement.textContent = userProfile.total_reports_created;
+        }
+      }
+      
+      console.log('✅ Reports created count incremented');
+    } catch (error) {
+      console.error('❌ Error incrementing reports created:', error);
+      // Don't show error to user, just log it
+    }
+  }
 
   // ----------------------------
   // Persistence (Supabase + localStorage fallback)
@@ -1892,7 +1964,10 @@
   
   // Load all spots from Supabase
   async function loadAllFromSupabase(silent = false) {
+    console.log('🔄 loadAllFromSupabase called, syncEnabled:', syncEnabled);
+    
     if (!syncEnabled) {
+      console.log('⚠️ Sync disabled, falling back to localStorage');
       loadAll(); // Fallback to localStorage
       return;
     }
@@ -1901,6 +1976,8 @@
       if (!silent) {
         toast('Loading spots from cloud...', 1000);
       }
+      
+      console.log('📡 Fetching spots from Supabase...');
       
       // Fetch all spots with their reports
       const { data: spotsData, error } = await supabase
@@ -1911,9 +1988,12 @@
         `)
         .order('created_at', { ascending: false });
       
+      console.log('📊 Supabase response:', { spotsData, error });
+      
       if (error) throw error;
       
       // Clear existing spots
+      console.log('🗑️ Clearing existing spots:', spots.length);
       spots.forEach(s => {
         try {
           map.removeLayer(s.marker);
@@ -1924,7 +2004,9 @@
       
       // Create spots from Supabase data
       if (spotsData && spotsData.length > 0) {
+        console.log(`✅ Creating ${spotsData.length} spots from Supabase data`);
         spotsData.forEach(spotData => {
+          console.log('Creating spot:', spotData.name);
           // Convert Supabase format to app format
           const spot = {
             id: spotData.id,
@@ -1932,7 +2014,11 @@
             species: spotData.species,
             lat: Number(spotData.lat),
             lng: Number(spotData.lng),
-            risk: spotData.risk,
+            // DO NOT set risk here - let createSpotFromData calculate it based on current date
+            // risk: spotData.risk,  // REMOVED - forces recalculation
+            address: spotData.address || '',
+            createdAt: spotData.created_at,
+            safePassageCount: spotData.safe_passage_count || 0,
             reports: (spotData.reports || []).map(r => ({
               id: r.id,
               alertLevel: r.alert_level,
@@ -1940,18 +2026,23 @@
               humanBehaviour: r.human_behaviour || [],
               precautions: r.precautions || [],
               extraDetails: r.extra_details || '',
-              timestamp: r.timestamp
+              timestamp: r.timestamp,
+              user_id: r.user_id,
+              created_by_name: r.created_by_name
             }))
           };
           
           createSpotFromData(spot, true);
         });
         
+        console.log(`✅ Successfully created ${spots.length} spots`);
+        
         // Only show toast if not silent
         if (!silent) {
           toast(`Loaded ${spotsData.length} spots from cloud`, 2000);
         }
       } else if (!silent) {
+        console.log('⚠️ No spots found in Supabase');
         toast('No spots found - add your first!', 2000);
       }
       
@@ -1969,10 +2060,13 @@
   
   // Load from localStorage (fallback/offline)
   function loadAll(){
+    console.log('📂 Loading spots from localStorage...');
     try {
       const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      console.log(`📂 Found ${raw.length} spots in localStorage`);
       raw.forEach(r => createSpotFromData(r, true));
-    } catch(e){ console.warn(e); }
+      console.log(`✅ Successfully loaded ${spots.length} spots from localStorage`);
+    } catch(e){ console.warn('❌ localStorage load error:', e); }
   }
   
   // Subscribe to real-time updates
@@ -2304,16 +2398,15 @@
     if(!Array.isArray(data.reports)) data.reports = [];
     if(!data.createdAt) data.createdAt = new Date().toISOString(); // Add creation date if missing
     
-    // Check if spot should be hidden due to inactivity
-    if (shouldHideSpot(data.reports, data.species || data.birdSpecies)) {
-      return null; // Don't create/show this spot
-    }
+    console.log(`🔨 Creating spot: ${data.name}, species: ${data.species || data.birdSpecies}, reports: ${data.reports?.length || 0}`);
     
     // Check if spot should show pre-season warning
     const showPreseasonMsg = shouldShowPreseasonWarning(data.reports, data.species || data.birdSpecies, data.createdAt);
     
     // compute risk if absent
     if(!data.risk) data.risk = computeSpotRiskFromReports(data.reports, data.species || data.birdSpecies);
+    
+    console.log(`🎯 Spot ${data.name} risk calculated as: ${data.risk}, isPreseason: ${showPreseasonMsg}`);
     
     // If showing pre-season warning, override to Calm and mark it
     if (showPreseasonMsg) {
@@ -2433,6 +2526,10 @@
       createSpotFromData(spotData, false);
       saveAll();
       
+      // Increment user's spots and reports counters
+      incrementUserSpotsCreated(); // +1 spot
+      incrementUserReportsCreated(); // +1 report (the initial report)
+      
       // Show success modal BEFORE resetting the form (so selectedRBird is still populated)
       showSuccessModal(birdName, birdSpecies.value, selectedRBird);
       
@@ -2443,9 +2540,13 @@
   // compute new overall spot risk from array of reports
   function computeSpotRiskFromReports(reportsArray, species = ''){
     // Check if the spot should be auto-calmed (season ended + 10 days since last report)
+    // Spots stay calm even when new season starts - only new reports change the risk
     if (shouldAutoCalm(reportsArray, species)) {
       return 'Calm - All clear';
     }
+    
+    // If we get here, there must be recent reports (within current season)
+    // Calculate risk based on most severe behavior reported
     
     // Highest priority: any contact (injured/uninjured) => Danger
     for(const r of reportsArray){
@@ -2458,69 +2559,72 @@
   }
 
   // Check if a spot should be automatically marked as calm
+  // Returns true if:
+  // 1. Season has ended + 10 days since last report, OR
+  // 2. New season started but no new reports yet (stays calm until proven active)
   function shouldAutoCalm(reportsArray, species) {
-    if (!reportsArray || reportsArray.length === 0) return false;
-    if (!species) return false;
+    if (!species) {
+      console.log('❌ shouldAutoCalm: No species');
+      return false;
+    }
     
     // Get the swooping season for this species
     const season = SWOOPING_SEASONS[species];
-    if (!season) return false; // Unknown species, can't auto-calm
+    if (!season) {
+      console.log('❌ shouldAutoCalm: No season data for', species);
+      return false;
+    }
     
-    // Get current date
-    const now = new Date();
-    const currentMonth = now.getMonth() + 1; // 1-based month
+    // Must have at least one report (from previous season) to be marked calm
+    if (!reportsArray || reportsArray.length === 0) {
+      console.log('❌ shouldAutoCalm: No reports, cannot be calm');
+      return false;
+    }
     
-    // Check if we're past the swooping season
-    const isPastSeason = currentMonth > season.end || currentMonth < season.start;
-    if (!isPastSeason) return false; // Still in swooping season
-    
-    // Find the most recent report
-    const sortedReports = [...reportsArray].sort((a, b) => {
-      const timeA = new Date(a.timestamp).getTime();
-      const timeB = new Date(b.timestamp).getTime();
-      return timeB - timeA; // Most recent first
-    });
-    
-    const lastReport = sortedReports[0];
-    if (!lastReport) return false;
-    
-    // Check if it's been at least 10 days since the last report
-    const lastReportDate = new Date(lastReport.timestamp);
-    const daysSinceLastReport = (now.getTime() - lastReportDate.getTime()) / (1000 * 60 * 60 * 24);
-    
-    return daysSinceLastReport >= AUTO_CALM_DAYS;
-  }
-  
-  // Check if a spot should be hidden due to inactivity (1 month after last report, outside nesting season)
-  function shouldHideSpot(reportsArray, species) {
-    if (!reportsArray || reportsArray.length === 0) return false;
-    if (!species) return false;
-    
-    const season = SWOOPING_SEASONS[species];
-    if (!season) return false;
-    
-    const now = new Date();
+    // Get current date and most recent report date
+    const now = getCurrentDate();
     const currentMonth = now.getMonth() + 1;
     const currentYear = now.getFullYear();
     
-    // Check if we're outside nesting season
-    const isOutsideSeason = currentMonth > season.end || currentMonth < season.start;
-    if (!isOutsideSeason) return false; // Still in or near nesting season
-    
-    // Find most recent report
+    // Find the most recent report
     const sortedReports = [...reportsArray].sort((a, b) => 
-      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      new Date(b.timestamp) - new Date(a.timestamp)
     );
-    
     const lastReport = sortedReports[0];
-    if (!lastReport) return false;
-    
     const lastReportDate = new Date(lastReport.timestamp);
-    const daysSinceLastReport = (now.getTime() - lastReportDate.getTime()) / (1000 * 60 * 60 * 24);
+    const daysSinceLastReport = Math.floor((now - lastReportDate) / (1000 * 60 * 60 * 24));
     
-    // Hide if inactive for more than 30 days and we're well past nesting season
-    return daysSinceLastReport >= HIDE_AFTER_DAYS;
+    console.log(`🔍 shouldAutoCalm: ${species}, current: ${currentMonth}/${currentYear}, season: ${season.start}-${season.end}, last report: ${daysSinceLastReport} days ago`);
+    
+    // Check if we're currently in the swooping season
+    const isInSeason = currentMonth >= season.start && currentMonth <= season.end;
+    
+    if (isInSeason) {
+      // We're in the active season - check if there are any reports from THIS season
+      const currentSeasonStart = new Date(currentYear, season.start - 1, 1);
+      const hasCurrentSeasonReports = reportsArray.some(r => new Date(r.timestamp) >= currentSeasonStart);
+      
+      if (hasCurrentSeasonReports) {
+        // There are reports from this season - calculate risk normally
+        console.log(`❌ shouldAutoCalm: In season with current reports - calculate risk normally`);
+        return false;
+      } else {
+        // In season but no reports yet this year - stay calm
+        console.log(`✅ shouldAutoCalm: In season but no new reports - staying calm`);
+        return true;
+      }
+    }
+    
+    // We're outside the season - check if enough time has passed since last report
+    if (daysSinceLastReport >= AUTO_CALM_DAYS) {
+      console.log(`✅ shouldAutoCalm: Outside season + ${daysSinceLastReport} days since last report - marking calm`);
+      return true;
+    }
+    
+    console.log(`❌ shouldAutoCalm: Outside season but only ${daysSinceLastReport} days since last report (need ${AUTO_CALM_DAYS})`);
+    return false;
   }
+  
   
   // Check if a spot should be reactivated with pre-season warning
   function shouldShowPreseasonWarning(reportsArray, species, createdAt) {
@@ -2529,35 +2633,29 @@
     const season = SWOOPING_SEASONS[species];
     if (!season) return false;
     
-    const now = new Date();
+    const now = getCurrentDate();
     const currentMonth = now.getMonth() + 1;
     const currentYear = now.getFullYear();
     
-    // Calculate days until season starts
-    let monthsUntilSeason;
+    // Check if currently outside nesting season
+    const isOutsideSeason = currentMonth > season.end || currentMonth < season.start;
+    if (!isOutsideSeason) return false; // Currently in season, no pre-season warning needed
+    
+    // Calculate days until next season starts
+    let daysUntilSeason;
+    
     if (currentMonth < season.start) {
-      // Same year - simple calculation
-      monthsUntilSeason = season.start - currentMonth;
+      // Season starts later this year
+      const seasonStartDate = new Date(currentYear, season.start - 1, 1);
+      daysUntilSeason = Math.floor((seasonStartDate - now) / (1000 * 60 * 60 * 24));
     } else {
-      // Next year - wrap around
-      monthsUntilSeason = (12 - currentMonth) + season.start;
+      // Season starts next year (we're past the end of this year's season)
+      const nextSeasonStartDate = new Date(currentYear + 1, season.start - 1, 1);
+      daysUntilSeason = Math.floor((nextSeasonStartDate - now) / (1000 * 60 * 60 * 24));
     }
     
-    // Approximate: 1 month = 30 days
-    const daysUntilSeason = monthsUntilSeason * 30;
-    
-    // Check if spot was created last year (or earlier)
-    const spotCreatedDate = new Date(createdAt);
-    const spotCreatedYear = spotCreatedDate.getFullYear();
-    const isFromPreviousYear = spotCreatedYear < currentYear;
-    
-    // Show warning if:
-    // 1. Spot is from a previous year
-    // 2. We're within 30 days of next nesting season
-    // 3. Currently outside nesting season
-    const isOutsideSeason = currentMonth > season.end || currentMonth < season.start;
-    
-    return isFromPreviousYear && isOutsideSeason && daysUntilSeason <= PRESEASON_WARNING_DAYS;
+    // Show pre-season warning if we're within 30 days of next season
+    return daysUntilSeason >= 0 && daysUntilSeason <= PRESEASON_WARNING_DAYS;
   }
   
   // Get the month name when nesting season begins
@@ -2596,6 +2694,7 @@
           <div class="mb-4 py-2 px-3 rounded ${
             s.risk === 'Danger - Avoid' ? 'bg-red-100 text-red-700' :
             s.risk === 'Take caution' ? 'bg-yellow-100 text-yellow-700' :
+            s.risk === 'Calm - All clear' ? 'bg-blue-100 text-blue-700' :
             'bg-green-100 text-green-700'
           }">
             <div class="font-medium">${escapeHtml(s.risk)}</div>
@@ -3141,9 +3240,11 @@
         // Color code based on risk level
         const borderColor = s.risk === 'Danger - Avoid' ? 'border-red-400 bg-red-50' : 
                           s.risk === 'Take caution' ? 'border-yellow-400 bg-yellow-50' : 
+                          s.risk === 'Calm - All clear' ? 'border-blue-400 bg-blue-50' :
                           'border-green-400 bg-green-50';
         const textColor = s.risk === 'Danger - Avoid' ? 'text-red-700' : 
                          s.risk === 'Take caution' ? 'text-yellow-700' : 
+                         s.risk === 'Calm - All clear' ? 'text-blue-700' :
                          'text-green-700';
         
         item.className = `border-2 p-2 rounded text-sm cursor-pointer hover:opacity-90 flex justify-between items-center ${borderColor}`;
@@ -3162,8 +3263,145 @@
         alertsList.appendChild(item);
       }
     });
+    
+    // Update stats whenever alerts are rendered
+    if (typeof renderStats === 'function') {
+      renderStats(currentStatsPeriod);
+    }
   }
   map.on('moveend', ()=> renderAlerts());
+
+  // ----------------------------
+  // Stats calculation and rendering
+  // ----------------------------
+  let currentStatsPeriod = 'today'; // 'today', 'week', 'season'
+  
+  function calculateStats(period = 'today') {
+    const now = getCurrentDate();
+    const stats = {
+      totalReports: 0,
+      safePassages: 0,
+      injuries: 0,
+      species: {}
+    };
+    
+    // Define time boundaries
+    let startDate;
+    if (period === 'today') {
+      startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    } else if (period === 'week') {
+      startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    } else if (period === 'season') {
+      // Current swooping season (August to November for most birds)
+      const currentMonth = now.getMonth() + 1;
+      if (currentMonth >= 8) {
+        startDate = new Date(now.getFullYear(), 7, 1); // August 1st this year
+      } else {
+        startDate = new Date(now.getFullYear() - 1, 7, 1); // August 1st last year
+      }
+    }
+    
+    // Count reports and analyze each spot
+    spots.forEach(spot => {
+      if (!spot.reports) return;
+      
+      // Count safe passages for this spot
+      if (spot.lastSafePassage) {
+        const safePassageDate = new Date(spot.lastSafePassage);
+        if (safePassageDate >= startDate) {
+          stats.safePassages += (spot.safePassageCount || 0);
+        }
+      }
+      
+      // Analyze reports
+      spot.reports.forEach(report => {
+        const reportDate = new Date(report.timestamp);
+        if (reportDate >= startDate) {
+          // Count total reports
+          stats.totalReports++;
+          
+          // Count by species
+          if (spot.species) {
+            if (!stats.species[spot.species]) {
+              stats.species[spot.species] = 0;
+            }
+            stats.species[spot.species]++;
+          }
+          
+          // Count injuries
+          if (report.birdBehaviour && 
+              report.birdBehaviour.includes('made contact + injured')) {
+            stats.injuries++;
+          }
+        }
+      });
+    });
+    
+    return stats;
+  }
+  
+  function renderStats(period = 'today') {
+    const stats = calculateStats(period);
+    
+    // Update totals
+    document.getElementById('statTotalReports').textContent = stats.totalReports;
+    document.getElementById('statSafePassages').textContent = stats.safePassages;
+    document.getElementById('statInjuries').textContent = stats.injuries;
+    
+    // Update species breakdown
+    const speciesBreakdown = document.getElementById('statSpeciesBreakdown');
+    speciesBreakdown.innerHTML = '';
+    
+    if (Object.keys(stats.species).length === 0) {
+      speciesBreakdown.innerHTML = '<div style="color: #422d1e; opacity: 0.6;">No reports yet</div>';
+    } else {
+      // Sort species by count (descending)
+      const sortedSpecies = Object.entries(stats.species)
+        .sort((a, b) => b[1] - a[1]);
+      
+      sortedSpecies.forEach(([species, count]) => {
+        const row = document.createElement('div');
+        row.className = 'flex justify-between items-center';
+        row.innerHTML = `
+          <span style="color: #422d1e;">${escapeHtml(species)}</span>
+          <span class="font-bold" style="color: #422d1e;">${count}</span>
+        `;
+        speciesBreakdown.appendChild(row);
+      });
+    }
+  }
+  
+  // Setup stats period tabs
+  document.addEventListener('DOMContentLoaded', () => {
+    const periodTabs = document.querySelectorAll('.stats-period-tab');
+    periodTabs.forEach(tab => {
+      tab.addEventListener('click', (e) => {
+        const period = e.target.dataset.period;
+        currentStatsPeriod = period;
+        
+        // Update tab styles
+        periodTabs.forEach(t => {
+          if (t.dataset.period === period) {
+            t.style.backgroundColor = '#422d1e';
+            t.style.color = 'white';
+            t.style.border = 'none';
+            t.classList.add('active');
+          } else {
+            t.style.backgroundColor = 'transparent';
+            t.style.color = '#422d1e';
+            t.style.border = '1px solid #d4cac7';
+            t.classList.remove('active');
+          }
+        });
+        
+        // Re-render stats
+        renderStats(period);
+      });
+    });
+    
+    // Initial render
+    renderStats('today');
+  });
 
   // ----------------------------
   // Open / close details modal
@@ -3246,6 +3484,9 @@
     saveAll(); // Save to localStorage
     saveSpotToSupabase(s); // Sync to Supabase
     
+    // Increment user's reports counter
+    incrementUserReportsCreated();
+    
     // Show success modal with bird behavior context (isNewSpot=false for additional reports)
     showSuccessModal(s.name, s.species, selectedReportBird, false);
     
@@ -3305,36 +3546,42 @@
       }
     }
     
+    // Filter out calm birds from alerts - they're preventative info, not danger warnings
+    // Users can still see them on the map and click for info
+    const activeThreats = insideSpots.filter(s => s.risk !== 'Calm - All clear');
+    
     // Sort by risk level (highest first) for display
-    if(insideSpots.length > 0){
-      insideSpots.sort((a,b) => {
+    if(activeThreats.length > 0){
+      activeThreats.sort((a,b) => {
         const riskOrder = {'Danger - Avoid': 3, 'Take caution': 2, 'Low risk': 1};
         return (riskOrder[b.risk] || 0) - (riskOrder[a.risk] || 0);
       });
     }
     
-    if(insideSpots.length > 0){
+    if(activeThreats.length > 0){
       // Check if the spots have changed
       const currentIds = currentAlertSpots.map(s => s.id).sort().join(',');
-      const newIds = insideSpots.map(s => s.id).sort().join(',');
+      const newIds = activeThreats.map(s => s.id).sort().join(',');
       
       if(currentIds !== newIds){
-        currentAlertSpots = insideSpots;
-        showCenteredAlert(insideSpots);
+        currentAlertSpots = activeThreats;
+        showCenteredAlert(activeThreats);
       }
     } else {
-      // User has exited ALL zones
+      // User has exited ALL active threat zones (calm birds don't count)
       if(currentAlertSpots.length > 0){
         const spotsToReport = Array.from(visitedSpots).map(id => spots.find(s => s.id === id)).filter(Boolean);
+        // Filter out calm birds from exit prompt too
+        const activeSpotsToReport = spotsToReport.filter(s => s.risk !== 'Calm - All clear');
         currentAlertSpots = [];
         hideCenteredAlert();
         
         // Play happy tone when exiting all zones
         playHappyTone();
         
-        // Only show prompt if they visited spots
-        if(spotsToReport.length > 0){
-          showExitPrompt(spotsToReport);
+        // Only show prompt if they visited active threat spots
+        if(activeSpotsToReport.length > 0){
+          showExitPrompt(activeSpotsToReport);
         }
         
         // Clear visited spots for next journey
@@ -3342,6 +3589,25 @@
       } else {
         currentAlertSpots = [];
         hideCenteredAlert();
+        
+        // Check if user just exited a calm spot during active season - ask for feedback!
+        const spotsToReport = Array.from(visitedSpots).map(id => spots.find(s => s.id === id)).filter(Boolean);
+        const calmSpotsInSeason = spotsToReport.filter(s => {
+          if (s.risk !== 'Calm - All clear') return false;
+          // Check if we're currently in the swooping season for this species
+          const season = SWOOPING_SEASONS[s.species];
+          if (!season) return false;
+          const now = getCurrentDate();
+          const currentMonth = now.getMonth() + 1;
+          return currentMonth >= season.start && currentMonth <= season.end;
+        });
+        
+        if (calmSpotsInSeason.length > 0) {
+          showCalmSpotFeedbackPrompt(calmSpotsInSeason);
+        }
+        
+        // Clear visited spots for next journey
+        visitedSpots.clear();
       }
     }
     renderAlerts();
@@ -3474,6 +3740,88 @@
     }
   });
 
+  // Show feedback prompt when user exits a calm spot during active swooping season
+  function showCalmSpotFeedbackPrompt(calmSpots) {
+    if (!calmSpots || calmSpots.length === 0) return;
+    
+    // For now, just handle the first calm spot (can be extended for multiple later)
+    const spot = calmSpots[0];
+    
+    // Get the last report year to show in the message
+    const lastReportDate = spot.reports && spot.reports.length > 0 
+      ? new Date(Math.max(...spot.reports.map(r => new Date(r.timestamp))))
+      : null;
+    const lastYear = lastReportDate ? lastReportDate.getFullYear() : 'last year';
+    
+    // Create a custom modal for this feedback
+    const feedbackModal = document.createElement('div');
+    feedbackModal.id = 'calmSpotFeedbackModal';
+    feedbackModal.className = 'fixed inset-0 z-50 flex items-center justify-center p-4';
+    feedbackModal.style.cssText = 'background-color: rgba(66, 45, 30, 0.5);';
+    
+    feedbackModal.innerHTML = `
+      <div class="rounded-lg shadow-xl max-w-md w-full p-6" style="background-color: #f2eceb;">
+        <div class="flex items-start gap-3 mb-4">
+          <div class="flex-shrink-0">
+            ${getBirdIconSVG('Calm - All clear')}
+          </div>
+          <div class="flex-1">
+            <h3 class="font-bold text-lg mb-1" style="color: #422d1e;">Bird Spotted?</h3>
+            <p class="text-sm" style="color: #422d1e;">
+              In ${lastYear}, a <span class="font-semibold" style="color: #2563eb;">${escapeHtml(spot.species)}</span> 
+              was reported at <span class="font-semibold">${escapeHtml(spot.name)}</span>.
+              <br><br>
+              This bird's nesting season has just begun - did you spot this bird today?
+            </p>
+          </div>
+        </div>
+        
+        <div class="flex flex-col gap-2">
+          <button id="calmFeedbackYes" class="w-full px-4 py-3 rounded font-medium text-white" style="background-color: #422d1e;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+            Yes, I saw the bird - Add Report
+          </button>
+          <button id="calmFeedbackNo" class="w-full px-4 py-3 rounded font-medium" style="background-color: #10B981; color: white;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+            No, the bird wasn't there
+          </button>
+          <button id="calmFeedbackSkip" class="w-full px-4 py-2 rounded text-sm" style="color: #422d1e; opacity: 0.7;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
+            Skip
+          </button>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(feedbackModal);
+    
+    // Handle "Yes" - Open details modal to add report
+    document.getElementById('calmFeedbackYes').addEventListener('click', () => {
+      feedbackModal.remove();
+      openDetailsModal(spot.id);
+      // Switch to add report tab
+      setTimeout(() => {
+        const addTab = detailsModal.querySelector('[data-tab="add"]');
+        if (addTab) addTab.click();
+      }, 100);
+    });
+    
+    // Handle "No" - Record safe passage
+    document.getElementById('calmFeedbackNo').addEventListener('click', () => {
+      if (!spot.safePassageCount) spot.safePassageCount = 0;
+      spot.safePassageCount++;
+      spot.lastSafePassage = new Date().toISOString();
+      
+      saveAll();
+      incrementUserSafePassages();
+      
+      feedbackModal.remove();
+      toast(`Thanks! Recorded safe passage at ${spot.name}`, 2000);
+    });
+    
+    // Handle "Skip"
+    document.getElementById('calmFeedbackSkip').addEventListener('click', () => {
+      feedbackModal.remove();
+    });
+  }
+
   // Show pre-season warning alert with preventative tips
   function showPreseasonAlert(s) {
     const seasonStartMonth = getSeasonStartMonth(s.species);
@@ -3502,7 +3850,7 @@
         
         <div class="border-t pt-2" style="border-color: #d4cac7;">
           <div class="text-xs font-semibold mb-2" style="color: #422d1e;">
-            🌿 Build rapport with local birds:
+            Build rapport with local birds:
           </div>
           <ul class="list-disc pl-5 space-y-1">
             ${tipsHTML}
@@ -3596,7 +3944,7 @@
       <div class="flex items-start justify-between gap-4">
         <div>
           <div class="text-sm font-semibold mb-1">${escapeHtml(s.name)} - ${escapeHtml(s.species)}</div>
-          <div class="text-sm ${s.risk==='Danger - Avoid'?'text-red-600': s.risk==='Take caution' ? 'text-yellow-600' : 'text-green-600'} font-medium">
+          <div class="text-sm ${s.risk==='Danger - Avoid'?'text-red-600': s.risk==='Take caution' ? 'text-yellow-600' : s.risk==='Calm - All clear' ? 'text-blue-600' : 'text-green-600'} font-medium">
             ${escapeHtml(s.risk)}
           </div>
           <div class="text-xs text-gray-600 mt-1">${s.reports.length} report${s.reports.length === 1 ? '' : 's'}</div>
@@ -3610,7 +3958,7 @@
           </div>
           <button id="safetyTipsAlertBtn" class="text-xs bg-green-600 hover:bg-green-700 text-white rounded px-3 py-1.5 w-full flex items-center justify-center gap-1.5">
             <img src="Assets/Icons/tips.svg" alt="Tips" style="width: 14px; height: 14px; filter: brightness(0) invert(1);">
-            Safety Tips
+            ${s.risk === 'Calm - All clear' ? 'Preventative Tips' : 'Safety Tips'}
           </button>
         </div>
       </div>
@@ -3649,7 +3997,12 @@
         safetyTipsAlertBtn.addEventListener('click', () => {
           alertBox.style.display = 'none';
           alertBox.classList.remove('show');
-          openSafetyTipsModal(s.species);
+          // Show preventative tips for calm spots, safety tips for others
+          if (s.risk === 'Calm - All clear') {
+            openPreventativeTipsModal(s.species);
+          } else {
+            openSafetyTipsModal(s.species);
+          }
         });
       }
     });
@@ -3775,9 +4128,11 @@
       const s = spotArray[0];
       const borderColor = s.risk === 'Danger - Avoid' ? 'border-red-400 bg-red-50' : 
                          s.risk === 'Take caution' ? 'border-yellow-400 bg-yellow-50' : 
+                         s.risk === 'Calm - All clear' ? 'border-blue-400 bg-blue-50' :
                          'border-green-400 bg-green-50';
       const textColor = s.risk === 'Danger - Avoid' ? 'text-red-700' : 
                        s.risk === 'Take caution' ? 'text-yellow-700' : 
+                       s.risk === 'Calm - All clear' ? 'text-blue-700' :
                        'text-green-700';
       
       // Determine risk class for alert box styling
@@ -4045,7 +4400,7 @@
     
     let html = `
       <div class="mb-4">
-        <h4 class="text-lg font-bold mb-2" style="color: #422d1e;">🌿 Building Rapport with ${species === 'general' ? 'Local Birds' : escapeHtml(species) + 's'}</h4>
+        <h4 class="text-lg font-bold mb-2" style="color: #422d1e;">Building Rapport with ${species === 'general' ? 'Local Birds' : escapeHtml(species) + 's'}</h4>
         <p class="text-sm mb-4" style="color: #422d1e; opacity: 0.8;">
           These preventative tips can help you build positive relationships with birds in your area before nesting season begins. 
           Birds have excellent memories and are more likely to tolerate familiar, friendly humans.
@@ -4069,7 +4424,7 @@
       </div>
       <div class="mt-6 p-4 rounded" style="background-color: #DCFCE7; border-left: 3px solid #059669;">
         <p class="text-sm font-medium" style="color: #14532D;">
-          🕊️ Building positive relationships with birds takes time and consistency. Start these practices well before nesting season 
+          Building positive relationships with birds takes time and consistency. Start these practices well before nesting season 
           for the best results. Remember, you're sharing their habitat - respect and patience go a long way!
         </p>
       </div>
@@ -4136,13 +4491,13 @@
       </div>
       <div class="mt-6 p-4 rounded" style="background-color: #FEF3C7; border-left: 3px solid #F59E0B;">
         <p class="text-sm font-medium" style="color: #92400E;">
-          ⚠️ Remember: These birds are protected native wildlife. They're defending their nests, not attacking maliciously. 
+          Remember: These birds are protected native wildlife. They're defending their nests, not attacking maliciously. 
           Never harm or attempt to remove nesting birds. Contact local wildlife authorities if a bird poses a serious danger.
         </p>
       </div>
       
       <div class="mt-6 p-4 rounded" style="background-color: #E0F2FE; border-left: 3px solid #0284C7;">
-        <h5 class="text-sm font-bold mb-2" style="color: #0C4A6E;">📚 Information Sources</h5>
+        <h5 class="text-sm font-bold mb-2" style="color: #0C4A6E;">Information Sources</h5>
         <div class="text-xs space-y-1" style="color: #0C4A6E;">
           <p><strong>Australian Government - Department of Climate Change, Energy, the Environment and Water</strong></p>
           <p class="ml-3">Wildlife protection guidelines and native bird behavior information</p>
@@ -4171,23 +4526,32 @@
   }
   
   // Safety tips modal event listeners
-  closeSafetyTips.addEventListener('click', () => {
-    safetyTipsModal.classList.add('hidden');
-    document.body.classList.remove('modal-open');
-  });
+  if (closeSafetyTips && safetyTipsModal) {
+    closeSafetyTips.addEventListener('click', () => {
+      safetyTipsModal.classList.add('hidden');
+      document.body.classList.remove('modal-open');
+    });
+  }
   
-  document.getElementById('closeSafetyTipsBottom').addEventListener('click', () => {
-    safetyTipsModal.classList.add('hidden');
-    document.body.classList.remove('modal-open');
-  });
+  const closeSafetyTipsBottom = document.getElementById('closeSafetyTipsBottom');
+  if (closeSafetyTipsBottom && safetyTipsModal) {
+    closeSafetyTipsBottom.addEventListener('click', () => {
+      safetyTipsModal.classList.add('hidden');
+      document.body.classList.remove('modal-open');
+    });
+  }
   
-  safetyTipsBtn.addEventListener('click', () => {
-    openSafetyTipsModal('general');
-  });
+  if (safetyTipsBtn) {
+    safetyTipsBtn.addEventListener('click', () => {
+      openSafetyTipsModal('general');
+    });
+  }
   
-  tipsSpeciesSelect.addEventListener('change', (e) => {
-    displaySafetyTips(e.target.value);
-  });
+  if (tipsSpeciesSelect) {
+    tipsSpeciesSelect.addEventListener('change', (e) => {
+      displaySafetyTips(e.target.value);
+    });
+  }
 
   // ----------------------------
   // Walk simulator (straight line)
@@ -4406,134 +4770,291 @@
       
       // Check if iOS
       if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
-        toast('⚠️ iOS does not support web vibration API', 3000);
+        toast('iOS does not support web vibration API', 3000);
       } else {
-        toast('⚠️ Vibration not supported on this browser', 3000);
+        toast('Vibration not supported on this browser', 3000);
       }
     }
   });
+
+  // ----------------------------
+  // Test Date Functionality
+  // ----------------------------
+  let testDate = null; // null = use real date, otherwise use this date
+  
+  // Helper function to get current date (real or test)
+  function getCurrentDate() {
+    return testDate ? new Date(testDate) : new Date();
+  }
+  
+  // Debug: Check if test date elements exist
+  console.log('🔍 Test Date Elements Check:', {
+    testDateBtn: !!testDateBtn,
+    testDateModal: !!testDateModal,
+    closeTestDate: !!closeTestDate,
+    testDateInput: !!testDateInput,
+    applyTestDate: !!applyTestDate,
+    resetTestDate: !!resetTestDate,
+    currentTestDate: !!currentTestDate
+  });
+  
+  // Open test date modal
+  testDateBtn.addEventListener('click', () => {
+    console.log('📅 Test Date Modal opened');
+    // Set input to current test date or today
+    const dateToShow = testDate ? new Date(testDate) : new Date();
+    testDateInput.value = dateToShow.toISOString().split('T')[0];
+    updateTestDateDisplay();
+    testDateModal.classList.remove('hidden');
+  });
+  
+  // Close test date modal
+  closeTestDate.addEventListener('click', () => {
+    console.log('❌ Test Date Modal closed');
+    testDateModal.classList.add('hidden');
+  });
+  
+  // Apply test date
+  console.log('🔧 Setting up applyTestDate event listener...');
+  applyTestDate.addEventListener('click', async () => {
+    console.log('🎯 Apply Test Date clicked!');
+    const selectedDate = testDateInput.value;
+    console.log('📅 Selected date:', selectedDate);
+    
+    if (selectedDate) {
+      testDate = new Date(selectedDate).toISOString();
+      console.log('✅ Test date set to:', testDate);
+      console.log('📊 Current spots before reload:', spots.length);
+      
+      updateTestDateDisplay();
+      
+      // Reload all spots to recalculate with new date
+      spots.forEach(s => {
+        try {
+          map.removeLayer(s.marker);
+          map.removeLayer(s.circle);
+        } catch(e) {}
+      });
+      spots = [];
+      console.log('🗑️ Spots cleared, reloading from Supabase...');
+      
+      // Reload from Supabase to recalculate risk levels with new test date
+      await loadAllFromSupabase(true);
+      console.log('📊 Spots after reload:', spots.length);
+      
+      renderAlerts();
+      
+      toast(`Test date set to ${new Date(testDate).toLocaleDateString()}`, 2000);
+      testDateModal.classList.add('hidden');
+    } else {
+      console.log('❌ No date selected');
+    }
+  });
+  
+  // Reset to real date
+  resetTestDate.addEventListener('click', async () => {
+    testDate = null;
+    updateTestDateDisplay();
+    
+    // Reload all spots to recalculate with real date
+    spots.forEach(s => {
+      try {
+        map.removeLayer(s.marker);
+        map.removeLayer(s.circle);
+      } catch(e) {}
+    });
+    spots = [];
+    
+    // Reload from Supabase to recalculate risk levels with real date
+    await loadAllFromSupabase(true);
+    renderAlerts();
+    
+    toast('Reset to real date', 2000);
+    testDateModal.classList.add('hidden');
+  });
+  
+  function updateTestDateDisplay() {
+    if (testDate) {
+      const date = new Date(testDate);
+      currentTestDate.innerHTML = `<strong>Testing with date:</strong> ${date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
+      currentTestDate.style.color = '#D97706';
+      currentTestDate.style.fontWeight = 'bold';
+      testDateBtn.style.backgroundColor = '#FEF3C7';
+      testDateBtn.style.borderColor = '#F59E0B';
+    } else {
+      currentTestDate.innerHTML = 'Using real date (today)';
+      currentTestDate.style.color = '#422d1e';
+      currentTestDate.style.fontWeight = 'normal';
+      testDateBtn.style.backgroundColor = 'transparent';
+      testDateBtn.style.borderColor = '#d4cac7';
+    }
+  }
+  
+  // Initial display update
+  updateTestDateDisplay();
 
   // ----------------------------
   // ----------------------------
   // Auth UI Event Listeners
   // ----------------------------
   
+  // Check if auth UI elements exist
+  if (!authModal || !signInButton) {
+    console.warn('⚠️ Authentication UI elements missing - sign-in disabled');
+    // Add a temporary warning for the sign-in button
+    if (signInButton) {
+      signInButton.addEventListener('click', () => {
+        toast('Sign-in temporarily unavailable - viewing in guest mode', 3000);
+      });
+    }
+  }
+  
   // Open auth modal
-  signInButton.addEventListener('click', () => {
-    authModal.classList.remove('hidden');
-    signInForm.classList.remove('hidden');
-    signUpForm.classList.add('hidden');
-    signInTab.classList.add('active');
-    signUpTab.classList.remove('active');
-    signInError.classList.add('hidden');
-    signUpError.classList.add('hidden');
-  });
+  if (signInButton && authModal) {
+    signInButton.addEventListener('click', () => {
+      authModal.classList.remove('hidden');
+      if (signInForm) signInForm.classList.remove('hidden');
+      if (signUpForm) signUpForm.classList.add('hidden');
+      if (signInTab) signInTab.classList.add('active');
+      if (signUpTab) signUpTab.classList.remove('active');
+      if (signInError) signInError.classList.add('hidden');
+      if (signUpError) signUpError.classList.add('hidden');
+    });
+  }
   
   // Close auth modal
-  closeAuthModal.addEventListener('click', () => {
-    authModal.classList.add('hidden');
-    signInForm.reset();
-    signUpForm.reset();
-    signInError.classList.add('hidden');
-    signUpError.classList.add('hidden');
-  });
+  if (closeAuthModal && authModal) {
+    closeAuthModal.addEventListener('click', () => {
+      authModal.classList.add('hidden');
+      if (signInForm) signInForm.reset();
+      if (signUpForm) signUpForm.reset();
+      if (signInError) signInError.classList.add('hidden');
+      if (signUpError) signUpError.classList.add('hidden');
+    });
+  }
   
   // Tab switching
-  signInTab.addEventListener('click', () => {
-    signInForm.classList.remove('hidden');
-    signUpForm.classList.add('hidden');
-    signInTab.classList.add('active');
-    signInTab.style.borderColor = '#422d1e';
-    signInTab.style.opacity = '1';
-    signUpTab.classList.remove('active');
-    signUpTab.style.borderColor = 'transparent';
-    signUpTab.style.opacity = '0.6';
-    signInError.classList.add('hidden');
-    signUpError.classList.add('hidden');
+  if (signInTab) signInTab.addEventListener('click', () => {
+    if (signInForm) signInForm.classList.remove('hidden');
+    if (signUpForm) signUpForm.classList.add('hidden');
+    if (signInTab) {
+      signInTab.classList.add('active');
+      signInTab.style.borderColor = '#422d1e';
+      signInTab.style.opacity = '1';
+    }
+    if (signUpTab) {
+      signUpTab.classList.remove('active');
+      signUpTab.style.borderColor = 'transparent';
+      signUpTab.style.opacity = '0.6';
+    }
+    if (signInError) signInError.classList.add('hidden');
+    if (signUpError) signUpError.classList.add('hidden');
   });
   
-  signUpTab.addEventListener('click', () => {
-    signUpForm.classList.remove('hidden');
-    signInForm.classList.add('hidden');
-    signUpTab.classList.add('active');
-    signUpTab.style.borderColor = '#422d1e';
-    signUpTab.style.opacity = '1';
-    signInTab.classList.remove('active');
-    signInTab.style.borderColor = 'transparent';
-    signInTab.style.opacity = '0.6';
-    signInError.classList.add('hidden');
-    signUpError.classList.add('hidden');
+  if (signUpTab) signUpTab.addEventListener('click', () => {
+    if (signUpForm) signUpForm.classList.remove('hidden');
+    if (signInForm) signInForm.classList.add('hidden');
+    if (signUpTab) {
+      signUpTab.classList.add('active');
+      signUpTab.style.borderColor = '#422d1e';
+      signUpTab.style.opacity = '1';
+    }
+    if (signInTab) {
+      signInTab.classList.remove('active');
+      signInTab.style.borderColor = 'transparent';
+      signInTab.style.opacity = '0.6';
+    }
+    if (signInError) signInError.classList.add('hidden');
+    if (signUpError) signUpError.classList.add('hidden');
   });
   
   // Sign in form submit
-  signInForm.addEventListener('submit', async (e) => {
+  if (signInForm) signInForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     await signIn(signInEmail.value, signInPassword.value);
   });
   
   // Sign up form submit
-  signUpForm.addEventListener('submit', async (e) => {
+  if (signUpForm) signUpForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     await signUp(signUpName.value, signUpEmail.value, signUpPassword.value);
   });
   
   // User button - toggle menu
-  userButton.addEventListener('click', (e) => {
-    e.stopPropagation();
-    userMenuDropdown.classList.toggle('hidden');
-  });
+  if (userButton && userMenuDropdown) {
+    userButton.addEventListener('click', (e) => {
+      e.stopPropagation();
+      userMenuDropdown.classList.toggle('hidden');
+    });
+  }
   
   // Close menu when clicking outside
-  document.addEventListener('click', () => {
-    userMenuDropdown.classList.add('hidden');
-  });
-  
-  userMenuDropdown.addEventListener('click', (e) => {
-    e.stopPropagation();
-  });
+  if (userMenuDropdown) {
+    document.addEventListener('click', () => {
+      userMenuDropdown.classList.add('hidden');
+    });
+    
+    userMenuDropdown.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
+  }
   
   // Menu actions
-  userMenuSignOut.addEventListener('click', async (e) => {
-    e.stopPropagation();
-    await signOutUser();
-    userMenuDropdown.classList.add('hidden');
-  });
+  if (userMenuSignOut && userMenuDropdown) {
+    userMenuSignOut.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      await signOutUser();
+      userMenuDropdown.classList.add('hidden');
+    });
+  }
   
   // Menu actions - Stats and Profile
-  userMenuStats.addEventListener('click', (e) => {
-    e.stopPropagation();
-    openProfileModal('stats');
-    userMenuDropdown.classList.add('hidden');
-  });
+  if (userMenuStats && userMenuDropdown) {
+    userMenuStats.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openProfileModal('stats');
+      userMenuDropdown.classList.add('hidden');
+    });
+  }
   
-  userMenuProfile.addEventListener('click', (e) => {
-    e.stopPropagation();
-    openProfileModal('edit');
-    userMenuDropdown.classList.add('hidden');
-  });
+  if (userMenuProfile && userMenuDropdown) {
+    userMenuProfile.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openProfileModal('edit');
+      userMenuDropdown.classList.add('hidden');
+    });
+  }
   
   // Profile Modal Event Listeners
-  closeProfileModal.addEventListener('click', closeProfileModalFn);
+  if (closeProfileModal) closeProfileModal.addEventListener('click', closeProfileModalFn);
   
   // Tab switching
-  profileStatsTab.addEventListener('click', () => {
-    profileStatsTab.classList.add('active');
-    profileStatsTab.style.cssText = 'border-color: #422d1e; color: #422d1e; opacity: 1;';
-    profileEditTab.classList.remove('active');
-    profileEditTab.style.cssText = 'color: #422d1e; opacity: 0.6; border-color: transparent;';
+  if (profileStatsTab) profileStatsTab.addEventListener('click', () => {
+    if (profileStatsTab) {
+      profileStatsTab.classList.add('active');
+      profileStatsTab.style.cssText = 'border-color: #422d1e; color: #422d1e; opacity: 1;';
+    }
+    if (profileEditTab) {
+      profileEditTab.classList.remove('active');
+      profileEditTab.style.cssText = 'color: #422d1e; opacity: 0.6; border-color: transparent;';
+    }
     
-    profileStatsContent.classList.remove('hidden');
-    profileEditContent.classList.add('hidden');
+    if (profileStatsContent) profileStatsContent.classList.remove('hidden');
+    if (profileEditContent) profileEditContent.classList.add('hidden');
   });
   
-  profileEditTab.addEventListener('click', () => {
-    profileEditTab.classList.add('active');
-    profileEditTab.style.cssText = 'border-color: #422d1e; color: #422d1e; opacity: 1;';
-    profileStatsTab.classList.remove('active');
-    profileStatsTab.style.cssText = 'color: #422d1e; opacity: 0.6; border-color: transparent;';
+  if (profileEditTab) profileEditTab.addEventListener('click', () => {
+    if (profileEditTab) {
+      profileEditTab.classList.add('active');
+      profileEditTab.style.cssText = 'border-color: #422d1e; color: #422d1e; opacity: 1;';
+    }
+    if (profileStatsTab) {
+      profileStatsTab.classList.remove('active');
+      profileStatsTab.style.cssText = 'color: #422d1e; opacity: 0.6; border-color: transparent;';
+    }
     
-    profileEditContent.classList.remove('hidden');
-    profileStatsContent.classList.add('hidden');
+    if (profileEditContent) profileEditContent.classList.remove('hidden');
+    if (profileStatsContent) profileStatsContent.classList.add('hidden');
   });
   
   // Avatar picker
@@ -4541,7 +5062,7 @@
     btn.addEventListener('click', (e) => {
       e.preventDefault();
       const avatar = btn.dataset.avatar;
-      selectedAvatar.value = avatar;
+      if (selectedAvatar) selectedAvatar.value = avatar;
       
       // Update visual selection
       document.querySelectorAll('.avatar-btn').forEach(b => {
@@ -4554,15 +5075,15 @@
   });
   
   // Profile edit form
-  profileEditForm.addEventListener('submit', updateUserProfile);
+  if (profileEditForm) profileEditForm.addEventListener('submit', updateUserProfile);
   
-  cancelEditProfile.addEventListener('click', (e) => {
+  if (cancelEditProfile) cancelEditProfile.addEventListener('click', (e) => {
     e.preventDefault();
-    profileStatsTab.click();
+    if (profileStatsTab) profileStatsTab.click();
   });
   
   // Close modal when clicking outside
-  profileModal.addEventListener('click', (e) => {
+  if (profileModal) profileModal.addEventListener('click', (e) => {
     if (e.target === profileModal) {
       e.stopPropagation();
       closeProfileModalFn();
@@ -4570,11 +5091,13 @@
   });
   
   // Prevent clicks inside modal content from closing it
-  const profileModalContent = profileModal.querySelector('.rounded-lg');
-  if (profileModalContent) {
-    profileModalContent.addEventListener('click', (e) => {
-      e.stopPropagation();
-    });
+  if (profileModal) {
+    const profileModalContent = profileModal.querySelector('.rounded-lg');
+    if (profileModalContent) {
+      profileModalContent.addEventListener('click', (e) => {
+        e.stopPropagation();
+      });
+    }
   }
 
   // ----------------------------
@@ -4588,13 +5111,20 @@
 
   // Load spots from Supabase (with fallback to localStorage)
   (async () => {
+    console.log('🚀 Starting app initialization...');
+    console.log('🗺️ Map initialized:', !!map);
+    console.log('📊 Initial spots count:', spots.length);
+    
     await loadAllFromSupabase();
+    
+    console.log('📊 After loadAllFromSupabase, spots count:', spots.length);
     
     // Subscribe to real-time updates
     subscribeToRealtimeUpdates();
     
     // If no spots loaded, create a default example spot
     if(spots.length === 0){
+      console.log('⚠️ No spots loaded, creating default example spot...');
       const defaultSpot = {
         id: uid(),
         name: 'South Bank Swoop',
@@ -4615,8 +5145,12 @@
       };
       createSpotFromData(defaultSpot, false);
       saveAll();
+      console.log('✅ Default spot created');
     }
+    
+    console.log('🎨 Rendering alerts...');
     renderAlerts();
+    console.log('✅ App initialization complete. Total spots:', spots.length);
   })();
 
   // re-run initialization each time modals open/close so UI arrays & handlers are fresh

@@ -660,7 +660,7 @@
         </div>
         
         <!-- Statistics Cards -->
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-3 gap-4">
           <!-- Spots Created -->
           <div class="p-4 rounded-lg text-center" style="background-color: #e8e2e1;">
             <div class="text-3xl font-bold" style="color: #422d1e;" id="statSpotsCreated">0</div>
@@ -671,6 +671,12 @@
           <div class="p-4 rounded-lg text-center" style="background-color: #e8e2e1;">
             <div class="text-3xl font-bold" style="color: #422d1e;" id="statReportsCreated">0</div>
             <div class="text-sm mt-1" style="color: #422d1e; opacity: 0.7;">Reports Created</div>
+          </div>
+          
+          <!-- Safe Passages -->
+          <div class="p-4 rounded-lg text-center" style="background-color: #e8e2e1;">
+            <div class="text-3xl font-bold" style="color: #422d1e;" id="statSafePassages">0</div>
+            <div class="text-sm mt-1" style="color: #422d1e; opacity: 0.7;">Safe Passages</div>
           </div>
         </div>
         
@@ -1607,6 +1613,7 @@
     // Update stats
     document.getElementById('statSpotsCreated').textContent = userProfile?.total_spots_created || 0;
     document.getElementById('statReportsCreated').textContent = userProfile?.total_reports_created || 0;
+    document.getElementById('statSafePassages').textContent = userProfile?.total_safe_passages || 0;
     
     // Load recent activity
     await loadRecentActivity();
@@ -1776,6 +1783,36 @@
       console.error('Error updating profile:', error);
       profileEditError.textContent = `Error: ${error.message || 'Please try again.'}`;
       profileEditError.classList.remove('hidden');
+    }
+  }
+  
+  // Increment user's safe passage count
+  async function incrementUserSafePassages() {
+    if (!currentUser) return;
+    
+    try {
+      // Increment the safe passage counter in the database
+      const { error } = await supabase.rpc('increment_safe_passages', {
+        user_id: currentUser.id
+      });
+      
+      if (error) throw error;
+      
+      // Update local userProfile
+      if (userProfile) {
+        userProfile.total_safe_passages = (userProfile.total_safe_passages || 0) + 1;
+        
+        // Update the displayed stat if profile modal is open
+        const statElement = document.getElementById('statSafePassages');
+        if (statElement) {
+          statElement.textContent = userProfile.total_safe_passages;
+        }
+      }
+      
+      console.log('✅ Safe passage count incremented');
+    } catch (error) {
+      console.error('❌ Error incrementing safe passages:', error);
+      // Don't show error to user, just log it
     }
   }
 
@@ -2707,6 +2744,9 @@
       
       saveAll();
       
+      // Increment user's safe passage count in profile
+      incrementUserSafePassages();
+      
       // Close the details modal
       detailsModal.classList.add('hidden');
       
@@ -3386,6 +3426,9 @@
     spot.safePassageCount++;
     spot.lastSafePassage = new Date().toISOString();
     saveAll();
+    
+    // Increment user's safe passage count in profile
+    incrementUserSafePassages();
     
     // Remove from spots to address
     spotsToAddress = spotsToAddress.filter(s => s.id !== spotId);

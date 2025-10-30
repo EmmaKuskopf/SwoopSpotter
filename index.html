@@ -2421,9 +2421,12 @@
     console.log(`🎯 Spot ${data.name} risk calculated as: ${data.risk}, isPreseason: ${showPreseasonMsg}`);
     
     // If showing pre-season warning, override to Calm and mark it
+    // Otherwise, clear the isPreseason flag (in case it was set previously)
     if (showPreseasonMsg) {
       data.risk = 'Calm - All clear';
       data.isPreseason = true;
+    } else {
+      data.isPreseason = false;
     }
     
     const lat = Number(data.lat), lng = Number(data.lng);

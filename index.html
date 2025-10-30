@@ -2587,15 +2587,31 @@
       return 'Calm - All clear';
     }
     
-    // If we get here, there must be recent reports (within current season)
-    // Calculate risk based on most severe behavior reported
+    // Filter to only current season reports
+    const season = SWOOPING_SEASONS[species];
+    const now = getCurrentDate();
+    const currentYear = now.getFullYear();
+    let currentSeasonReports = reportsArray;
+    
+    if (season) {
+      const currentSeasonStart = new Date(currentYear, season.start - 1, 1);
+      currentSeasonReports = reportsArray.filter(r => new Date(r.timestamp) >= currentSeasonStart);
+      console.log(`🔍 Risk calculation: ${reportsArray.length} total reports, ${currentSeasonReports.length} from current season`);
+    }
+    
+    // If no current season reports, return calm
+    if (currentSeasonReports.length === 0) {
+      return 'Calm - All clear';
+    }
+    
+    // Calculate risk based on most severe behavior reported IN CURRENT SEASON ONLY
     
     // Highest priority: any contact (injured/uninjured) => Danger
-    for(const r of reportsArray){
+    for(const r of currentSeasonReports){
       if(Array.isArray(r.birdBehaviour) && (r.birdBehaviour.includes('made contact + injured') || r.birdBehaviour.includes('made contact + uninjured'))) return 'Danger - Avoid';
     }
     // Next: any close swoop
-    for(const r of reportsArray){ if(Array.isArray(r.birdBehaviour) && r.birdBehaviour.includes('close swoop')) return 'Take caution'; }
+    for(const r of currentSeasonReports){ if(Array.isArray(r.birdBehaviour) && r.birdBehaviour.includes('close swoop')) return 'Take caution'; }
     // else Low
     return 'Low risk';
   }
@@ -3550,6 +3566,12 @@
     // Increment user's reports counter
     incrementUserReportsCreated();
     
+    // Suppress alerts for this spot for 10 seconds (user just reported it)
+    recentlyReportedSpots.add(s.id);
+    setTimeout(() => {
+      recentlyReportedSpots.delete(s.id);
+    }, 10000);
+    
     // Show success modal with bird behavior context (isNewSpot=false for additional reports)
     showSuccessModal(s.name, s.species, selectedReportBird, false);
     
@@ -3597,6 +3619,7 @@
   let currentAlertSpots = []; // Track currently displayed spots
   let visitedSpots = new Set(); // Track spots visited during current journey
   let hasShownCalmFeedback = false; // Track if we've already shown calm feedback this journey
+  let recentlyReportedSpots = new Set(); // Track spots user just reported to prevent immediate alerts
   
   function checkLocation(lat,lng){
     if(userMarker){ try{ userMarker.setLatLng([lat,lng]); } catch(e){} } else { userMarker = L.marker([lat,lng], { icon: getUserIcon() }).addTo(map); }
@@ -3612,7 +3635,11 @@
     
     // Filter out calm birds from alerts - they're preventative info, not danger warnings
     // Users can still see them on the map and click for info
-    const activeThreats = insideSpots.filter(s => s.risk !== 'Calm - All clear');
+    // Also filter out spots the user just reported on (suppress alert for 10 seconds)
+    const activeThreats = insideSpots.filter(s => 
+      s.risk !== 'Calm - All clear' && 
+      !recentlyReportedSpots.has(s.id)
+    );
     
     // Sort by risk level (highest first) for display
     if(activeThreats.length > 0){

@@ -2030,6 +2030,7 @@
             address: spotData.address || '',
             createdAt: spotData.created_at,
             safePassageCount: spotData.safe_passage_count || 0,
+            isPreseason: spotData.is_preseason || false, // Load isPreseason flag from database
             reports: (spotData.reports || []).map(r => ({
               id: r.id,
               alertLevel: r.alert_level,
@@ -3910,15 +3911,9 @@
     console.log('📍 Modal in body:', document.getElementById('calmSpotFeedbackModal'));
     console.log('📍 Body has modal-open class:', document.body.classList.contains('modal-open'));
     
-    // Click anywhere on the overlay (but not the content) to close
-    feedbackModal.addEventListener('click', (e) => {
-      console.log('🔘 Modal clicked, target:', e.target.className, 'current:', e.currentTarget.id);
-      
-      // Check if it's a button click first
-      const btn = e.target.closest('.calm-feedback-btn');
-      console.log('🔘 Found button:', btn);
-      
-      if (btn) {
+    // Direct button click handlers for Safari compatibility
+    feedbackModal.querySelectorAll('.calm-feedback-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
         e.stopPropagation();
         e.preventDefault();
         
@@ -3957,15 +3952,16 @@
           document.body.classList.remove('modal-open');
           console.log('✅ Modal removed, modal-open class removed');
         }
-        return;
-      }
-      
+      });
+    });
+    
+    // Overlay click to close
+    feedbackModal.addEventListener('click', (e) => {
       // If clicking directly on the overlay (not bubbled from content), close it
       if (e.target === feedbackModal) {
         console.log('🔘 Overlay clicked - closing modal');
         feedbackModal.remove();
         document.body.classList.remove('modal-open');
-        return;
       }
     });
   }

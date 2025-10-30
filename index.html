@@ -2151,7 +2151,17 @@
   
   // Handle real-time report updates
   function handleReportRealTimeUpdate(payload) {
-    // When a report changes, reload the affected spot
+    // Don't reload when we just added a report ourselves
+    // The real-time update would override our local state changes
+    // Only reload if the report was added by another user
+    const reportUserId = payload.new?.user_id;
+    if (reportUserId === currentUser?.id) {
+      console.log('🔕 Ignoring real-time update for own report to prevent state override');
+      return;
+    }
+    
+    // When a report changes from another user, reload the affected spot
+    console.log('🔄 Reloading spots due to real-time report update from another user');
     loadAllFromSupabase(true); // Reload silently
   }
 

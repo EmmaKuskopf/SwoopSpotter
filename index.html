@@ -2439,21 +2439,22 @@
     
     console.log(`🔨 Creating spot: ${data.name}, species: ${data.species || data.birdSpecies}, reports: ${data.reports?.length || 0}`);
     
-    // Check if spot should show pre-season warning
-    const showPreseasonMsg = shouldShowPreseasonWarning(data.reports, data.species || data.birdSpecies, data.createdAt);
-    
     // compute risk if absent
     if(!data.risk) data.risk = computeSpotRiskFromReports(data.reports, data.species || data.birdSpecies);
     
-    console.log(`🎯 Spot ${data.name} risk calculated as: ${data.risk}, isPreseason: ${showPreseasonMsg}`);
-    
-    // If showing pre-season warning, override to Calm and mark it
-    // Otherwise, clear the isPreseason flag (in case it was set previously)
-    if (showPreseasonMsg) {
-      data.risk = 'Calm - All clear';
-      data.isPreseason = true;
+    // Only calculate isPreseason if it's not explicitly set in the data
+    // This respects manual clearing when reports are added
+    if (data.isPreseason === undefined || data.isPreseason === null) {
+      const showPreseasonMsg = shouldShowPreseasonWarning(data.reports, data.species || data.birdSpecies, data.createdAt);
+      data.isPreseason = showPreseasonMsg;
+      console.log(`🎯 Spot ${data.name} risk: ${data.risk}, calculated isPreseason: ${data.isPreseason}`);
     } else {
-      data.isPreseason = false;
+      console.log(`🎯 Spot ${data.name} risk: ${data.risk}, using existing isPreseason: ${data.isPreseason}`);
+    }
+    
+    // If showing pre-season warning, ensure risk is Calm
+    if (data.isPreseason) {
+      data.risk = 'Calm - All clear';
     }
     
     const lat = Number(data.lat), lng = Number(data.lng);

@@ -2025,19 +2025,19 @@
             species: spotData.species,
             lat: Number(spotData.lat),
             lng: Number(spotData.lng),
-            // DO NOT set risk here - let createSpotFromData calculate it based on current date
+            // DO NOT set risk or isPreseason here - let createSpotFromData calculate based on current date
             // risk: spotData.risk,  // REMOVED - forces recalculation
+            // isPreseason: spotData.is_preseason,  // REMOVED - forces recalculation
             address: spotData.address || '',
             createdAt: spotData.created_at,
             safePassageCount: spotData.safe_passage_count || 0,
-            isPreseason: spotData.is_preseason || false, // Load isPreseason flag from database
             reports: (spotData.reports || []).map(r => ({
               id: r.id,
               alertLevel: r.alert_level,
               birdBehaviour: r.bird_behaviour || [],
               humanBehaviour: r.human_behaviour || [],
               precautions: r.precautions || [],
-              extraDetails: r.extra_details || '',
+              extra: r.extra_details || '',
               timestamp: r.timestamp,
               user_id: r.user_id,
               created_by_name: r.created_by_name
@@ -3488,11 +3488,10 @@
     // Update spot risk
     s.risk = newRisk;
     
-    // Clear isPreseason flag if spot is no longer calm (new activity reported)
-    if (newRisk !== 'Calm - All clear') {
-      console.log(`🔧 Clearing isPreseason flag for ${s.name} (risk changed to ${newRisk})`);
-      s.isPreseason = false;
-    }
+    // ALWAYS clear isPreseason flag when a new report is added
+    // A new report means we're no longer in pre-season warning mode
+    console.log(`🔧 Clearing isPreseason flag for ${s.name} (new report added, risk: ${newRisk})`);
+    s.isPreseason = false;
     
     // Update marker if risk changed OR if isPreseason flag changed
     const preseasonChanged = oldIsPreseason !== s.isPreseason;

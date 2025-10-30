@@ -1909,6 +1909,14 @@
     try {
       isSyncing = true;
       
+      // Track that we're saving this spot to ignore its real-time update
+      recentlySavedSpotIds.add(spot.id);
+      
+      // Clear it after a short delay (in case the real-time update is delayed)
+      setTimeout(() => {
+        recentlySavedSpotIds.delete(spot.id);
+      }, 3000);
+      
       // Prepare spot data (exclude UI elements)
       const spotData = {
         id: spot.id,
@@ -2121,6 +2129,9 @@
   }
   
   // Handle real-time spot updates
+  // Track recently saved spots to ignore their real-time updates
+  let recentlySavedSpotIds = new Set();
+  
   function handleSpotRealTimeUpdate(payload) {
     const { eventType, new: newSpot, old: oldSpot } = payload;
     
@@ -2132,7 +2143,13 @@
         loadAllFromSupabase(true); // Reload silently
       }
     } else if (eventType === 'UPDATE') {
-      // Spot updated
+      // Check if this is our own update
+      if (recentlySavedSpotIds.has(newSpot.id)) {
+        console.log('🔕 Ignoring real-time update for spot we just saved:', newSpot.id);
+        recentlySavedSpotIds.delete(newSpot.id);
+        return;
+      }
+      // Spot updated by another user
       loadAllFromSupabase(true); // Reload silently
     } else if (eventType === 'DELETE') {
       // Spot deleted
@@ -2519,7 +2536,7 @@
       // create initial report
       const report = {
         id: uid(),
-        timestamp: new Date().toISOString(),
+        timestamp: getCurrentDate().toISOString(),
         birdBehaviour: selectedRBird.slice(),
         humanBehaviour: selectedRHuman.slice(),
         precautions: selectedRPrec.slice(),
@@ -2545,7 +2562,7 @@
         radius: spotRisk === 'Danger - Avoid' ? 100 : spotRisk === 'Take caution' ? 80 : 50,
         risk: spotRisk,
         reports: [report],
-        createdAt: new Date().toISOString() // Track creation date for lifecycle management
+        createdAt: getCurrentDate().toISOString() // Track creation date for lifecycle management
       };
 
       createSpotFromData(spotData, false);
@@ -2871,7 +2888,7 @@
       // Just increment the safe passage counter
       if (!s.safePassageCount) s.safePassageCount = 0;
       s.safePassageCount++;
-      s.lastSafePassage = new Date().toISOString();
+      s.lastSafePassage = getCurrentDate().toISOString();
       
       saveAll();
       
@@ -3477,7 +3494,7 @@
     // Create new report
     const rep = {
       id: uid(),
-      timestamp: new Date().toISOString(),
+      timestamp: getCurrentDate().toISOString(),
       birdBehaviour: selectedReportBird.slice(),
       humanBehaviour: selectedReportHuman.slice(),
       precautions: selectedReportPrec.slice(),
@@ -5297,7 +5314,7 @@
         risk: 'Take caution',
         reports: [{
           id: uid(),
-          timestamp: new Date().toISOString(),
+          timestamp: getCurrentDate().toISOString(),
           birdBehaviour: ['swoop'],
           humanBehaviour: ['walking'],
           precautions: ['Hat'],

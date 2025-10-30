@@ -1939,7 +1939,7 @@
           bird_behaviour: r.birdBehaviour || [],
           human_behaviour: r.humanBehaviour || [],
           precautions: r.precautions || [],
-          extra_details: r.extraDetails || '',
+          extra_details: r.extra || '',
           timestamp: r.timestamp,
           user_id: r.user_id || currentUser?.id || null,
           created_by_name: r.created_by_name || (currentUser ? (userProfile?.display_name || currentUser.email.split('@')[0]) : null)
@@ -3482,16 +3482,22 @@
     
     // Recompute overall spot risk
     const newRisk = computeSpotRiskFromReports(s.reports, s.species);
-    if(newRisk !== s.risk) {
-      s.risk = newRisk;
-      
-      // Clear isPreseason flag if spot is no longer calm
-      if (newRisk !== 'Calm - All clear') {
-        console.log(`🔧 Clearing isPreseason flag for ${s.name} (risk changed to ${newRisk})`);
-        s.isPreseason = false;
-      }
-      
-      console.log(`🎨 Updating marker for ${s.name}: risk=${newRisk}, isPreseason=${s.isPreseason}`);
+    const oldIsPreseason = s.isPreseason;
+    const riskChanged = newRisk !== s.risk;
+    
+    // Update spot risk
+    s.risk = newRisk;
+    
+    // Clear isPreseason flag if spot is no longer calm (new activity reported)
+    if (newRisk !== 'Calm - All clear') {
+      console.log(`🔧 Clearing isPreseason flag for ${s.name} (risk changed to ${newRisk})`);
+      s.isPreseason = false;
+    }
+    
+    // Update marker if risk changed OR if isPreseason flag changed
+    const preseasonChanged = oldIsPreseason !== s.isPreseason;
+    if (riskChanged || preseasonChanged) {
+      console.log(`🎨 Updating marker for ${s.name}: risk=${newRisk}, isPreseason=${s.isPreseason}, riskChanged=${riskChanged}, preseasonChanged=${preseasonChanged}`);
       
       // Update marker icon and circle
       try {

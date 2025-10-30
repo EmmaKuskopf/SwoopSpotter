@@ -3490,32 +3490,32 @@
     
     // ALWAYS clear isPreseason flag when a new report is added
     // A new report means we're no longer in pre-season warning mode
-    console.log(`🔧 Clearing isPreseason flag for ${s.name} (new report added, risk: ${newRisk})`);
     s.isPreseason = false;
+    console.log(`🔧 CLEARED isPreseason flag for ${s.name}: risk=${newRisk}, isPreseason=${s.isPreseason}, oldIsPreseason=${oldIsPreseason}`);
     
-    // Update marker if risk changed OR if isPreseason flag changed
-    const preseasonChanged = oldIsPreseason !== s.isPreseason;
-    if (riskChanged || preseasonChanged) {
-      console.log(`🎨 Updating marker for ${s.name}: risk=${newRisk}, isPreseason=${s.isPreseason}, riskChanged=${riskChanged}, preseasonChanged=${preseasonChanged}`);
-      
-      // Update marker icon and circle
-      try {
-        map.removeLayer(s.marker);
-        map.removeLayer(s.circle);
-      } catch(e){}
-      
-      s.marker = L.marker([s.lat, s.lng], { icon: getBirdIcon(newRisk, s.isPreseason) }).addTo(map);
-      s.marker.on('click', ()=> showSpotQuickAlert(s));
-      
-      const radius = getRadiusByRisk(newRisk);
-      s.radius = radius;
-      s.circle = L.circle([s.lat, s.lng], { 
-        radius: radius,
-        color: newRisk === 'Danger - Avoid' ? '#EF4444' : newRisk === 'Take caution' ? '#F59E0B' : newRisk === 'Calm - All clear' ? '#3b82f6' : '#10B981',
-        fillColor: newRisk === 'Danger - Avoid' ? '#FEE2E2' : newRisk === 'Take caution' ? '#FEF3C7' : newRisk === 'Calm - All clear' ? '#dbeafe' : '#DCFCE7',
-        fillOpacity: 0.35 
-      }).addTo(map);
+    // ALWAYS update the marker when a report is added (don't rely on flag comparison)
+    // This ensures the icon reflects the current state
+    console.log(`🎨 Updating marker for ${s.name}: risk=${newRisk}, isPreseason=${s.isPreseason}`);
+    
+    // Update marker icon and circle
+    try {
+      map.removeLayer(s.marker);
+      map.removeLayer(s.circle);
+    } catch(e){
+      console.error('Error removing old marker:', e);
     }
+    
+    s.marker = L.marker([s.lat, s.lng], { icon: getBirdIcon(newRisk, s.isPreseason) }).addTo(map);
+    s.marker.on('click', ()=> showSpotQuickAlert(s));
+    
+    const radius = getRadiusByRisk(newRisk);
+    s.radius = radius;
+    s.circle = L.circle([s.lat, s.lng], { 
+      radius: radius,
+      color: newRisk === 'Danger - Avoid' ? '#EF4444' : newRisk === 'Take caution' ? '#F59E0B' : newRisk === 'Calm - All clear' ? '#3b82f6' : '#10B981',
+      fillColor: newRisk === 'Danger - Avoid' ? '#FEE2E2' : newRisk === 'Take caution' ? '#FEF3C7' : newRisk === 'Calm - All clear' ? '#dbeafe' : '#DCFCE7',
+      fillOpacity: 0.35 
+    }).addTo(map);
     
     saveAll(); // Save to localStorage
     saveSpotToSupabase(s); // Sync to Supabase

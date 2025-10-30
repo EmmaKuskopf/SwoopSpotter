@@ -4115,11 +4115,22 @@
 
   // Show quick alert for spot from list
   function showSpotQuickAlert(s) {
+    console.log(`🔔 showSpotQuickAlert called for ${s.name}: risk=${s.risk}, isPreseason=${s.isPreseason}`);
+    
+    // Don't show alert for spots the user just reported on
+    if (recentlyReportedSpots.has(s.id)) {
+      console.log('🔕 Suppressing alert for recently reported spot');
+      return;
+    }
+    
     // Check if this is a pre-season warning spot
     if (s.isPreseason) {
+      console.log('📅 Showing preseason alert');
       showPreseasonAlert(s);
       return;
     }
+    
+    console.log('⚠️ Showing normal alert');
     
     // Get latest report timestamp
     let lastReportedText = '';

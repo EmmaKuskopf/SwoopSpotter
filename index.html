@@ -897,11 +897,21 @@
     }
     return `<img src="Assets/Icons/${iconName}" width="36" height="36" alt="Bird icon">`;
   }
-  function getBirdIcon(level){
+  function getBirdIcon(level, isPreseason = false){
+    console.log(`🎨 getBirdIcon called: level=${level}, isPreseason=${isPreseason}`);
+    
+    // If isPreseason flag is set, always use blue (calm) color for preventative messaging
+    if (isPreseason) {
+      console.log('  → Returning blue (calm) icon due to isPreseason flag');
+      return L.divIcon({ className:'bird-marker', html: birdSVG('#3b82f6'), iconSize:[36,36], iconAnchor:[18,18] });
+    }
+    
     let col = '#10B981'; // low risk (green)
     if(level === 'Take caution') col = '#F59E0B'; // caution (amber)
     if(level === 'Danger - Avoid') col = '#EF4444'; // danger (red)
     if(level === 'Calm - All clear') col = '#3b82f6'; // calm (blue)
+    
+    console.log(`  → Returning ${col} icon for risk level: ${level}`);
     return L.divIcon({ className:'bird-marker', html: birdSVG(col), iconSize:[36,36], iconAnchor:[18,18] });
   }
   function getBirdIconSVG(level){
@@ -1907,6 +1917,7 @@
         lat: Number(spot.lat),
         lng: Number(spot.lng),
         risk: spot.risk,
+        is_preseason: spot.isPreseason || false, // Include isPreseason flag
         user_id: currentUser?.id || null,
         created_by_name: currentUser ? (userProfile?.display_name || currentUser.email.split('@')[0]) : null
       };
@@ -2415,7 +2426,7 @@
     }
     
     const lat = Number(data.lat), lng = Number(data.lng);
-    const marker = L.marker([lat,lng], { icon: getBirdIcon(data.risk) }).addTo(map);
+    const marker = L.marker([lat,lng], { icon: getBirdIcon(data.risk, data.isPreseason) }).addTo(map);
     const radius = getRadiusByRisk(data.risk);
     
     const circle = L.circle([lat,lng], { 
@@ -2627,6 +2638,8 @@
   
   
   // Check if a spot should be reactivated with pre-season warning
+  // This controls the ENTRY ALERT (blue preventative tips when entering the zone)
+  // Note: This is different from the EXIT FEEDBACK prompt for calm spots during season
   function shouldShowPreseasonWarning(reportsArray, species, createdAt) {
     if (!species) return false;
     
@@ -2654,8 +2667,13 @@
       daysUntilSeason = Math.floor((nextSeasonStartDate - now) / (1000 * 60 * 60 * 24));
     }
     
-    // Show pre-season warning if we're within 30 days of next season
-    return daysUntilSeason >= 0 && daysUntilSeason <= PRESEASON_WARNING_DAYS;
+    // Show pre-season warning ENTRY ALERT if we're within 30 days of next season
+    // BUT we're NOT too close (not within 4 days) - those get the exit feedback instead
+    const isInPreseasonWindow = daysUntilSeason >= 4 && daysUntilSeason <= PRESEASON_WARNING_DAYS;
+    
+    console.log(`📅 shouldShowPreseasonWarning: ${species}, days until season: ${daysUntilSeason}, showing entry alert: ${isInPreseasonWindow}`);
+    
+    return isInPreseasonWindow;
   }
   
   // Get the month name when nesting season begins
@@ -3462,13 +3480,22 @@
     const newRisk = computeSpotRiskFromReports(s.reports, s.species);
     if(newRisk !== s.risk) {
       s.risk = newRisk;
+      
+      // Clear isPreseason flag if spot is no longer calm
+      if (newRisk !== 'Calm - All clear') {
+        console.log(`🔧 Clearing isPreseason flag for ${s.name} (risk changed to ${newRisk})`);
+        s.isPreseason = false;
+      }
+      
+      console.log(`🎨 Updating marker for ${s.name}: risk=${newRisk}, isPreseason=${s.isPreseason}`);
+      
       // Update marker icon and circle
       try {
         map.removeLayer(s.marker);
         map.removeLayer(s.circle);
       } catch(e){}
       
-      s.marker = L.marker([s.lat, s.lng], { icon: getBirdIcon(newRisk) }).addTo(map);
+      s.marker = L.marker([s.lat, s.lng], { icon: getBirdIcon(newRisk, s.isPreseason) }).addTo(map);
       s.marker.on('click', ()=> showSpotQuickAlert(s));
       
       const radius = getRadiusByRisk(newRisk);
@@ -3533,6 +3560,7 @@
   // ----------------------------
   let currentAlertSpots = []; // Track currently displayed spots
   let visitedSpots = new Set(); // Track spots visited during current journey
+  let hasShownCalmFeedback = false; // Track if we've already shown calm feedback this journey
   
   function checkLocation(lat,lng){
     if(userMarker){ try{ userMarker.setLatLng([lat,lng]); } catch(e){} } else { userMarker = L.marker([lat,lng], { icon: getUserIcon() }).addTo(map); }
@@ -3564,6 +3592,8 @@
       const newIds = activeThreats.map(s => s.id).sort().join(',');
       
       if(currentIds !== newIds){
+        // New journey starting - reset the calm feedback flag
+        hasShownCalmFeedback = false;
         currentAlertSpots = activeThreats;
         showCenteredAlert(activeThreats);
       }
@@ -3586,28 +3616,81 @@
         
         // Clear visited spots for next journey
         visitedSpots.clear();
+        hasShownCalmFeedback = false; // Reset calm feedback flag for next journey
       } else {
         currentAlertSpots = [];
         hideCenteredAlert();
         
-        // Check if user just exited a calm spot during active season - ask for feedback!
-        const spotsToReport = Array.from(visitedSpots).map(id => spots.find(s => s.id === id)).filter(Boolean);
-        const calmSpotsInSeason = spotsToReport.filter(s => {
-          if (s.risk !== 'Calm - All clear') return false;
-          // Check if we're currently in the swooping season for this species
-          const season = SWOOPING_SEASONS[s.species];
-          if (!season) return false;
-          const now = getCurrentDate();
-          const currentMonth = now.getMonth() + 1;
-          return currentMonth >= season.start && currentMonth <= season.end;
-        });
-        
-        if (calmSpotsInSeason.length > 0) {
-          showCalmSpotFeedbackPrompt(calmSpotsInSeason);
+        // Check if user just exited a calm spot during/near active season - ask for feedback!
+        // Only show once per journey!
+        if (!hasShownCalmFeedback) {
+          const spotsToReport = Array.from(visitedSpots).map(id => spots.find(s => s.id === id)).filter(Boolean);
+          console.log('🔍 Spots visited during journey:', spotsToReport.length, spotsToReport.map(s => `${s.name} (${s.risk})`));
+          
+          const calmSpotsNeedingFeedback = spotsToReport.filter(s => {
+            if (s.risk !== 'Calm - All clear') {
+              console.log(`⏭️ Skipping ${s.name} - not calm (${s.risk})`);
+              return false;
+            }
+            
+            // Check if we're currently in the swooping season OR within first 30 days of season
+            const season = SWOOPING_SEASONS[s.species];
+            if (!season) {
+              console.log(`⏭️ Skipping ${s.name} - no season data for ${s.species}`);
+              return false;
+            }
+            
+            const now = getCurrentDate();
+            const currentMonth = now.getMonth() + 1;
+            const currentYear = now.getFullYear();
+            
+            // Calculate when this season starts
+            let seasonStartDate;
+            if (currentMonth <= season.end) {
+              // Season might be this year
+              seasonStartDate = new Date(currentYear, season.start - 1, 1);
+            } else {
+              // Season is next year
+              seasonStartDate = new Date(currentYear + 1, season.start - 1, 1);
+            }
+            
+            // Calculate days until/since season started
+            const daysFromSeasonStart = Math.floor((now - seasonStartDate) / (1000 * 60 * 60 * 24));
+            
+            // Ask for feedback if:
+            // 1. We're within 30 days BEFORE season starts (pre-season check), OR
+            // 2. We're within first 60 days of the season (early season check)
+            const isPreSeason = daysFromSeasonStart >= -30 && daysFromSeasonStart < 0;
+            const isEarlySeason = daysFromSeasonStart >= 0 && daysFromSeasonStart <= 60;
+            
+            console.log(`🐦 Calm spot feedback check: ${s.name} (${s.species}), days from season start: ${daysFromSeasonStart}, pre-season: ${isPreSeason}, early-season: ${isEarlySeason}`);
+            
+            return isPreSeason || isEarlySeason;
+          });
+          
+          console.log('🔍 Calm spots needing feedback:', calmSpotsNeedingFeedback.length);
+          
+          if (calmSpotsNeedingFeedback.length > 0) {
+            hasShownCalmFeedback = true; // Mark that we've shown it BEFORE calling the function
+            console.log('🚫 Setting hasShownCalmFeedback = true to prevent duplicates');
+            showCalmSpotFeedbackPrompt(calmSpotsNeedingFeedback);
+            
+            // Clear visitedSpots immediately to prevent duplicate modals on next GPS update
+            console.log('✅ Modal shown - clearing visitedSpots to prevent duplicates');
+            visitedSpots.clear();
+            return; // Exit early
+          } else {
+            console.log('❌ No calm spots need feedback at this time');
+          }
+        } else {
+          console.log('🚫 hasShownCalmFeedback is already true - skipping check');
+          // Clear visited spots since we're not showing a modal and journey is over
+          visitedSpots.clear();
         }
         
-        // Clear visited spots for next journey
-        visitedSpots.clear();
+        // Note: hasShownCalmFeedback flag is NOT reset here!
+        // It will be reset only when entering a new zone (starting a new journey)
+        // This prevents duplicate modals during the same journey
       }
     }
     renderAlerts();
@@ -3744,6 +3827,8 @@
   function showCalmSpotFeedbackPrompt(calmSpots) {
     if (!calmSpots || calmSpots.length === 0) return;
     
+    console.log('🐦 showCalmSpotFeedbackPrompt called with', calmSpots.length, 'spots');
+    
     // For now, just handle the first calm spot (can be extended for multiple later)
     const spot = calmSpots[0];
     
@@ -3752,6 +3837,33 @@
       ? new Date(Math.max(...spot.reports.map(r => new Date(r.timestamp))))
       : null;
     const lastYear = lastReportDate ? lastReportDate.getFullYear() : 'last year';
+    
+    // Determine if we're pre-season or in-season
+    const season = SWOOPING_SEASONS[spot.species];
+    const now = getCurrentDate();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
+    
+    let seasonStartDate;
+    if (currentMonth <= (season?.end || 12)) {
+      seasonStartDate = new Date(currentYear, (season?.start || 8) - 1, 1);
+    } else {
+      seasonStartDate = new Date(currentYear + 1, (season?.start || 8) - 1, 1);
+    }
+    
+    const daysFromSeasonStart = Math.floor((now - seasonStartDate) / (1000 * 60 * 60 * 24));
+    const isPreSeason = daysFromSeasonStart < 0;
+    
+    // Customize message based on timing
+    let seasonMessage;
+    if (isPreSeason) {
+      const daysUntilSeason = Math.abs(daysFromSeasonStart);
+      seasonMessage = `This bird's nesting season begins in ${daysUntilSeason} day${daysUntilSeason === 1 ? '' : 's'} - have you noticed any activity?`;
+    } else {
+      seasonMessage = `This bird's nesting season has just begun - did you spot this bird today?`;
+    }
+    
+    console.log('📅 Feedback prompt:', seasonMessage);
     
     // Create a custom modal for this feedback
     const feedbackModal = document.createElement('div');
@@ -3771,19 +3883,19 @@
               In ${lastYear}, a <span class="font-semibold" style="color: #2563eb;">${escapeHtml(spot.species)}</span> 
               was reported at <span class="font-semibold">${escapeHtml(spot.name)}</span>.
               <br><br>
-              This bird's nesting season has just begun - did you spot this bird today?
+              ${seasonMessage}
             </p>
           </div>
         </div>
         
         <div class="flex flex-col gap-2">
-          <button id="calmFeedbackYes" class="w-full px-4 py-3 rounded font-medium text-white" style="background-color: #422d1e;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+          <button data-action="yes" class="calm-feedback-btn w-full px-4 py-3 rounded font-medium text-white" style="background-color: #422d1e;">
             Yes, I saw the bird - Add Report
           </button>
-          <button id="calmFeedbackNo" class="w-full px-4 py-3 rounded font-medium" style="background-color: #10B981; color: white;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+          <button data-action="no" class="calm-feedback-btn w-full px-4 py-3 rounded font-medium" style="background-color: #10B981; color: white;">
             No, the bird wasn't there
           </button>
-          <button id="calmFeedbackSkip" class="w-full px-4 py-2 rounded text-sm" style="color: #422d1e; opacity: 0.7;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
+          <button data-action="skip" class="calm-feedback-btn w-full px-4 py-2 rounded text-sm" style="color: #422d1e; opacity: 0.7;">
             Skip
           </button>
         </div>
@@ -3791,34 +3903,70 @@
     `;
     
     document.body.appendChild(feedbackModal);
+    document.body.classList.add('modal-open');
     
-    // Handle "Yes" - Open details modal to add report
-    document.getElementById('calmFeedbackYes').addEventListener('click', () => {
-      feedbackModal.remove();
-      openDetailsModal(spot.id);
-      // Switch to add report tab
-      setTimeout(() => {
-        const addTab = detailsModal.querySelector('[data-tab="add"]');
-        if (addTab) addTab.click();
-      }, 100);
-    });
+    console.log('✅ Feedback modal added to DOM');
+    console.log('📍 Modal element:', feedbackModal);
+    console.log('📍 Modal in body:', document.getElementById('calmSpotFeedbackModal'));
+    console.log('📍 Body has modal-open class:', document.body.classList.contains('modal-open'));
     
-    // Handle "No" - Record safe passage
-    document.getElementById('calmFeedbackNo').addEventListener('click', () => {
-      if (!spot.safePassageCount) spot.safePassageCount = 0;
-      spot.safePassageCount++;
-      spot.lastSafePassage = new Date().toISOString();
+    // Click anywhere on the overlay (but not the content) to close
+    feedbackModal.addEventListener('click', (e) => {
+      console.log('🔘 Modal clicked, target:', e.target.className, 'current:', e.currentTarget.id);
       
-      saveAll();
-      incrementUserSafePassages();
+      // Check if it's a button click first
+      const btn = e.target.closest('.calm-feedback-btn');
+      console.log('🔘 Found button:', btn);
       
-      feedbackModal.remove();
-      toast(`Thanks! Recorded safe passage at ${spot.name}`, 2000);
-    });
-    
-    // Handle "Skip"
-    document.getElementById('calmFeedbackSkip').addEventListener('click', () => {
-      feedbackModal.remove();
+      if (btn) {
+        e.stopPropagation();
+        e.preventDefault();
+        
+        const action = btn.getAttribute('data-action');
+        console.log('🔘 Button clicked, action:', action);
+        
+        // Reset the flag so user can be prompted again on next visit
+        hasShownCalmFeedback = false;
+        console.log('🔄 Reset hasShownCalmFeedback flag for next journey');
+        
+        if (action === 'yes') {
+          console.log('✅ Yes - opening details modal');
+          feedbackModal.remove();
+          document.body.classList.remove('modal-open');
+          openDetailsModal(spot.id);
+          setTimeout(() => {
+            const addTab = detailsModal.querySelector('[data-tab="add"]');
+            if (addTab) addTab.click();
+          }, 100);
+        } else if (action === 'no') {
+          console.log('✅ No - recording safe passage');
+          if (!spot.safePassageCount) spot.safePassageCount = 0;
+          spot.safePassageCount++;
+          spot.lastSafePassage = new Date().toISOString();
+          
+          saveAll();
+          incrementUserSafePassages();
+          
+          feedbackModal.remove();
+          document.body.classList.remove('modal-open');
+          console.log('✅ Modal removed, modal-open class removed');
+          toast(`Thanks! Recorded safe passage at ${spot.name}`, 2000);
+        } else if (action === 'skip') {
+          console.log('✅ Skip - closing modal');
+          feedbackModal.remove();
+          document.body.classList.remove('modal-open');
+          console.log('✅ Modal removed, modal-open class removed');
+        }
+        return;
+      }
+      
+      // If clicking directly on the overlay (not bubbled from content), close it
+      if (e.target === feedbackModal) {
+        console.log('🔘 Overlay clicked - closing modal');
+        feedbackModal.remove();
+        document.body.classList.remove('modal-open');
+        return;
+      }
     });
   }
 

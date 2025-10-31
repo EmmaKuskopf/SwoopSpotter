@@ -2628,11 +2628,24 @@
     if (season) {
       const currentSeasonStart = new Date(currentYear, season.start - 1, 1);
       
+      console.log(`🔍 Risk calc debug:`, {
+        now: now.toISOString(),
+        currentYear,
+        currentMonth: now.getMonth() + 1,
+        seasonStart: season.start,
+        currentSeasonStart: currentSeasonStart.toISOString(),
+        thirtyDaysAgo: thirtyDaysAgo.toISOString(),
+        totalReports: reportsArray.length
+      });
+      
       // Include reports from current season OR any recent reports (within 30 days)
       // This ensures reports added just before season starts are counted
       relevantReports = reportsArray.filter(r => {
         const reportDate = new Date(r.timestamp);
-        return reportDate >= currentSeasonStart || reportDate >= thirtyDaysAgo;
+        const isCurrentSeason = reportDate >= currentSeasonStart;
+        const isRecent = reportDate >= thirtyDaysAgo;
+        console.log(`  📝 Report: ${reportDate.toISOString()}, current season: ${isCurrentSeason}, recent: ${isRecent}`);
+        return isCurrentSeason || isRecent;
       });
       
       console.log(`🔍 Risk calculation: ${reportsArray.length} total reports, ${relevantReports.length} relevant (current season or recent)`);

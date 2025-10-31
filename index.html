@@ -2033,9 +2033,8 @@
             species: spotData.species,
             lat: Number(spotData.lat),
             lng: Number(spotData.lng),
-            // DO NOT set risk or isPreseason here - let createSpotFromData calculate based on current date
-            // risk: spotData.risk,  // REMOVED - forces recalculation
-            // isPreseason: spotData.is_preseason,  // REMOVED - forces recalculation
+            // Pass isPreseason from database so createSpotFromData respects manual clearing
+            isPreseason: spotData.is_preseason,
             address: spotData.address || '',
             createdAt: spotData.created_at,
             safePassageCount: spotData.safe_passage_count || 0,

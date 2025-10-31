@@ -2618,31 +2618,39 @@
       return 'Calm - All clear';
     }
     
-    // Filter to only current season reports
+    // Filter to only current season reports OR recent reports (within 30 days)
     const season = SWOOPING_SEASONS[species];
     const now = getCurrentDate();
     const currentYear = now.getFullYear();
-    let currentSeasonReports = reportsArray;
+    const thirtyDaysAgo = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000));
+    let relevantReports = reportsArray;
     
     if (season) {
       const currentSeasonStart = new Date(currentYear, season.start - 1, 1);
-      currentSeasonReports = reportsArray.filter(r => new Date(r.timestamp) >= currentSeasonStart);
-      console.log(`🔍 Risk calculation: ${reportsArray.length} total reports, ${currentSeasonReports.length} from current season`);
+      
+      // Include reports from current season OR any recent reports (within 30 days)
+      // This ensures reports added just before season starts are counted
+      relevantReports = reportsArray.filter(r => {
+        const reportDate = new Date(r.timestamp);
+        return reportDate >= currentSeasonStart || reportDate >= thirtyDaysAgo;
+      });
+      
+      console.log(`🔍 Risk calculation: ${reportsArray.length} total reports, ${relevantReports.length} relevant (current season or recent)`);
     }
     
-    // If no current season reports, return calm
-    if (currentSeasonReports.length === 0) {
+    // If no relevant reports, return calm
+    if (relevantReports.length === 0) {
       return 'Calm - All clear';
     }
     
-    // Calculate risk based on most severe behavior reported IN CURRENT SEASON ONLY
+    // Calculate risk based on most severe behavior reported
     
     // Highest priority: any contact (injured/uninjured) => Danger
-    for(const r of currentSeasonReports){
+    for(const r of relevantReports){
       if(Array.isArray(r.birdBehaviour) && (r.birdBehaviour.includes('made contact + injured') || r.birdBehaviour.includes('made contact + uninjured'))) return 'Danger - Avoid';
     }
     // Next: any close swoop
-    for(const r of currentSeasonReports){ if(Array.isArray(r.birdBehaviour) && r.birdBehaviour.includes('close swoop')) return 'Take caution'; }
+    for(const r of relevantReports){ if(Array.isArray(r.birdBehaviour) && r.birdBehaviour.includes('close swoop')) return 'Take caution'; }
     // else Low
     return 'Low risk';
   }

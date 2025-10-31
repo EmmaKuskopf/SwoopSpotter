@@ -2025,7 +2025,7 @@
       if (spotsData && spotsData.length > 0) {
         console.log(`✅ Creating ${spotsData.length} spots from Supabase data`);
         spotsData.forEach(spotData => {
-          console.log('Creating spot:', spotData.name);
+          console.log('Creating spot:', spotData.name, 'DB is_preseason:', spotData.is_preseason);
           // Convert Supabase format to app format
           const spot = {
             id: spotData.id,
@@ -2033,8 +2033,9 @@
             species: spotData.species,
             lat: Number(spotData.lat),
             lng: Number(spotData.lng),
-            // Pass isPreseason from database so createSpotFromData respects manual clearing
-            isPreseason: spotData.is_preseason,
+            // Pass isPreseason from database - explicitly convert to boolean
+            // This ensures false/null from DB are treated as false (not recalculated)
+            isPreseason: spotData.is_preseason === true ? true : false,
             address: spotData.address || '',
             createdAt: spotData.created_at,
             safePassageCount: spotData.safe_passage_count || 0,
@@ -2443,7 +2444,8 @@
     
     // Only calculate isPreseason if it's not explicitly set in the data
     // This respects manual clearing when reports are added
-    if (data.isPreseason === undefined || data.isPreseason === null) {
+    // NOTE: We check for undefined only - false means it was explicitly cleared
+    if (typeof data.isPreseason !== 'boolean') {
       const showPreseasonMsg = shouldShowPreseasonWarning(data.reports, data.species || data.birdSpecies, data.createdAt);
       data.isPreseason = showPreseasonMsg;
       console.log(`🎯 Spot ${data.name} risk: ${data.risk}, calculated isPreseason: ${data.isPreseason}`);

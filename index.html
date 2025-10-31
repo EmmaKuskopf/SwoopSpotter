@@ -2338,23 +2338,31 @@
   function updateRepAlertFromBirds(){ repAlertLevel.value = computeAlertFromBirds(selectedReportBird); }
 
   // ----------------------------
-  // Geocoding (Nominatim)
+  // Geocoding (with CORS workaround)
   // ----------------------------
   async function geocodeAddress(q){
-    const url = 'https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(q);
-    const res = await fetch(url, {
-      headers: {
-        'User-Agent': 'SwoopSpotter/1.0 (https://github.com/EmmaKuskopf/SwoopSpotter)' // Required by Nominatim usage policy
+    // Use geocode.maps.co (free, CORS-friendly alternative to Nominatim)
+    // This service uses OpenStreetMap data and allows browser requests
+    const url = 'https://geocode.maps.co/search?q=' + encodeURIComponent(q);
+    
+    try {
+      const res = await fetch(url);
+      
+      if (!res.ok) {
+        throw new Error(`Geocoding failed: ${res.status} ${res.statusText}`);
       }
-    });
-    
-    if (!res.ok) {
-      throw new Error(`Geocoding failed: ${res.status} ${res.statusText}`);
+      
+      const j = await res.json();
+      if(!j || j.length===0) throw new Error('Address not found');
+      return { 
+        lat: parseFloat(j[0].lat), 
+        lng: parseFloat(j[0].lon), 
+        display: j[0].display_name 
+      };
+    } catch (error) {
+      console.error('Geocoding error:', error);
+      throw new Error('Unable to find address. Please try selecting from map instead.');
     }
-    
-    const j = await res.json();
-    if(!j || j.length===0) throw new Error('Address not found');
-    return { lat: parseFloat(j[0].lat), lng: parseFloat(j[0].lon), display: j[0].display_name };
   }
 
   // Address suggestions UI
@@ -2383,12 +2391,9 @@
     }
 
     try {
-      const url = 'https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(input.value.trim());
-      const res = await fetch(url, {
-        headers: {
-          'User-Agent': 'SwoopSpotter/1.0 (https://github.com/EmmaKuskopf/SwoopSpotter)' // Required by Nominatim usage policy
-        }
-      });
+      // Use geocode.maps.co (free, CORS-friendly alternative)
+      const url = 'https://geocode.maps.co/search?q=' + encodeURIComponent(input.value.trim());
+      const res = await fetch(url);
       
       if (!res.ok) {
         console.warn('Address lookup failed:', res.status, res.statusText);

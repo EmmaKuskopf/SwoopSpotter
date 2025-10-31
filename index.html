@@ -2479,7 +2479,7 @@
       reports: data.reports.slice(),
       safePassageCount: data.safePassageCount || 0,
       createdAt: data.createdAt,
-      isPreseason: showPreseasonMsg || false,
+      isPreseason: data.isPreseason || false, // Use the value from data, not undefined showPreseasonMsg
       marker, circle
     };
 

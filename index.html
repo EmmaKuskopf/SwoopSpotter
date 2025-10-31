@@ -3618,6 +3618,12 @@
     console.log(`📝 After save: spot ${s.name} isPreseason=${s.isPreseason}, risk=${s.risk}`);
     console.log(`📝 Spot object:`, { id: s.id, name: s.name, risk: s.risk, isPreseason: s.isPreseason, reports: s.reports.length });
     
+    // Remove this spot from visitedSpots to prevent calm feedback prompt after reporting
+    if (visitedSpots.has(s.id)) {
+      visitedSpots.delete(s.id);
+      console.log(`🗑️ Removed ${s.name} from visitedSpots - no feedback prompt after updating`);
+    }
+    
     // Increment user's reports counter
     incrementUserReportsCreated();
     

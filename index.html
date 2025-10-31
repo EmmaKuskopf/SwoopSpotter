@@ -2342,7 +2342,16 @@
   // ----------------------------
   async function geocodeAddress(q){
     const url = 'https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(q);
-    const res = await fetch(url);
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': 'SwoopSpotter/1.0 (https://github.com/EmmaKuskopf/SwoopSpotter)' // Required by Nominatim usage policy
+      }
+    });
+    
+    if (!res.ok) {
+      throw new Error(`Geocoding failed: ${res.status} ${res.statusText}`);
+    }
+    
     const j = await res.json();
     if(!j || j.length===0) throw new Error('Address not found');
     return { lat: parseFloat(j[0].lat), lng: parseFloat(j[0].lon), display: j[0].display_name };
@@ -2375,7 +2384,17 @@
 
     try {
       const url = 'https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(input.value.trim());
-      const res = await fetch(url);
+      const res = await fetch(url, {
+        headers: {
+          'User-Agent': 'SwoopSpotter/1.0 (https://github.com/EmmaKuskopf/SwoopSpotter)' // Required by Nominatim usage policy
+        }
+      });
+      
+      if (!res.ok) {
+        console.warn('Address lookup failed:', res.status, res.statusText);
+        return;
+      }
+      
       const results = await res.json();
       
       const list = createAddressList(input);

@@ -1925,10 +1925,12 @@
         lat: Number(spot.lat),
         lng: Number(spot.lng),
         risk: spot.risk,
-        is_preseason: spot.isPreseason || false, // Include isPreseason flag
+        is_preseason: spot.isPreseason === true, // Explicitly convert to boolean (false if undefined/null/false)
         user_id: currentUser?.id || null,
         created_by_name: currentUser ? (userProfile?.display_name || currentUser.email.split('@')[0]) : null
       };
+      
+      console.log(`💾 Saving spot ${spot.name}: isPreseason=${spot.isPreseason}, DB is_preseason=${spotData.is_preseason}`);
       
       // Upsert spot (insert or update)
       const { data: spotResult, error: spotError } = await supabase
@@ -2135,6 +2137,8 @@
   function handleSpotRealTimeUpdate(payload) {
     const { eventType, new: newSpot, old: oldSpot } = payload;
     
+    console.log(`🔄 Real-time spot update: eventType=${eventType}, spot=${newSpot?.name}, id=${newSpot?.id}`);
+    
     if (eventType === 'INSERT') {
       // New spot added by another user
       const existingSpot = spots.find(s => s.id === newSpot.id);
@@ -2149,6 +2153,7 @@
         recentlySavedSpotIds.delete(newSpot.id);
         return;
       }
+      console.log(`🔄 Processing real-time UPDATE for spot ${newSpot.name} (not in recentlySavedSpotIds)`);
       // Spot updated by another user
       loadAllFromSupabase(true); // Reload silently
     } else if (eventType === 'DELETE') {
@@ -3564,6 +3569,9 @@
     
     saveAll(); // Save to localStorage
     saveSpotToSupabase(s); // Sync to Supabase
+    
+    console.log(`📝 After save: spot ${s.name} isPreseason=${s.isPreseason}, risk=${s.risk}`);
+    console.log(`📝 Spot object:`, { id: s.id, name: s.name, risk: s.risk, isPreseason: s.isPreseason, reports: s.reports.length });
     
     // Increment user's reports counter
     incrementUserReportsCreated();

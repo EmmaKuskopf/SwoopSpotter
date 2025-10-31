@@ -3624,6 +3624,10 @@
       console.log(`🗑️ Removed ${s.name} from visitedSpots - no feedback prompt after updating`);
     }
     
+    // Mark this spot as already reported this journey - won't be re-added to visitedSpots
+    alreadyReportedThisJourney.add(s.id);
+    console.log(`✅ Added ${s.name} to alreadyReportedThisJourney - won't trigger feedback if still in zone`);
+    
     // Increment user's reports counter
     incrementUserReportsCreated();
     
@@ -3681,6 +3685,7 @@
   let visitedSpots = new Set(); // Track spots visited during current journey
   let hasShownCalmFeedback = false; // Track if we've already shown calm feedback this journey
   let recentlyReportedSpots = new Set(); // Track spots user just reported to prevent immediate alerts
+  let alreadyReportedThisJourney = new Set(); // Track spots we've reported on during this journey (won't trigger feedback)
   
   function checkLocation(lat,lng){
     if(userMarker){ try{ userMarker.setLatLng([lat,lng]); } catch(e){} } else { userMarker = L.marker([lat,lng], { icon: getUserIcon() }).addTo(map); }
@@ -3690,7 +3695,10 @@
     for(const s of spots){
       if(metersBetween(lat,lng,s.lat,s.lng) <= (s.radius || 150)){ 
         insideSpots.push(s);
-        visitedSpots.add(s.id); // Track that we've been in this spot
+        // Only track as visited if we haven't already reported on it this journey
+        if (!alreadyReportedThisJourney.has(s.id)) {
+          visitedSpots.add(s.id); // Track that we've been in this spot
+        }
       }
     }
     
@@ -3740,6 +3748,7 @@
         
         // Clear visited spots for next journey
         visitedSpots.clear();
+        alreadyReportedThisJourney.clear(); // Also clear reported tracking for next journey
         hasShownCalmFeedback = false; // Reset calm feedback flag for next journey
       } else {
         currentAlertSpots = [];

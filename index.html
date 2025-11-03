@@ -5689,18 +5689,29 @@
   const closeTestingModal = document.getElementById('closeTestingModal');
   const closeTestingModalBottom = document.getElementById('closeTestingModalBottom');
   
-  // Close Testing Modal
-  if (closeTestingModal && testingModal) {
-    closeTestingModal.addEventListener('click', () => {
+  // Helper function to close testing modal
+  function closeTestingModalFn() {
+    if (testingModal) {
       testingModal.classList.add('hidden');
       document.body.classList.remove('modal-open');
-    });
+    }
   }
   
-  if (closeTestingModalBottom && testingModal) {
-    closeTestingModalBottom.addEventListener('click', () => {
-      testingModal.classList.add('hidden');
-      document.body.classList.remove('modal-open');
+  // Close Testing Modal
+  if (closeTestingModal) {
+    closeTestingModal.addEventListener('click', closeTestingModalFn);
+  }
+  
+  if (closeTestingModalBottom) {
+    closeTestingModalBottom.addEventListener('click', closeTestingModalFn);
+  }
+  
+  // Close when clicking outside
+  if (testingModal) {
+    testingModal.addEventListener('click', (e) => {
+      if (e.target === testingModal) {
+        closeTestingModalFn();
+      }
     });
   }
   
@@ -5786,16 +5797,21 @@
   const resetTestDateModal = document.getElementById('resetTestDateModal');
   const currentTestDateModal = document.getElementById('currentTestDateModal');
   
-  function updateTestDateModalDisplay() {
+  // Make this function globally accessible
+  window.updateTestDateModalDisplay = function() {
     if (testDate) {
       const date = new Date(testDate);
-      currentTestDateModal.innerHTML = `<strong>Testing with date:</strong> ${date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
-      currentTestDateModal.style.color = '#D97706';
-      currentTestDateModal.style.fontWeight = 'bold';
+      if (currentTestDateModal) {
+        currentTestDateModal.innerHTML = `<strong>Testing with date:</strong> ${date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
+        currentTestDateModal.style.color = '#D97706';
+        currentTestDateModal.style.fontWeight = 'bold';
+      }
     } else {
-      currentTestDateModal.innerHTML = 'Using real date (today)';
-      currentTestDateModal.style.color = '#422d1e';
-      currentTestDateModal.style.fontWeight = 'normal';
+      if (currentTestDateModal) {
+        currentTestDateModal.innerHTML = 'Using real date (today)';
+        currentTestDateModal.style.color = '#422d1e';
+        currentTestDateModal.style.fontWeight = 'normal';
+      }
     }
   }
   
@@ -5805,7 +5821,7 @@
       
       if (selectedDate) {
         testDate = new Date(selectedDate).toISOString();
-        updateTestDateModalDisplay();
+        window.updateTestDateModalDisplay();
         
         // Reload all spots
         spots.forEach(s => {
@@ -5825,7 +5841,7 @@
   if (resetTestDateModal) {
     resetTestDateModal.addEventListener('click', async () => {
       testDate = null;
-      updateTestDateModalDisplay();
+      window.updateTestDateModalDisplay();
       
       // Reload all spots
       spots.forEach(s => {
@@ -6387,7 +6403,9 @@
         testingModal.classList.remove('hidden');
         document.body.classList.add('modal-open');
         // Update test date display
-        updateTestDateModalDisplay();
+        if (typeof window.updateTestDateModalDisplay === 'function') {
+          window.updateTestDateModalDisplay();
+        }
       }
       setActiveNavItem(navTesting);
     });
@@ -6600,7 +6618,9 @@
         testingModal.classList.remove('hidden');
         document.body.classList.add('modal-open');
         // Update test date display
-        updateTestDateModalDisplay();
+        if (typeof window.updateTestDateModalDisplay === 'function') {
+          window.updateTestDateModalDisplay();
+        }
       }
       setActiveDesktopNavItem(desktopNavTesting);
     });

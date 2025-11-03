@@ -122,6 +122,86 @@
       padding-bottom: 1rem;
     }
   }
+
+  /* Mobile Navigation Bar */
+  .mobile-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: #f2eceb;
+    border-top: 2px solid #d4cac7;
+    z-index: 1000;
+    display: none;
+    padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+    box-shadow: 0 -2px 10px rgba(66, 45, 30, 0.1);
+  }
+
+  .mobile-nav-items {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+
+  .mobile-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #422d1e;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  .mobile-nav-item.active {
+    opacity: 1;
+  }
+
+  .mobile-nav-item:active {
+    opacity: 0.4;
+  }
+
+  .mobile-nav-item img {
+    width: 24px;
+    height: 24px;
+  }
+
+  /* Show mobile nav on small screens */
+  @media (max-width: 768px) {
+    .mobile-nav {
+      display: block;
+    }
+
+    main {
+      padding-bottom: calc(80px + env(safe-area-inset-bottom)) !important;
+    }
+  }
+
+  /* Stats Modal for Mobile */
+  .stats-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background-color: rgba(66, 45, 30, 0.5);
+    z-index: 60;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .stats-modal.active {
+    display: flex;
+  }
+  
   
   /* Safari-specific form element fixes */
   select, input, textarea {
@@ -5468,7 +5548,228 @@
     syncEnabled // Expose to toggle sync
   };
 
+  // ----------------------------
+  // Mobile Navigation
+  // ----------------------------
+  
+  const navHome = document.getElementById('navHome');
+  const navProfile = document.getElementById('navProfile');
+  const navStats = document.getElementById('navStats');
+  const navTips = document.getElementById('navTips');
+  const navLogout = document.getElementById('navLogout');
+  const statsModal = document.getElementById('statsModal');
+  const closeStatsModal = document.getElementById('closeStatsModal');
+  
+  // Set active nav item
+  function setActiveNavItem(activeItem) {
+    document.querySelectorAll('.mobile-nav-item').forEach(item => {
+      item.classList.remove('active');
+    });
+    if (activeItem) {
+      activeItem.classList.add('active');
+    }
+  }
+  
+  // Home button - scroll to top
+  if (navHome) {
+    navHome.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setActiveNavItem(navHome);
+    });
+  }
+  
+  // Profile button
+  if (navProfile) {
+    navProfile.addEventListener('click', () => {
+      if (!currentUser) {
+        toast('Please sign in to view your profile', 2000);
+        authModal.classList.remove('hidden');
+        return;
+      }
+      openProfileModal('stats', false);
+      setActiveNavItem(navProfile);
+    });
+  }
+  
+  // Stats button - open stats modal
+  if (navStats) {
+    navStats.addEventListener('click', () => {
+      statsModal.classList.add('active');
+      renderStatsModal(currentStatsPeriod);
+      setActiveNavItem(navStats);
+    });
+  }
+  
+  // Tips button
+  if (navTips) {
+    navTips.addEventListener('click', () => {
+      safetyTipsModal.classList.remove('hidden');
+      document.body.classList.add('modal-open');
+      setActiveNavItem(navTips);
+    });
+  }
+  
+  // Logout button
+  if (navLogout) {
+    navLogout.addEventListener('click', async () => {
+      if (!currentUser) {
+        toast('You are not signed in', 2000);
+        return;
+      }
+      
+      if (confirm('Are you sure you want to sign out?')) {
+        await signOutUser();
+        setActiveNavItem(navHome);
+      }
+    });
+  }
+  
+  // Close stats modal
+  if (closeStatsModal) {
+    closeStatsModal.addEventListener('click', () => {
+      statsModal.classList.remove('active');
+      setActiveNavItem(navHome);
+    });
+  }
+  
+  // Close stats modal when clicking outside
+  if (statsModal) {
+    statsModal.addEventListener('click', (e) => {
+      if (e.target === statsModal) {
+        statsModal.classList.remove('active');
+        setActiveNavItem(navHome);
+      }
+    });
+  }
+  
+  // Stats modal period tabs
+  document.querySelectorAll('.stats-period-tab-modal').forEach(tab => {
+    tab.addEventListener('click', (e) => {
+      const period = e.target.dataset.period;
+      
+      // Update tab styles
+      document.querySelectorAll('.stats-period-tab-modal').forEach(t => {
+        if (t.dataset.period === period) {
+          t.style.cssText = 'background-color: #422d1e; color: white;';
+          t.classList.add('active');
+        } else {
+          t.style.cssText = 'background-color: transparent; color: #422d1e; border: 1px solid #d4cac7;';
+          t.classList.remove('active');
+        }
+      });
+      
+      // Re-render stats
+      renderStatsModal(period);
+    });
+  });
+  
+  // Render stats in modal
+  async function renderStatsModal(period = 'today') {
+    const stats = await calculateStats(period);
+    
+    // Update totals
+    document.getElementById('statTotalReportsModal').textContent = stats.totalReports;
+    document.getElementById('statInjuriesModal').textContent = stats.injuries;
+    
+    // Update species breakdown
+    const speciesBreakdown = document.getElementById('statSpeciesBreakdownModal');
+    speciesBreakdown.innerHTML = '';
+    
+    if (Object.keys(stats.species).length === 0) {
+      speciesBreakdown.innerHTML = '<div style="color: #422d1e; opacity: 0.6;">No reports yet</div>';
+    } else {
+      // Sort species by count (descending)
+      const sortedSpecies = Object.entries(stats.species)
+        .sort((a, b) => b[1] - a[1]);
+      
+      sortedSpecies.forEach(([species, count]) => {
+        const row = document.createElement('div');
+        row.className = 'flex justify-between items-center py-1';
+        row.innerHTML = `
+          <span style="color: #422d1e;">${escapeHtml(species)}</span>
+          <span class="font-bold" style="color: #422d1e;">${count}</span>
+        `;
+        speciesBreakdown.appendChild(row);
+      });
+    }
+  }
+
 })(); // IIFE end
 </script>
+
+<!-- Mobile Navigation Bar -->
+<nav class="mobile-nav" id="mobileNav">
+  <div class="mobile-nav-items">
+    <button class="mobile-nav-item active" id="navHome" data-view="home">
+      <img src="Assets/Menu Icons/Light Mode/menu-home.svg" alt="Home">
+      <span>Home</span>
+    </button>
+    <button class="mobile-nav-item" id="navProfile" data-view="profile">
+      <img src="Assets/Menu Icons/Light Mode/menu-profile.svg" alt="Profile">
+      <span>Profile</span>
+    </button>
+    <button class="mobile-nav-item" id="navStats" data-view="stats">
+      <img src="Assets/Menu Icons/Light Mode/menu-stats.svg" alt="Stats">
+      <span>Stats</span>
+    </button>
+    <button class="mobile-nav-item" id="navTips" data-view="tips">
+      <img src="Assets/Menu Icons/Light Mode/menu-tips.svg" alt="Tips">
+      <span>Tips</span>
+    </button>
+    <button class="mobile-nav-item" id="navLogout" data-view="logout">
+      <img src="Assets/Menu Icons/Light Mode/menu-logout.svg" alt="Logout">
+      <span>Logout</span>
+    </button>
+  </div>
+</nav>
+
+<!-- Stats Modal for Mobile -->
+<div class="stats-modal" id="statsModal">
+  <div class="rounded-lg w-full max-w-2xl mx-auto max-h-[90vh] overflow-y-auto relative" style="background-color: #f2eceb;">
+    <div class="p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-2xl font-bold" style="color: #422d1e;">Activity Stats</h2>
+        <button id="closeStatsModal" class="text-2xl font-bold" style="color: #422d1e;" aria-label="Close">&times;</button>
+      </div>
+
+      <!-- Time Period Tabs -->
+      <div class="flex gap-2 mb-4">
+        <button class="stats-period-tab-modal active flex-1 text-sm py-2 px-3 rounded" data-period="today" style="background-color: #422d1e; color: white;">
+          Today
+        </button>
+        <button class="stats-period-tab-modal flex-1 text-sm py-2 px-3 rounded" data-period="week" style="background-color: transparent; color: #422d1e; border: 1px solid #d4cac7;">
+          This Week
+        </button>
+        <button class="stats-period-tab-modal flex-1 text-sm py-2 px-3 rounded" data-period="season" style="background-color: transparent; color: #422d1e; border: 1px solid #d4cac7;">
+          This Season
+        </button>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="space-y-3">
+        <!-- Total Reports -->
+        <div class="flex justify-between items-center p-3 rounded" style="background-color: #e8e2e1;">
+          <span style="color: #422d1e; font-weight: 500;">Total Reports</span>
+          <span class="font-bold text-lg" style="color: #422d1e;" id="statTotalReportsModal">0</span>
+        </div>
+        
+        <!-- Injuries -->
+        <div class="flex justify-between items-center p-3 rounded" style="background-color: #e8e2e1;">
+          <span style="color: #DC2626; font-weight: 500;">⚠ Injuries</span>
+          <span class="font-bold text-lg" style="color: #DC2626;" id="statInjuriesModal">0</span>
+        </div>
+        
+        <!-- Bird Species Breakdown -->
+        <div class="p-3 rounded" style="background-color: #e8e2e1;">
+          <div class="font-semibold mb-3" style="color: #422d1e;">By Species:</div>
+          <div id="statSpeciesBreakdownModal" class="space-y-2">
+            <div style="color: #422d1e; opacity: 0.6;">No reports yet</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

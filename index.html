@@ -1099,6 +1099,8 @@
 // ----------------------------
 // Global Test Date Manager (MUST be before any code that uses getCurrentDate)
 // ----------------------------
+console.log('🚀 Initializing SwoopSpotter app...');
+
 window.testDateManager = {
   _testDate: null,
   setTestDate(date) {
@@ -1112,13 +1114,19 @@ window.testDateManager = {
   }
 };
 
+console.log('✅ Test date manager initialized');
+
 // Global getCurrentDate function for convenience
 window.getCurrentDate = function() {
   return window.testDateManager.getCurrentDate();
 };
 
+console.log('✅ Global getCurrentDate function created');
+
 // Main app IIFE
 (() => {
+  console.log('🔧 Starting main app IIFE...');
+  
   // ----------------------------
   // Supabase Configuration
   // ----------------------------
@@ -5904,6 +5912,14 @@ window.getCurrentDate = function() {
   // ----------------------------
   
   // Check if auth UI elements exist
+  console.log('🔍 Checking auth UI elements:', {
+    authModal: !!authModal,
+    signInButton: !!signInButton,
+    closeAuthModal: !!closeAuthModal,
+    signInForm: !!signInForm,
+    signUpForm: !!signUpForm
+  });
+  
   if (!authModal || !signInButton) {
     console.warn('⚠️ Authentication UI elements missing - sign-in disabled');
     // Add a temporary warning for the sign-in button
@@ -5916,7 +5932,9 @@ window.getCurrentDate = function() {
   
   // Open auth modal
   if (signInButton && authModal) {
+    console.log('✅ Attaching sign-in button click handler');
     signInButton.addEventListener('click', () => {
+      console.log('🔐 Sign-in button clicked');
       authModal.classList.remove('hidden');
       if (signInForm) signInForm.classList.remove('hidden');
       if (signUpForm) signUpForm.classList.add('hidden');
@@ -6177,10 +6195,12 @@ window.getCurrentDate = function() {
     openProfileModal, // Expose for mobile nav
     openSafetyTipsModal, // Expose for mobile nav
     currentUser, // Expose current user state
-    userProfile, // Expose user profile
-    testDate, // Expose test date for testing tools
-    getCurrentDate // Expose date function for global access
+    userProfile // Expose user profile
+    // testDate and getCurrentDate are now in global window.testDateManager
   };
+  
+  console.log('✅ Main app IIFE completed successfully');
+  console.log('✅ window.SwoopSpotter exposed with', Object.keys(window.SwoopSpotter).length, 'properties');
 
 })(); // IIFE end
 </script>

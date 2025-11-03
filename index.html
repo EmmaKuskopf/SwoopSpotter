@@ -1096,6 +1096,28 @@
 </div>
 
 <script>
+// ----------------------------
+// Global Test Date Manager (MUST be before any code that uses getCurrentDate)
+// ----------------------------
+window.testDateManager = {
+  _testDate: null,
+  setTestDate(date) {
+    this._testDate = date;
+  },
+  getTestDate() {
+    return this._testDate;
+  },
+  getCurrentDate() {
+    return this._testDate ? new Date(this._testDate) : new Date();
+  }
+};
+
+// Global getCurrentDate function for convenience
+window.getCurrentDate = function() {
+  return window.testDateManager.getCurrentDate();
+};
+
+// Main app IIFE
 (() => {
   // ----------------------------
   // Supabase Configuration
@@ -1117,29 +1139,11 @@
   let syncEnabled = true; // Can be toggled for offline mode
   
   // ----------------------------
-  // Test Date Functionality (Global)
+  // Local convenience wrapper for test date
   // ----------------------------
-  // Initialize global test date manager BEFORE any code uses getCurrentDate()
-  if (!window.testDateManager) {
-    window.testDateManager = {
-      _testDate: null,
-      setTestDate(date) {
-        this._testDate = date;
-      },
-      getTestDate() {
-        return this._testDate;
-      },
-      getCurrentDate() {
-        return this._testDate ? new Date(this._testDate) : new Date();
-      }
-    };
-  }
-  
-  // Convenience accessor for this IIFE
-  let testDate = null; // Local reference
+  // Use the global testDateManager (initialized before IIFE)
   function getCurrentDate() {
-    // Always use the global manager
-    return window.testDateManager.getCurrentDate();
+    return window.getCurrentDate();
   }
   
   // ----------------------------

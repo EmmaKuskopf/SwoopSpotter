@@ -724,15 +724,15 @@
       <h3 class="text-lg font-bold mb-4" style="color: #422d1e;">Your Contributions</h3>
       <div class="grid grid-cols-3 gap-4 mb-6">
         <div class="text-center p-4 rounded" style="background-color: white; border: 2px solid #d4cac7;">
-          <div class="text-3xl font-bold" style="color: #422d1e;" id="statSpotsCreated">0</div>
+          <div class="text-3xl font-bold" style="color: #422d1e;" id="profileStatSpotsCreated">0</div>
           <div class="text-sm" style="color: #422d1e; opacity: 0.7;">Spots Created</div>
         </div>
         <div class="text-center p-4 rounded" style="background-color: white; border: 2px solid #d4cac7;">
-          <div class="text-3xl font-bold" style="color: #422d1e;" id="statReportsCreated">0</div>
+          <div class="text-3xl font-bold" style="color: #422d1e;" id="profileStatReportsCreated">0</div>
           <div class="text-sm" style="color: #422d1e; opacity: 0.7;">Reports Added</div>
         </div>
         <div class="text-center p-4 rounded" style="background-color: white; border: 2px solid #d4cac7;">
-          <div class="text-3xl font-bold" style="color: #422d1e;" id="statSafePassages">0</div>
+          <div class="text-3xl font-bold" style="color: #422d1e;" id="profileStatSafePassages">0</div>
           <div class="text-sm" style="color: #422d1e; opacity: 0.7;">Safe Passages</div>
         </div>
       </div>
@@ -1633,9 +1633,14 @@
     }
     
     // Update stats
-    document.getElementById('statSpotsCreated').textContent = userProfile?.total_spots_created || 0;
-    document.getElementById('statReportsCreated').textContent = userProfile?.total_reports_created || 0;
-    document.getElementById('statSafePassages').textContent = userProfile?.total_safe_passages || 0;
+    console.log('📊 Setting stats from userProfile:', {
+      spots: userProfile?.total_spots_created,
+      reports: userProfile?.total_reports_created,
+      safePassages: userProfile?.total_safe_passages
+    });
+    document.getElementById('profileStatSpotsCreated').textContent = userProfile?.total_spots_created || 0;
+    document.getElementById('profileStatReportsCreated').textContent = userProfile?.total_reports_created || 0;
+    document.getElementById('profileStatSafePassages').textContent = userProfile?.total_safe_passages || 0;
     
     // Load recent activity
     await loadRecentActivity();

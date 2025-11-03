@@ -7,6 +7,12 @@
 
 <!-- Tailwind CDN -->
 <script src="https://cdn.tailwindcss.com"></script>
+<script>
+  // Configure Tailwind to use class-based dark mode with our custom class
+  tailwind.config = {
+    darkMode: ['class', '.dark-mode']
+  }
+</script>
 
 <!-- Leaflet -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
@@ -373,32 +379,159 @@
     border-color: #DC2626 !important;
   }
   
-  body.dark-mode .bg-red-50 {
-    background-color: rgba(220, 38, 38, 0.15) !important;
+  body.dark-mode .bg-red-50,
+  body.dark-mode div.bg-red-50 {
+    background-color: #7F1D1D !important; /* Dark red background */
+  }
+  
+  body.dark-mode [class*="bg-red-50"] {
+    background-color: #7F1D1D !important;
+  }
+  
+  body.dark-mode .text-red-700,
+  body.dark-mode div.text-red-700 {
+    color: #FCA5A5 !important; /* Light red for readability */
   }
   
   body.dark-mode .border-yellow-400 {
     border-color: #D97706 !important;
   }
   
-  body.dark-mode .bg-yellow-50 {
-    background-color: rgba(217, 119, 6, 0.15) !important;
+  body.dark-mode .bg-yellow-50,
+  body.dark-mode div.bg-yellow-50 {
+    background-color: #78350F !important; /* Dark orange/yellow background */
+  }
+  
+  body.dark-mode [class*="bg-yellow-50"] {
+    background-color: #78350F !important;
+  }
+  
+  body.dark-mode .text-yellow-700,
+  body.dark-mode div.text-yellow-700 {
+    color: #FCD34D !important; /* Light yellow for readability */
   }
   
   body.dark-mode .border-green-400 {
     border-color: #059669 !important;
   }
   
-  body.dark-mode .bg-green-50 {
-    background-color: rgba(5, 150, 105, 0.15) !important;
+  body.dark-mode .bg-green-50,
+  body.dark-mode div.bg-green-50 {
+    background-color: #14532D !important; /* Dark green background */
+  }
+  
+  body.dark-mode [class*="bg-green-50"] {
+    background-color: #14532D !important;
+  }
+  
+  body.dark-mode .text-green-700,
+  body.dark-mode div.text-green-700 {
+    color: #6EE7B7 !important; /* Light green for readability */
   }
   
   body.dark-mode .border-blue-400 {
     border-color: #2563eb !important;
   }
   
-  body.dark-mode .bg-blue-50 {
-    background-color: rgba(37, 99, 235, 0.15) !important;
+  body.dark-mode .bg-blue-50,
+  body.dark-mode div.bg-blue-50 {
+    background-color: #1E3A8A !important; /* Dark blue background */
+  }
+  
+  body.dark-mode [class*="bg-blue-50"] {
+    background-color: #1E3A8A !important;
+  }
+  
+  body.dark-mode .text-blue-700 {
+    color: #93C5FD !important; /* Light blue for readability */
+  }
+  
+  body.dark-mode .text-gray-600,
+  body.dark-mode .text-gray-500 {
+    color: var(--text-secondary) !important;
+  }
+  
+  /* Ensure bold text in alerts is also light colored */
+  body.dark-mode .bg-red-50 b,
+  body.dark-mode .bg-yellow-50 b,
+  body.dark-mode .bg-green-50 b,
+  body.dark-mode .bg-blue-50 b {
+    color: var(--text-primary) !important;
+  }
+  
+  /* Reports Feed - different color classes */
+  body.dark-mode .border-red-500 {
+    border-color: #DC2626 !important;
+  }
+  
+  body.dark-mode .text-red-600 {
+    color: #FCA5A5 !important;
+  }
+  
+  body.dark-mode .border-yellow-500 {
+    border-color: #D97706 !important;
+  }
+  
+  body.dark-mode .text-yellow-600 {
+    color: #FCD34D !important;
+  }
+  
+  body.dark-mode .border-green-500 {
+    border-color: #059669 !important;
+  }
+  
+  body.dark-mode .text-green-600 {
+    color: #6EE7B7 !important;
+  }
+  
+  /* Override bg-white in reports */
+  body.dark-mode .bg-white,
+  body.dark-mode div.bg-white {
+    background-color: var(--bg-secondary) !important;
+  }
+  
+  /* Risk Level Banner - bg-*-100 backgrounds */
+  body.dark-mode .bg-red-100 {
+    background-color: #7F1D1D !important; /* Dark red background */
+  }
+  
+  body.dark-mode .bg-yellow-100 {
+    background-color: #78350F !important; /* Dark orange/yellow background */
+  }
+  
+  body.dark-mode .bg-green-100 {
+    background-color: #14532D !important; /* Dark green background */
+  }
+  
+  body.dark-mode .bg-blue-100 {
+    background-color: #1E3A8A !important; /* Dark blue background */
+  }
+  
+  /* Alert Box (map alerts) - override light backgrounds */
+  body.dark-mode #alertBox.risk-danger {
+    background: #7F1D1D !important;
+    border-color: #DC2626 !important;
+  }
+  
+  body.dark-mode #alertBox.risk-caution {
+    background: #78350F !important;
+    border-color: #D97706 !important;
+  }
+  
+  body.dark-mode #alertBox.risk-low {
+    background: #14532D !important;
+    border-color: #059669 !important;
+  }
+  
+  body.dark-mode #alertBox.risk-calm {
+    background: #1E3A8A !important;
+    border-color: #2563eb !important;
+  }
+  
+  /* Ensure text in alertBox is light colored */
+  body.dark-mode #alertBox,
+  body.dark-mode #alertBox * {
+    color: var(--text-primary) !important;
   }
   
   /* Keep white text on colored buttons */
@@ -5420,6 +5553,44 @@ window.getCurrentDate = function() {
     `;
     
     tipsContent.innerHTML = html;
+    
+    // Set the species in the dropdown
+    tipsSpeciesSelect.value = species;
+    
+    // Display all tabs' content for the correct species
+    displaySafetyTips(species);
+    displayPreventativeTips(species);
+    displaySources();
+    
+    // Switch to the Preventative Tips tab
+    document.querySelectorAll('.safety-tips-tab-btn').forEach(btn => {
+      if (btn.dataset.tab === 'preventative') {
+        btn.classList.add('active');
+        btn.style.borderColor = '#422d1e';
+        btn.style.color = '#422d1e';
+        btn.style.opacity = '1';
+      } else {
+        btn.classList.remove('active');
+        btn.style.borderColor = 'transparent';
+        btn.style.color = '#422d1e';
+        btn.style.opacity = '0.6';
+      }
+    });
+    
+    // Show preventative tab content, hide others
+    document.querySelectorAll('.safety-tips-tab-content').forEach(content => {
+      if (content.id === 'preventativeContent') {
+        content.classList.remove('hidden');
+      } else {
+        content.classList.add('hidden');
+      }
+    });
+    
+    // Show species selector
+    const speciesSelectorContainer = document.getElementById('speciesSelectorContainer');
+    if (speciesSelectorContainer) {
+      speciesSelectorContainer.classList.remove('hidden');
+    }
     
     // Show the modal
     safetyTipsModal.classList.remove('hidden');

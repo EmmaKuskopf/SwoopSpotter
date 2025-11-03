@@ -1813,26 +1813,43 @@
     if (!currentUser) return;
     
     try {
+      console.log('📊 Incrementing safe passages for user:', currentUser.id);
+      
       // Increment the safe passage counter in the database
-      const { error } = await supabase.rpc('increment_safe_passages', {
+      const { data, error } = await supabase.rpc('increment_safe_passages', {
         user_id: currentUser.id
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Database error:', error);
+        throw error;
+      }
+      
+      console.log('✅ Database increment successful');
       
       // Reload profile from database to get the updated count
       await loadUserProfile();
+      
+      console.log('✅ Profile reloaded, total_safe_passages:', userProfile?.total_safe_passages);
       
       // Update the displayed stat if profile modal is open
       const statElement = document.getElementById('statSafePassages');
       if (statElement && userProfile) {
         statElement.textContent = userProfile.total_safe_passages || 0;
+        console.log('✅ Updated UI element to:', userProfile.total_safe_passages || 0);
       }
       
       console.log('✅ Safe passage count incremented to:', userProfile?.total_safe_passages);
     } catch (error) {
       console.error('❌ Error incrementing safe passages:', error);
-      // Don't show error to user, just log it
+      console.error('❌ Error details:', {
+        message: error.message,
+        hint: error.hint,
+        details: error.details
+      });
+      
+      // Show user-friendly error
+      toast('Could not update safe passage count. Please check database setup.', 3000);
     }
   }
   

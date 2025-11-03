@@ -1099,8 +1099,6 @@
 // ----------------------------
 // Global Test Date Manager (MUST be before any code that uses getCurrentDate)
 // ----------------------------
-console.log('🚀 Initializing SwoopSpotter app...');
-
 window.testDateManager = {
   _testDate: null,
   setTestDate(date) {
@@ -1114,19 +1112,13 @@ window.testDateManager = {
   }
 };
 
-console.log('✅ Test date manager initialized');
-
 // Global getCurrentDate function for convenience
 window.getCurrentDate = function() {
   return window.testDateManager.getCurrentDate();
 };
 
-console.log('✅ Global getCurrentDate function created');
-
 // Main app IIFE
 (() => {
-  console.log('🔧 Starting main app IIFE...');
-  
   // ----------------------------
   // Supabase Configuration
   // ----------------------------
@@ -5496,197 +5488,15 @@ console.log('✅ Global getCurrentDate function created');
   */
 
   // ----------------------------
-  // Use GPS & clear spots
+  // NOTE: GPS button, Test Vibration, and Test Date buttons moved to Testing Modal (see lines ~5700+)
   // ----------------------------
-  useGPSBtn.addEventListener('click', ()=> {
-    if(!navigator.geolocation) {
-      toast('Geolocation is not supported by your browser');
-      return;
-    }
-    
-    // Show loading state
-    toast('Getting your location...');
-    
-    navigator.geolocation.getCurrentPosition(
-      // Success callback
-      p => {
-        map.setView([p.coords.latitude, p.coords.longitude], 15);
-        checkLocation(p.coords.latitude, p.coords.longitude);
-        toast('Location found!');
-      }, 
-      // Error callback
-      err => {
-        console.error('Geolocation error:', err);
-        let errorMsg = 'GPS error: ';
-        
-        switch(err.code) {
-          case err.PERMISSION_DENIED:
-            errorMsg += 'Location permission denied. Please enable location access in your browser settings.';
-            break;
-          case err.POSITION_UNAVAILABLE:
-            errorMsg += 'Location information unavailable. Please check your device settings.';
-            break;
-          case err.TIMEOUT:
-            errorMsg += 'Location request timed out. Please try again.';
-            break;
-          default:
-            errorMsg += err.message || 'Unknown error occurred';
-        }
-        
-        toast(errorMsg, 4000); // Show error for 4 seconds
-      },
-      // Options
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
-      }
-    );
-  });
-
-  // Test vibration button
-  const testVibrateBtn = document.getElementById('testVibrateBtn');
-  testVibrateBtn.addEventListener('click', ()=> {
-    console.log('📳 Testing vibration...');
-    
-    if ('vibrate' in navigator) {
-      toast('Testing vibration...', 1000);
-      
-      // Test vibration
-      const vibrationPattern = [300, 100, 300, 100, 300];
-      const result = navigator.vibrate(vibrationPattern);
-      
-      console.log('Vibration API called, result:', result);
-      
-      if (result) {
-        setTimeout(() => {
-          toast('Vibration triggered! Did you feel it?', 3000);
-        }, 1000);
-      } else {
-        toast('Vibration API returned false - may not be supported', 3000);
-      }
-    } else {
-      console.log('Vibration API not available');
-      
-      // Check if iOS
-      if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
-        toast('iOS does not support web vibration API', 3000);
-      } else {
-        toast('Vibration not supported on this browser', 3000);
-      }
-    }
-  });
 
   // ----------------------------
   // Test Date Modal Display Update
   // ----------------------------
   // NOTE: testDate variable and getCurrentDate() function are now declared at top of IIFE (lines ~1118)
-  
-  // Debug: Check if test date elements exist
-  console.log('🔍 Test Date Elements Check:', {
-    testDateBtn: !!testDateBtn,
-    testDateModal: !!testDateModal,
-    closeTestDate: !!closeTestDate,
-    testDateInput: !!testDateInput,
-    applyTestDate: !!applyTestDate,
-    resetTestDate: !!resetTestDate,
-    currentTestDate: !!currentTestDate
-  });
-  
-  // Open test date modal
-  testDateBtn.addEventListener('click', () => {
-    console.log('📅 Test Date Modal opened');
-    // Set input to current test date or today
-    const dateToShow = testDate ? new Date(testDate) : new Date();
-    testDateInput.value = dateToShow.toISOString().split('T')[0];
-    updateTestDateDisplay();
-    testDateModal.classList.remove('hidden');
-  });
-  
-  // Close test date modal
-  closeTestDate.addEventListener('click', () => {
-    console.log('❌ Test Date Modal closed');
-    testDateModal.classList.add('hidden');
-  });
-  
-  // Apply test date
-  console.log('🔧 Setting up applyTestDate event listener...');
-  applyTestDate.addEventListener('click', async () => {
-    console.log('🎯 Apply Test Date clicked!');
-    const selectedDate = testDateInput.value;
-    console.log('📅 Selected date:', selectedDate);
-    
-    if (selectedDate) {
-      testDate = new Date(selectedDate).toISOString();
-      console.log('✅ Test date set to:', testDate);
-      console.log('📊 Current spots before reload:', spots.length);
-      
-      updateTestDateDisplay();
-      
-      // Reload all spots to recalculate with new date
-      spots.forEach(s => {
-        try {
-          map.removeLayer(s.marker);
-          map.removeLayer(s.circle);
-        } catch(e) {}
-      });
-      spots = [];
-      console.log('🗑️ Spots cleared, reloading from Supabase...');
-      
-      // Reload from Supabase to recalculate risk levels with new test date
-      await loadAllFromSupabase(true);
-      console.log('📊 Spots after reload:', spots.length);
-      
-      renderAlerts();
-      
-      toast(`Test date set to ${new Date(testDate).toLocaleDateString()}`, 2000);
-      testDateModal.classList.add('hidden');
-    } else {
-      console.log('❌ No date selected');
-    }
-  });
-  
-  // Reset to real date
-  resetTestDate.addEventListener('click', async () => {
-    testDate = null;
-    updateTestDateDisplay();
-    
-    // Reload all spots to recalculate with real date
-    spots.forEach(s => {
-      try {
-        map.removeLayer(s.marker);
-        map.removeLayer(s.circle);
-      } catch(e) {}
-    });
-    spots = [];
-    
-    // Reload from Supabase to recalculate risk levels with real date
-    await loadAllFromSupabase(true);
-    renderAlerts();
-    
-    toast('Reset to real date', 2000);
-    testDateModal.classList.add('hidden');
-  });
-  
-  function updateTestDateDisplay() {
-    if (testDate) {
-      const date = new Date(testDate);
-      currentTestDate.innerHTML = `<strong>Testing with date:</strong> ${date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
-      currentTestDate.style.color = '#D97706';
-      currentTestDate.style.fontWeight = 'bold';
-      testDateBtn.style.backgroundColor = '#FEF3C7';
-      testDateBtn.style.borderColor = '#F59E0B';
-    } else {
-      currentTestDate.innerHTML = 'Using real date (today)';
-      currentTestDate.style.color = '#422d1e';
-      currentTestDate.style.fontWeight = 'normal';
-      testDateBtn.style.backgroundColor = 'transparent';
-      testDateBtn.style.borderColor = '#d4cac7';
-    }
-  }
-  
-  // Initial display update
-  updateTestDateDisplay();
+  // NOTE: Old test date modal handlers removed - all testing features now in Testing Modal (see below)
+  // ----------------------------
 
   // ----------------------------
   // Testing Modal Event Handlers
@@ -5912,14 +5722,6 @@ console.log('✅ Global getCurrentDate function created');
   // ----------------------------
   
   // Check if auth UI elements exist
-  console.log('🔍 Checking auth UI elements:', {
-    authModal: !!authModal,
-    signInButton: !!signInButton,
-    closeAuthModal: !!closeAuthModal,
-    signInForm: !!signInForm,
-    signUpForm: !!signUpForm
-  });
-  
   if (!authModal || !signInButton) {
     console.warn('⚠️ Authentication UI elements missing - sign-in disabled');
     // Add a temporary warning for the sign-in button
@@ -5932,9 +5734,7 @@ console.log('✅ Global getCurrentDate function created');
   
   // Open auth modal
   if (signInButton && authModal) {
-    console.log('✅ Attaching sign-in button click handler');
     signInButton.addEventListener('click', () => {
-      console.log('🔐 Sign-in button clicked');
       authModal.classList.remove('hidden');
       if (signInForm) signInForm.classList.remove('hidden');
       if (signUpForm) signUpForm.classList.add('hidden');
@@ -6198,9 +5998,6 @@ console.log('✅ Global getCurrentDate function created');
     userProfile // Expose user profile
     // testDate and getCurrentDate are now in global window.testDateManager
   };
-  
-  console.log('✅ Main app IIFE completed successfully');
-  console.log('✅ window.SwoopSpotter exposed with', Object.keys(window.SwoopSpotter).length, 'properties');
 
 })(); // IIFE end
 </script>

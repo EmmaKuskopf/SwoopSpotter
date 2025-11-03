@@ -2685,6 +2685,72 @@ window.getCurrentDate = function() {
     profileModal.classList.add('hidden');
     profileEditError.classList.add('hidden');
     profileEditSuccess.classList.add('hidden');
+    document.body.classList.remove('modal-open');
+    
+    // Reset to home view when closing modal
+    scrollToHome();
+  }
+  
+  // Helper function to close all modals
+  function closeAllModals() {
+    // Close all possible modals
+    const modals = [
+      'profileModal',
+      'statsModal', 
+      'safetyTipsModal',
+      'testingModal',
+      'authModal',
+      'spotModal',
+      'detailsModal',
+      'successModal'
+    ];
+    
+    modals.forEach(modalId => {
+      const modal = document.getElementById(modalId);
+      if (modal) {
+        modal.classList.add('hidden');
+      }
+    });
+    
+    document.body.classList.remove('modal-open');
+  }
+  
+  // Helper function to scroll to home and reset view
+  function scrollToHome() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // Reset mobile nav to home
+    const navHome = document.getElementById('navHome');
+    if (navHome) {
+      document.querySelectorAll('.mobile-nav-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      navHome.classList.add('active');
+    }
+    
+    // Reset desktop nav to home
+    const desktopNavHome = document.getElementById('desktopNavHome');
+    if (desktopNavHome) {
+      const desktopNavItems = [
+        'desktopNavHome',
+        'desktopNavProfile', 
+        'desktopNavTips',
+        'desktopNavStats',
+        'desktopNavTesting',
+        'desktopNavLogout'
+      ];
+      
+      desktopNavItems.forEach(itemId => {
+        const item = document.getElementById(itemId);
+        if (item) {
+          item.classList.remove('active');
+          item.style.backgroundColor = '';
+          item.style.color = '';
+        }
+      });
+      
+      desktopNavHome.classList.add('active');
+    }
   }
   
   async function loadRecentActivity() {
@@ -5825,6 +5891,7 @@ window.getCurrentDate = function() {
     closeSafetyTips.addEventListener('click', () => {
       safetyTipsModal.classList.add('hidden');
       document.body.classList.remove('modal-open');
+      scrollToHome();
     });
   }
   
@@ -5833,6 +5900,7 @@ window.getCurrentDate = function() {
     closeSafetyTipsBottom.addEventListener('click', () => {
       safetyTipsModal.classList.add('hidden');
       document.body.classList.remove('modal-open');
+      scrollToHome();
     });
   }
   
@@ -6155,6 +6223,7 @@ window.getCurrentDate = function() {
     if (testingModal) {
       testingModal.classList.add('hidden');
       document.body.classList.remove('modal-open');
+      scrollToHome();
     }
   }
   
@@ -6485,9 +6554,9 @@ window.getCurrentDate = function() {
     menuHome.addEventListener('click', (e) => {
       e.stopPropagation();
       hamburgerMenuDropdown.classList.add('hidden');
-      // Switch to home view
-      const homeBtn = document.getElementById('desktopNavHome') || document.querySelector('[data-view="home"]');
-      if (homeBtn) homeBtn.click();
+      // Close all modals and return to home
+      closeAllModals();
+      scrollToHome();
     });
   }
   
@@ -6495,8 +6564,11 @@ window.getCurrentDate = function() {
   if (menuContributions) {
     menuContributions.addEventListener('click', (e) => {
       e.stopPropagation();
-      openProfileModal('stats');
       hamburgerMenuDropdown.classList.add('hidden');
+      // Close all modals first
+      closeAllModals();
+      // Then open profile modal
+      openProfileModal('stats');
     });
   }
   
@@ -6504,8 +6576,11 @@ window.getCurrentDate = function() {
   if (menuEditProfile) {
     menuEditProfile.addEventListener('click', (e) => {
       e.stopPropagation();
-      openProfileModal('edit');
       hamburgerMenuDropdown.classList.add('hidden');
+      // Close all modals first
+      closeAllModals();
+      // Then open profile modal
+      openProfileModal('edit');
     });
   }
   
@@ -6514,6 +6589,8 @@ window.getCurrentDate = function() {
     menuStats.addEventListener('click', (e) => {
       e.stopPropagation();
       hamburgerMenuDropdown.classList.add('hidden');
+      // Close all modals first
+      closeAllModals();
       // Open Stats modal
       const statsModal = document.getElementById('statsModal');
       if (statsModal) {
@@ -6531,8 +6608,11 @@ window.getCurrentDate = function() {
   if (menuTips) {
     menuTips.addEventListener('click', (e) => {
       e.stopPropagation();
-      openSafetyTipsModal('general');
       hamburgerMenuDropdown.classList.add('hidden');
+      // Close all modals first
+      closeAllModals();
+      // Then open safety tips
+      openSafetyTipsModal('general');
     });
   }
   
@@ -6541,6 +6621,9 @@ window.getCurrentDate = function() {
     menuTesting.addEventListener('click', (e) => {
       e.stopPropagation();
       hamburgerMenuDropdown.classList.add('hidden');
+      // Close all modals first
+      closeAllModals();
+      // Then open testing modal
       const testingModal = document.getElementById('testingModal');
       if (testingModal) {
         testingModal.classList.remove('hidden');
@@ -6554,6 +6637,9 @@ window.getCurrentDate = function() {
     menuSignIn.addEventListener('click', (e) => {
       e.stopPropagation();
       hamburgerMenuDropdown.classList.add('hidden');
+      // Close all modals first
+      closeAllModals();
+      // Then open auth modal
       if (authModal) {
         authModal.classList.remove('hidden');
         document.body.classList.add('modal-open');
@@ -7005,7 +7091,9 @@ window.getCurrentDate = function() {
   if (closeStatsModal) {
     closeStatsModal.addEventListener('click', () => {
       statsModal.classList.remove('active');
-      setActiveNavItem(navHome);
+      statsModal.classList.add('hidden');
+      document.body.classList.remove('modal-open');
+      scrollToHome();
     });
   }
   
@@ -7014,7 +7102,9 @@ window.getCurrentDate = function() {
     statsModal.addEventListener('click', (e) => {
       if (e.target === statsModal) {
         statsModal.classList.remove('active');
-        setActiveNavItem(navHome);
+        statsModal.classList.add('hidden');
+        document.body.classList.remove('modal-open');
+        scrollToHome();
       }
     });
   }

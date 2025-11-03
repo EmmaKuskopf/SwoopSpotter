@@ -5570,15 +5570,24 @@
     }
   }
   
-  // Home button - scroll to top
-  if (navHome) {
-    navHome.addEventListener('click', () => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      setActiveNavItem(navHome);
+  // Logout button - signs user out
+  if (navLogout) {
+    navLogout.addEventListener('click', async () => {
+      if (!currentUser) {
+        toast('You are not signed in', 2000);
+        authModal.classList.remove('hidden');
+        return;
+      }
+      
+      if (confirm('Are you sure you want to sign out?')) {
+        await signOutUser();
+        toast('Signed out successfully', 2000);
+        setActiveNavItem(navHome);
+      }
     });
   }
   
-  // Profile button
+  // Profile button - opens profile on Contributions tab
   if (navProfile) {
     navProfile.addEventListener('click', () => {
       if (!currentUser) {
@@ -5591,36 +5600,33 @@
     });
   }
   
-  // Stats button - open stats modal
-  if (navStats) {
-    navStats.addEventListener('click', () => {
-      statsModal.classList.add('active');
-      renderStatsModal(currentStatsPeriod);
-      setActiveNavItem(navStats);
+  // Home button - scroll to top (main map view)
+  if (navHome) {
+    navHome.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setActiveNavItem(navHome);
     });
   }
   
-  // Tips button
+  // Tips button - opens Safety Tips modal
   if (navTips) {
     navTips.addEventListener('click', () => {
-      safetyTipsModal.classList.remove('hidden');
-      document.body.classList.add('modal-open');
+      if (safetyTipsModal) {
+        safetyTipsModal.classList.remove('hidden');
+        document.body.classList.add('modal-open');
+      }
       setActiveNavItem(navTips);
     });
   }
   
-  // Logout button
-  if (navLogout) {
-    navLogout.addEventListener('click', async () => {
-      if (!currentUser) {
-        toast('You are not signed in', 2000);
-        return;
+  // Stats button - opens Activity Stats modal
+  if (navStats) {
+    navStats.addEventListener('click', () => {
+      if (statsModal) {
+        statsModal.classList.add('active');
+        renderStatsModal(currentStatsPeriod);
       }
-      
-      if (confirm('Are you sure you want to sign out?')) {
-        await signOutUser();
-        setActiveNavItem(navHome);
-      }
+      setActiveNavItem(navStats);
     });
   }
   
@@ -5668,11 +5674,16 @@
     const stats = await calculateStats(period);
     
     // Update totals
-    document.getElementById('statTotalReportsModal').textContent = stats.totalReports;
-    document.getElementById('statInjuriesModal').textContent = stats.injuries;
+    const totalReportsEl = document.getElementById('statTotalReportsModal');
+    const injuriesEl = document.getElementById('statInjuriesModal');
+    
+    if (totalReportsEl) totalReportsEl.textContent = stats.totalReports;
+    if (injuriesEl) injuriesEl.textContent = stats.injuries;
     
     // Update species breakdown
     const speciesBreakdown = document.getElementById('statSpeciesBreakdownModal');
+    if (!speciesBreakdown) return;
+    
     speciesBreakdown.innerHTML = '';
     
     if (Object.keys(stats.species).length === 0) {
@@ -5700,25 +5711,25 @@
 <!-- Mobile Navigation Bar -->
 <nav class="mobile-nav" id="mobileNav">
   <div class="mobile-nav-items">
-    <button class="mobile-nav-item active" id="navHome" data-view="home">
-      <img src="Assets/Menu Icons/Light Mode/menu-home.svg" alt="Home">
-      <span>Home</span>
+    <button class="mobile-nav-item" id="navLogout" data-view="logout">
+      <img src="Assets/Menu Icons/Light Mode/menu-logout.svg" alt="Logout">
+      <span>Logout</span>
     </button>
     <button class="mobile-nav-item" id="navProfile" data-view="profile">
       <img src="Assets/Menu Icons/Light Mode/menu-profile.svg" alt="Profile">
       <span>Profile</span>
     </button>
-    <button class="mobile-nav-item" id="navStats" data-view="stats">
-      <img src="Assets/Menu Icons/Light Mode/menu-stats.svg" alt="Stats">
-      <span>Stats</span>
+    <button class="mobile-nav-item active" id="navHome" data-view="home">
+      <img src="Assets/Menu Icons/Light Mode/menu-home.svg" alt="Home">
+      <span>Home</span>
     </button>
     <button class="mobile-nav-item" id="navTips" data-view="tips">
       <img src="Assets/Menu Icons/Light Mode/menu-tips.svg" alt="Tips">
       <span>Tips</span>
     </button>
-    <button class="mobile-nav-item" id="navLogout" data-view="logout">
-      <img src="Assets/Menu Icons/Light Mode/menu-logout.svg" alt="Logout">
-      <span>Logout</span>
+    <button class="mobile-nav-item" id="navStats" data-view="stats">
+      <img src="Assets/Menu Icons/Light Mode/menu-stats.svg" alt="Stats">
+      <span>Stats</span>
     </button>
   </div>
 </nav>

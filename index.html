@@ -909,7 +909,7 @@
       </div>
       
       <!-- Species selector -->
-      <div class="mb-4">
+      <div id="speciesSelectorContainer" class="mb-4">
         <label class="block text-sm font-medium mb-2" style="color: #422d1e;">Select bird species for specific tips:</label>
         <select id="tipsSpeciesSelect" class="w-full rounded-lg p-2" style="padding: 8px 12px; border-radius: 8px; border: 1px solid #d4cac7; background-color: #fff; color: #422d1e;">
           <option value="general">General Tips (All Birds)</option>
@@ -5060,6 +5060,16 @@
           b.style.opacity = '0.6';
         }
       });
+      
+      // Show/hide species selector based on tab
+      const speciesSelectorContainer = document.getElementById('speciesSelectorContainer');
+      if (speciesSelectorContainer) {
+        if (tabId === 'sources') {
+          speciesSelectorContainer.classList.add('hidden');
+        } else {
+          speciesSelectorContainer.classList.remove('hidden');
+        }
+      }
       
       // Update tab content
       document.querySelectorAll('.safety-tips-tab-content').forEach(content => {

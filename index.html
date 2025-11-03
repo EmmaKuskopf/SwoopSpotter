@@ -870,12 +870,12 @@
     <div class="flex-1 flex justify-end items-center gap-3 relative">
       <!-- Dark Mode Toggle -->
       <button id="darkModeToggle" class="p-2 rounded-full transition-colors bg-secondary text-primary" title="Toggle dark mode">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <!-- Moon icon (shown in light mode) -->
-          <path class="moon-icon" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        <!-- Moon icon (shown in light mode) -->
+        <svg class="moon-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
         </svg>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="sun-icon hidden" style="position: absolute; top: 8px; left: 8px;">
-          <!-- Sun icon (shown in dark mode) -->
+        <!-- Sun icon (shown in dark mode) -->
+        <svg class="sun-icon hidden" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="5"></circle>
           <line x1="12" y1="1" x2="12" y2="3"></line>
           <line x1="12" y1="21" x2="12" y2="23"></line>
@@ -888,36 +888,94 @@
         </svg>
       </button>
       
-      <!-- User Button (shown when signed in) -->
-      <button id="userButton" class="hidden items-center gap-2 px-3 py-1.5 rounded btn-secondary">
-        <span id="userButtonName">User</span>
-        <span class="text-xs">▾</span>
+      <!-- Hamburger Menu Button -->
+      <button id="hamburgerMenuButton" class="p-2 rounded transition-colors text-primary hover:bg-secondary" title="Menu">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
       </button>
       
-      <!-- User Menu Dropdown -->
-      <div id="userMenuDropdown" class="hidden absolute right-0 top-full mt-2 rounded-lg shadow-xl p-4 z-50 card-primary" style="min-width: 200px;">
-        <div class="flex items-center gap-3 mb-3 pb-3 border-themed" style="border-bottom-width: 1px;">
-          <img id="userMenuAvatar" src="Assets/Users Icons/user_1.svg" alt="Avatar" class="w-10 h-10 rounded-full">
-          <div>
-            <div id="userMenuName" class="font-medium text-primary">User Name</div>
-            <div id="userMenuEmail" class="text-xs text-secondary">user@email.com</div>
+      <!-- Hamburger Menu Dropdown -->
+      <div id="hamburgerMenuDropdown" class="hidden absolute right-0 top-full mt-2 rounded-lg shadow-xl p-2 z-50 card-primary" style="min-width: 220px;">
+        <!-- User Info (shown when signed in) -->
+        <div id="hamburgerUserInfo" class="hidden flex items-center gap-3 mb-2 pb-2 px-2 border-themed" style="border-bottom-width: 1px;">
+          <img id="hamburgerUserAvatar" src="Assets/Users Icons/user_1.svg" alt="Avatar" class="w-10 h-10 rounded-full">
+          <div class="flex-1 min-w-0">
+            <div id="hamburgerUserName" class="font-medium text-primary truncate">User Name</div>
+            <div id="hamburgerUserEmail" class="text-xs text-secondary truncate">user@email.com</div>
           </div>
         </div>
-        <button id="userMenuStats" class="w-full text-left px-3 py-2 rounded mb-1 text-primary hover:bg-secondary">
-          View Contributions
+        
+        <!-- Menu Items -->
+        <button id="menuHome" class="w-full text-left px-3 py-2 rounded mb-1 text-primary hover:bg-secondary flex items-center gap-2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
+          Home
         </button>
-        <button id="userMenuProfile" class="w-full text-left px-3 py-2 rounded mb-1 text-primary hover:bg-secondary">
+        
+        <button id="menuContributions" class="hidden w-full text-left px-3 py-2 rounded mb-1 text-primary hover:bg-secondary flex items-center gap-2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+          </svg>
+          Contributions
+        </button>
+        
+        <button id="menuEditProfile" class="hidden w-full text-left px-3 py-2 rounded mb-1 text-primary hover:bg-secondary flex items-center gap-2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
           Edit Profile
         </button>
-        <button id="userMenuSignOut" class="w-full text-left px-3 py-2 rounded text-primary hover:bg-secondary">
+        
+        <button id="menuStats" class="hidden w-full text-left px-3 py-2 rounded mb-1 text-primary hover:bg-secondary flex items-center gap-2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="20" x2="18" y2="10"></line>
+            <line x1="12" y1="20" x2="12" y2="4"></line>
+            <line x1="6" y1="20" x2="6" y2="14"></line>
+          </svg>
+          Stats
+        </button>
+        
+        <button id="menuTips" class="w-full text-left px-3 py-2 rounded mb-1 text-primary hover:bg-secondary flex items-center gap-2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+          Safety Tips
+        </button>
+        
+        <button id="menuTesting" class="w-full text-left px-3 py-2 rounded mb-1 text-primary hover:bg-secondary flex items-center gap-2">
+          <img src="Assets/Menu Icons/Light Mode/menu-testing.svg" alt="" width="16" height="16">
+          Testing
+        </button>
+        
+        <!-- Divider (only shown when signed in) -->
+        <div id="menuDivider" class="hidden border-themed my-1" style="border-bottom-width: 1px;"></div>
+        
+        <button id="menuSignIn" class="w-full text-left px-3 py-2 rounded text-primary hover:bg-secondary flex items-center gap-2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+            <polyline points="10 17 15 12 10 7"></polyline>
+            <line x1="15" y1="12" x2="3" y2="12"></line>
+          </svg>
+          Sign In
+        </button>
+        
+        <button id="menuSignOut" class="hidden w-full text-left px-3 py-2 rounded text-primary hover:bg-secondary flex items-center gap-2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
           Sign Out
         </button>
       </div>
-      
-      <!-- Sign In Button (shown when signed out) -->
-      <button id="signInButton" class="items-center gap-2 px-4 py-1.5 rounded text-white btn-primary">
-        Sign In
-      </button>
     </div>
   </div>
 </header>
@@ -942,7 +1000,7 @@
       <span>Stats</span>
     </button>
     <button class="desktop-nav-item" id="desktopNavTesting" data-view="testing">
-      <span>🧪</span>
+      <img src="Assets/Menu Icons/Light Mode/menu-testing.svg" alt="Testing" width="20" height="20">
       <span>Testing</span>
     </button>
     <button class="desktop-nav-item" id="desktopNavLogout" data-view="logout">
@@ -2289,38 +2347,58 @@ window.getCurrentDate = function() {
   
   // Update UI based on auth state
   function updateAuthUI() {
+    const hamburgerUserInfo = document.getElementById('hamburgerUserInfo');
+    const hamburgerUserName = document.getElementById('hamburgerUserName');
+    const hamburgerUserEmail = document.getElementById('hamburgerUserEmail');
+    const hamburgerUserAvatar = document.getElementById('hamburgerUserAvatar');
+    const menuContributions = document.getElementById('menuContributions');
+    const menuEditProfile = document.getElementById('menuEditProfile');
+    const menuStats = document.getElementById('menuStats');
+    const menuSignIn = document.getElementById('menuSignIn');
+    const menuSignOut = document.getElementById('menuSignOut');
+    const menuDivider = document.getElementById('menuDivider');
+    
     if (currentUser) {
-      // Show user button, hide sign in
-      if (signInButton) signInButton.classList.add('hidden');
-      if (userButton) {
-        userButton.classList.remove('hidden');
-        userButton.classList.add('flex');
-      }
-      
       // Get display name from profile or user metadata or email
       const displayName = userProfile?.display_name || 
                          currentUser.user_metadata?.display_name || 
                          currentUser.email.split('@')[0];
       
-      if (userButtonName) userButtonName.textContent = displayName;
+      // Show user info in hamburger menu
+      if (hamburgerUserInfo) hamburgerUserInfo.classList.remove('hidden');
+      if (hamburgerUserName) hamburgerUserName.textContent = displayName;
+      if (hamburgerUserEmail) hamburgerUserEmail.textContent = currentUser.email;
       
-      // Update menu
-      if (userMenuName) userMenuName.textContent = displayName;
-      if (userMenuEmail) userMenuEmail.textContent = currentUser.email;
-      
-      // Update menu avatar
+      // Update hamburger menu avatar
       const avatarUrl = userProfile?.avatar_url || 'user_1.svg';
-      const userMenuAvatar = document.getElementById('userMenuAvatar');
-      if (userMenuAvatar) {
-        userMenuAvatar.src = `Assets/Users Icons/${avatarUrl}`;
+      if (hamburgerUserAvatar) {
+        hamburgerUserAvatar.src = `Assets/Users Icons/${avatarUrl}`;
       }
+      
+      // Show signed-in menu items
+      if (menuContributions) menuContributions.classList.remove('hidden');
+      if (menuEditProfile) menuEditProfile.classList.remove('hidden');
+      if (menuStats) menuStats.classList.remove('hidden');
+      if (menuSignOut) menuSignOut.classList.remove('hidden');
+      if (menuDivider) menuDivider.classList.remove('hidden');
+      
+      // Hide sign in button
+      if (menuSignIn) menuSignIn.classList.add('hidden');
       
       console.log('UI updated with display name:', displayName);
     } else {
-      // Show sign in, hide user button
-      if (signInButton) signInButton.classList.remove('hidden');
-      if (userButton) userButton.classList.add('hidden');
-      if (userMenuDropdown) userMenuDropdown.classList.add('hidden');
+      // Hide user info in hamburger menu
+      if (hamburgerUserInfo) hamburgerUserInfo.classList.add('hidden');
+      
+      // Hide signed-in menu items
+      if (menuContributions) menuContributions.classList.add('hidden');
+      if (menuEditProfile) menuEditProfile.classList.add('hidden');
+      if (menuStats) menuStats.classList.add('hidden');
+      if (menuSignOut) menuSignOut.classList.add('hidden');
+      if (menuDivider) menuDivider.classList.add('hidden');
+      
+      // Show sign in button
+      if (menuSignIn) menuSignIn.classList.remove('hidden');
     }
   }
   
@@ -6296,48 +6374,125 @@ window.getCurrentDate = function() {
     await signUp(signUpName.value, signUpEmail.value, signUpPassword.value);
   });
   
-  // User button - toggle menu
-  if (userButton && userMenuDropdown) {
-    userButton.addEventListener('click', (e) => {
+  // Hamburger menu - toggle menu
+  const hamburgerMenuButton = document.getElementById('hamburgerMenuButton');
+  const hamburgerMenuDropdown = document.getElementById('hamburgerMenuDropdown');
+  
+  if (hamburgerMenuButton && hamburgerMenuDropdown) {
+    hamburgerMenuButton.addEventListener('click', (e) => {
       e.stopPropagation();
-      userMenuDropdown.classList.toggle('hidden');
+      hamburgerMenuDropdown.classList.toggle('hidden');
     });
   }
   
   // Close menu when clicking outside
-  if (userMenuDropdown) {
+  if (hamburgerMenuDropdown) {
     document.addEventListener('click', () => {
-      userMenuDropdown.classList.add('hidden');
+      hamburgerMenuDropdown.classList.add('hidden');
     });
     
-    userMenuDropdown.addEventListener('click', (e) => {
+    hamburgerMenuDropdown.addEventListener('click', (e) => {
       e.stopPropagation();
     });
   }
   
-  // Menu actions
-  if (userMenuSignOut && userMenuDropdown) {
-    userMenuSignOut.addEventListener('click', async (e) => {
+  // Hamburger Menu Items
+  const menuHome = document.getElementById('menuHome');
+  const menuContributions = document.getElementById('menuContributions');
+  const menuEditProfile = document.getElementById('menuEditProfile');
+  const menuStats = document.getElementById('menuStats');
+  const menuTips = document.getElementById('menuTips');
+  const menuTesting = document.getElementById('menuTesting');
+  const menuSignIn = document.getElementById('menuSignIn');
+  const menuSignOut = document.getElementById('menuSignOut');
+  
+  // Home
+  if (menuHome) {
+    menuHome.addEventListener('click', (e) => {
       e.stopPropagation();
-      await signOutUser();
-      userMenuDropdown.classList.add('hidden');
+      hamburgerMenuDropdown.classList.add('hidden');
+      // Switch to home view
+      const homeBtn = document.getElementById('desktopNavHome') || document.querySelector('[data-view="home"]');
+      if (homeBtn) homeBtn.click();
     });
   }
   
-  // Menu actions - Stats and Profile
-  if (userMenuStats && userMenuDropdown) {
-    userMenuStats.addEventListener('click', (e) => {
+  // Contributions (Stats)
+  if (menuContributions) {
+    menuContributions.addEventListener('click', (e) => {
       e.stopPropagation();
       openProfileModal('stats');
-      userMenuDropdown.classList.add('hidden');
+      hamburgerMenuDropdown.classList.add('hidden');
     });
   }
   
-  if (userMenuProfile && userMenuDropdown) {
-    userMenuProfile.addEventListener('click', (e) => {
+  // Edit Profile
+  if (menuEditProfile) {
+    menuEditProfile.addEventListener('click', (e) => {
       e.stopPropagation();
       openProfileModal('edit');
-      userMenuDropdown.classList.add('hidden');
+      hamburgerMenuDropdown.classList.add('hidden');
+    });
+  }
+  
+  // Stats Modal
+  if (menuStats) {
+    menuStats.addEventListener('click', (e) => {
+      e.stopPropagation();
+      hamburgerMenuDropdown.classList.add('hidden');
+      // Open Stats modal
+      const statsModal = document.getElementById('statsModal');
+      if (statsModal) {
+        statsModal.classList.remove('hidden');
+        document.body.classList.add('modal-open');
+        // Refresh stats when opening
+        if (typeof renderStatsModal === 'function') {
+          renderStatsModal(currentStatsPeriod);
+        }
+      }
+    });
+  }
+  
+  // Safety Tips
+  if (menuTips) {
+    menuTips.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openSafetyTipsModal('general');
+      hamburgerMenuDropdown.classList.add('hidden');
+    });
+  }
+  
+  // Testing
+  if (menuTesting) {
+    menuTesting.addEventListener('click', (e) => {
+      e.stopPropagation();
+      hamburgerMenuDropdown.classList.add('hidden');
+      const testingModal = document.getElementById('testingModal');
+      if (testingModal) {
+        testingModal.classList.remove('hidden');
+        document.body.classList.add('modal-open');
+      }
+    });
+  }
+  
+  // Sign In
+  if (menuSignIn) {
+    menuSignIn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      hamburgerMenuDropdown.classList.add('hidden');
+      if (authModal) {
+        authModal.classList.remove('hidden');
+        document.body.classList.add('modal-open');
+      }
+    });
+  }
+  
+  // Sign Out
+  if (menuSignOut) {
+    menuSignOut.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      await signOutUser();
+      hamburgerMenuDropdown.classList.add('hidden');
     });
   }
   
@@ -6559,7 +6714,7 @@ window.getCurrentDate = function() {
       <span>Stats</span>
     </button>
     <button class="mobile-nav-item" id="navTesting" data-view="testing">
-      <span style="font-size: 20px;">🧪</span>
+      <img src="Assets/Menu Icons/Light Mode/menu-testing.svg" alt="Testing" width="24" height="24">
       <span>Testing</span>
     </button>
   </div>

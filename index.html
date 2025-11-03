@@ -45,7 +45,7 @@
     --border-color: #4a3d32;
     --shadow: rgba(0, 0, 0, 0.3);
     --shadow-heavy: rgba(0, 0, 0, 0.5);
-    --map-bg: #2a1f18;
+    --map-bg: #181818;
   }
   
   body { 
@@ -1714,12 +1714,40 @@ window.getCurrentDate = function() {
     maxZoom: 18
   }).setView([-27.4698, 153.0251], 14);
   
-  // Add CartoDB Voyager tiles (colorful, modern map style - free, no API key needed)
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+  // Define light and dark tile layers
+  const lightTileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
     subdomains: 'abcd',
     maxZoom: 20
-  }).addTo(map);
+  });
+  
+  const darkTileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    subdomains: 'abcd',
+    maxZoom: 20
+  });
+  
+  // Add the appropriate tile layer based on current theme
+  const savedTheme = localStorage.getItem('theme');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const isDarkMode = savedTheme === 'dark' || (!savedTheme && prefersDark);
+  
+  if (isDarkMode) {
+    darkTileLayer.addTo(map);
+  } else {
+    lightTileLayer.addTo(map);
+  }
+  
+  // Function to switch map tiles (will be called by dark mode toggle)
+  window.switchMapTiles = function(isDark) {
+    if (isDark) {
+      map.removeLayer(lightTileLayer);
+      darkTileLayer.addTo(map);
+    } else {
+      map.removeLayer(darkTileLayer);
+      lightTileLayer.addTo(map);
+    }
+  };
 
   function birdSVG(col){
     let iconName;
@@ -6591,6 +6619,11 @@ window.getCurrentDate = function() {
     darkModeToggle?.addEventListener('click', () => {
       const isDark = document.body.classList.toggle('dark-mode');
       localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      
+      // Switch map tiles
+      if (typeof window.switchMapTiles === 'function') {
+        window.switchMapTiles(isDark);
+      }
       
       // Toggle icons and text
       if (moonIcon && sunIcon) {

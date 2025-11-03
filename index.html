@@ -299,12 +299,6 @@
             <span class="font-bold" style="color: #422d1e;" id="statTotalReports">0</span>
           </div>
           
-          <!-- Safe Passages -->
-          <div class="flex justify-between items-center p-2 rounded" style="background-color: #e8e2e1;">
-            <span style="color: #059669;">✓ Safe Passages</span>
-            <span class="font-bold" style="color: #059669;" id="statSafePassages">0</span>
-          </div>
-          
           <!-- Injuries -->
           <div class="flex justify-between items-center p-2 rounded" style="background-color: #e8e2e1;">
             <span style="color: #DC2626;">⚠ Injuries</span>
@@ -3409,11 +3403,10 @@
   // ----------------------------
   let currentStatsPeriod = 'today'; // 'today', 'week', 'season'
   
-  function calculateStats(period = 'today') {
+  async function calculateStats(period = 'today') {
     const now = getCurrentDate();
     const stats = {
       totalReports: 0,
-      safePassages: 0,
       injuries: 0,
       species: {}
     };
@@ -3434,51 +3427,52 @@
       }
     }
     
-    // Count reports and analyze each spot
-    spots.forEach(spot => {
-      if (!spot.reports) return;
+    // Get ALL reports from ALL spots in database (not just current view)
+    try {
+      const { data: allReports, error: reportsError } = await supabase
+        .from('reports')
+        .select(`
+          id,
+          timestamp,
+          bird_behaviour,
+          spots!inner (
+            species
+          )
+        `)
+        .gte('timestamp', startDate.toISOString());
       
-      // Count safe passages for this spot
-      if (spot.lastSafePassage) {
-        const safePassageDate = new Date(spot.lastSafePassage);
-        if (safePassageDate >= startDate) {
-          stats.safePassages += (spot.safePassageCount || 0);
-        }
-      }
-      
-      // Analyze reports
-      spot.reports.forEach(report => {
-        const reportDate = new Date(report.timestamp);
-        if (reportDate >= startDate) {
-          // Count total reports
-          stats.totalReports++;
-          
-          // Count by species
-          if (spot.species) {
-            if (!stats.species[spot.species]) {
-              stats.species[spot.species] = 0;
+      if (!reportsError && allReports) {
+        stats.totalReports = allReports.length;
+        
+        // Count by species
+        allReports.forEach(report => {
+          const species = report.spots?.species;
+          if (species) {
+            if (!stats.species[species]) {
+              stats.species[species] = 0;
             }
-            stats.species[spot.species]++;
+            stats.species[species]++;
           }
           
           // Count injuries
-          if (report.birdBehaviour && 
-              report.birdBehaviour.includes('made contact + injured')) {
+          if (report.bird_behaviour && 
+              report.bird_behaviour.includes('made contact + injured')) {
             stats.injuries++;
           }
-        }
-      });
-    });
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching reports:', error);
+    }
     
     return stats;
   }
   
-  function renderStats(period = 'today') {
-    const stats = calculateStats(period);
+  async function renderStats(period = 'today') {
+    const stats = await calculateStats(period);
     
     // Update totals
     document.getElementById('statTotalReports').textContent = stats.totalReports;
-    document.getElementById('statSafePassages').textContent = stats.safePassages;
     document.getElementById('statInjuries').textContent = stats.injuries;
     
     // Update species breakdown

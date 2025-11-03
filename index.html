@@ -889,8 +889,20 @@
   <div class="rounded-lg shadow-lg w-full max-w-2xl mx-auto my-auto" style="background-color: #f2eceb;">
     <div class="p-6">
       <div class="flex justify-between items-center mb-4">
-        <h3 class="text-xl font-bold" style="color: #422d1e;">Safety Tips</h3>
+        <h3 class="text-xl font-bold" style="color: #422d1e;">Bird Safety & Prevention</h3>
         <button id="closeSafetyTips" class="text-2xl" style="color: #422d1e; opacity: 0.7;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">&times;</button>
+      </div>
+      
+      <!-- Tabs -->
+      <div style="border-bottom: 1px solid #d4cac7;" class="mb-4">
+        <nav class="flex -mb-px" role="tablist">
+          <button data-tab="safety" role="tab" class="safety-tips-tab-btn active mr-4 py-2 px-1 border-b-2 font-medium" style="border-color: #422d1e; color: #422d1e;">
+            Safety Tips
+          </button>
+          <button data-tab="preventative" role="tab" class="safety-tips-tab-btn py-2 px-1 border-b-2 border-transparent" style="color: #422d1e; opacity: 0.6;" onmouseover="this.style.opacity='0.8'" onmouseout="this.classList.contains('active') || (this.style.opacity='0.6')">
+            Preventative Tips
+          </button>
+        </nav>
       </div>
       
       <!-- Species selector -->
@@ -908,9 +920,21 @@
         </select>
       </div>
       
-      <!-- Tips content -->
-      <div id="tipsContent" class="space-y-4" style="color: #422d1e;">
-        <!-- Will be populated by JavaScript -->
+      <!-- Tab Content -->
+      <div class="mt-4">
+        <!-- Safety Tips Tab -->
+        <div id="safetyTab" class="safety-tips-tab-content active" role="tabpanel">
+          <div id="tipsContent" class="space-y-4" style="color: #422d1e;">
+            <!-- Will be populated by JavaScript -->
+          </div>
+        </div>
+        
+        <!-- Preventative Tips Tab -->
+        <div id="preventativeTab" class="safety-tips-tab-content hidden" role="tabpanel">
+          <div id="preventativeTipsContent" class="space-y-4" style="color: #422d1e;">
+            <!-- Will be populated by JavaScript -->
+          </div>
+        </div>
       </div>
       
       <!-- Close button at bottom -->
@@ -4917,8 +4941,9 @@
     // Set the species in the dropdown
     tipsSpeciesSelect.value = species;
     
-    // Display the tips
+    // Display both tabs' content
     displaySafetyTips(species);
+    displayPreventativeTips(species);
     
     // Show the modal
     safetyTipsModal.classList.remove('hidden');
@@ -5021,10 +5046,98 @@
     });
   }
   
+  // Species selector - update both tabs when changed
   if (tipsSpeciesSelect) {
     tipsSpeciesSelect.addEventListener('change', (e) => {
-      displaySafetyTips(e.target.value);
+      const species = e.target.value;
+      displaySafetyTips(species);
+      displayPreventativeTips(species);
     });
+  }
+  
+  // Tab switching for Safety Tips modal
+  document.querySelectorAll('.safety-tips-tab-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const tabId = btn.dataset.tab;
+      
+      // Update tab buttons
+      document.querySelectorAll('.safety-tips-tab-btn').forEach(b => {
+        if (b.dataset.tab === tabId) {
+          b.classList.add('active');
+          b.style.borderColor = '#422d1e';
+          b.style.color = '#422d1e';
+          b.style.opacity = '1';
+        } else {
+          b.classList.remove('active');
+          b.style.borderColor = 'transparent';
+          b.style.color = '#422d1e';
+          b.style.opacity = '0.6';
+        }
+      });
+      
+      // Update tab content
+      document.querySelectorAll('.safety-tips-tab-content').forEach(content => {
+        if (content.id === `${tabId}Tab`) {
+          content.classList.remove('hidden');
+          content.classList.add('active');
+        } else {
+          content.classList.add('hidden');
+          content.classList.remove('active');
+        }
+      });
+    });
+  });
+  
+  // Function to display preventative tips
+  function displayPreventativeTips(species) {
+    const tips = PREVENTATIVE_TIPS[species] || PREVENTATIVE_TIPS.general;
+    
+    console.log('🌱 displayPreventativeTips called with species:', species);
+    
+    if (!tips || !Array.isArray(tips)) {
+      console.error('❌ Invalid preventative tips for species:', species);
+      return;
+    }
+    
+    let html = `
+      <div class="mb-4">
+        <h4 class="text-lg font-bold mb-2" style="color: #422d1e;">Building Rapport with ${species === 'general' ? 'Local Birds' : species}</h4>
+        <p class="text-sm mb-4" style="color: #422d1e; opacity: 0.8;">
+          These preventative measures can help reduce swooping behavior before nesting season begins. 
+          Building positive relationships with local birds year-round makes everyone safer.
+        </p>
+      </div>
+      <div class="space-y-3">
+    `;
+    
+    tips.forEach((tip, index) => {
+      html += `
+        <div class="flex items-start gap-3 p-3 rounded" style="background-color: #fff; border-left: 3px solid #059669;">
+          <span class="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white" style="background-color: #059669;">
+            ${index + 1}
+          </span>
+          <p class="text-sm" style="color: #422d1e;">${escapeHtml(tip)}</p>
+        </div>
+      `;
+    });
+    
+    html += `
+      </div>
+      <div class="mt-6 p-4 rounded" style="background-color: #DCFCE7; border-left: 3px solid #059669;">
+        <p class="text-sm font-medium" style="color: #14532D;">
+          💚 Remember: Preventative measures work best when practiced consistently throughout the year, 
+          not just during nesting season. Birds have excellent memories and can recognize individual humans!
+        </p>
+      </div>
+    `;
+    
+    const preventativeTipsElement = document.getElementById('preventativeTipsContent');
+    if (preventativeTipsElement) {
+      preventativeTipsElement.innerHTML = html;
+      console.log('✅ Preventative tips content updated');
+    } else {
+      console.error('❌ preventativeTipsContent element not found');
+    }
   }
 
   // ----------------------------

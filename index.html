@@ -1820,18 +1820,16 @@
       
       if (error) throw error;
       
-      // Update local userProfile
-      if (userProfile) {
-        userProfile.total_safe_passages = (userProfile.total_safe_passages || 0) + 1;
-        
-        // Update the displayed stat if profile modal is open
-        const statElement = document.getElementById('statSafePassages');
-        if (statElement) {
-          statElement.textContent = userProfile.total_safe_passages;
-        }
+      // Reload profile from database to get the updated count
+      await loadUserProfile();
+      
+      // Update the displayed stat if profile modal is open
+      const statElement = document.getElementById('statSafePassages');
+      if (statElement && userProfile) {
+        statElement.textContent = userProfile.total_safe_passages || 0;
       }
       
-      console.log('✅ Safe passage count incremented');
+      console.log('✅ Safe passage count incremented to:', userProfile?.total_safe_passages);
     } catch (error) {
       console.error('❌ Error incrementing safe passages:', error);
       // Don't show error to user, just log it
@@ -1850,18 +1848,16 @@
       
       if (error) throw error;
       
-      // Update local userProfile
-      if (userProfile) {
-        userProfile.total_spots_created = (userProfile.total_spots_created || 0) + 1;
-        
-        // Update the displayed stat if profile modal is open
-        const statElement = document.getElementById('statSpotsCreated');
-        if (statElement) {
-          statElement.textContent = userProfile.total_spots_created;
-        }
+      // Reload profile from database to get the updated count
+      await loadUserProfile();
+      
+      // Update the displayed stat if profile modal is open
+      const statElement = document.getElementById('statSpotsCreated');
+      if (statElement && userProfile) {
+        statElement.textContent = userProfile.total_spots_created || 0;
       }
       
-      console.log('✅ Spots created count incremented');
+      console.log('✅ Spots created count incremented to:', userProfile?.total_spots_created);
     } catch (error) {
       console.error('❌ Error incrementing spots created:', error);
       // Don't show error to user, just log it
@@ -1880,18 +1876,16 @@
       
       if (error) throw error;
       
-      // Update local userProfile
-      if (userProfile) {
-        userProfile.total_reports_created = (userProfile.total_reports_created || 0) + 1;
-        
-        // Update the displayed stat if profile modal is open
-        const statElement = document.getElementById('statReportsCreated');
-        if (statElement) {
-          statElement.textContent = userProfile.total_reports_created;
-        }
+      // Reload profile from database to get the updated count
+      await loadUserProfile();
+      
+      // Update the displayed stat if profile modal is open
+      const statElement = document.getElementById('statReportsCreated');
+      if (statElement && userProfile) {
+        statElement.textContent = userProfile.total_reports_created || 0;
       }
       
-      console.log('✅ Reports created count incremented');
+      console.log('✅ Reports created count incremented to:', userProfile?.total_reports_created);
     } catch (error) {
       console.error('❌ Error incrementing reports created:', error);
       // Don't show error to user, just log it

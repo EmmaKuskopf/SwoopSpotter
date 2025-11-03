@@ -1709,6 +1709,7 @@ window.getCurrentDate = function() {
   // Setup map + icons + DOM refs
   // ----------------------------
   // Initialize map with a slight delay to ensure DOM is ready
+  // Start with a default view (will be updated once we get user location)
   const map = L.map('map', {
     minZoom: 3,
     maxZoom: 18
@@ -1748,6 +1749,56 @@ window.getCurrentDate = function() {
       lightTileLayer.addTo(map);
     }
   };
+  
+  // Automatically get user's location on page load and center map
+  if (navigator.geolocation) {
+    console.log('🌍 Requesting user location on page load...');
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        console.log(`✅ User location found: ${lat}, ${lng}`);
+        
+        // Center map on user's location
+        map.setView([lat, lng], 14);
+        
+        // Add user marker
+        checkLocation(lat, lng);
+        
+        toast('Location found! Showing your area', 2000);
+      },
+      (error) => {
+        console.warn('⚠️ Location access denied or unavailable:', error);
+        
+        // Show friendly message based on error
+        let message = '';
+        switch(error.code) {
+          case error.PERMISSION_DENIED:
+            message = 'Location access denied. Showing default area. You can enable location in your browser settings.';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            message = 'Location unavailable. Showing default area.';
+            break;
+          case error.TIMEOUT:
+            message = 'Location request timed out. Showing default area.';
+            break;
+          default:
+            message = 'Could not get your location. Showing default area.';
+        }
+        
+        toast(message, 4000);
+        // Map will stay at default Brisbane location set above
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 60000 // Accept cached location up to 1 minute old
+      }
+    );
+  } else {
+    console.warn('⚠️ Geolocation not supported by browser');
+    toast('Location services not available. Showing default area.', 3000);
+  }
 
   function birdSVG(col){
     let iconName;

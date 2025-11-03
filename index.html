@@ -899,8 +899,11 @@
           <button data-tab="safety" role="tab" class="safety-tips-tab-btn active mr-4 py-2 px-1 border-b-2 font-medium" style="border-color: #422d1e; color: #422d1e;">
             Safety Tips
           </button>
-          <button data-tab="preventative" role="tab" class="safety-tips-tab-btn py-2 px-1 border-b-2 border-transparent" style="color: #422d1e; opacity: 0.6;" onmouseover="this.style.opacity='0.8'" onmouseout="this.classList.contains('active') || (this.style.opacity='0.6')">
+          <button data-tab="preventative" role="tab" class="safety-tips-tab-btn mr-4 py-2 px-1 border-b-2 border-transparent" style="color: #422d1e; opacity: 0.6;" onmouseover="this.style.opacity='0.8'" onmouseout="this.classList.contains('active') || (this.style.opacity='0.6')">
             Preventative Tips
+          </button>
+          <button data-tab="sources" role="tab" class="safety-tips-tab-btn py-2 px-1 border-b-2 border-transparent" style="color: #422d1e; opacity: 0.6;" onmouseover="this.style.opacity='0.8'" onmouseout="this.classList.contains('active') || (this.style.opacity='0.6')">
+            Sources
           </button>
         </nav>
       </div>
@@ -932,6 +935,13 @@
         <!-- Preventative Tips Tab -->
         <div id="preventativeTab" class="safety-tips-tab-content hidden" role="tabpanel">
           <div id="preventativeTipsContent" class="space-y-4" style="color: #422d1e;">
+            <!-- Will be populated by JavaScript -->
+          </div>
+        </div>
+        
+        <!-- Sources Tab -->
+        <div id="sourcesTab" class="safety-tips-tab-content hidden" role="tabpanel">
+          <div id="sourcesContent" class="space-y-4" style="color: #422d1e;">
             <!-- Will be populated by JavaScript -->
           </div>
         </div>
@@ -4941,9 +4951,10 @@
     // Set the species in the dropdown
     tipsSpeciesSelect.value = species;
     
-    // Display both tabs' content
+    // Display all tabs' content
     displaySafetyTips(species);
     displayPreventativeTips(species);
+    displaySources();
     
     // Show the modal
     safetyTipsModal.classList.remove('hidden');
@@ -4987,31 +4998,6 @@
           Remember: These birds are protected native wildlife. They're defending their nests, not attacking maliciously. 
           Never harm or attempt to remove nesting birds. Contact local wildlife authorities if a bird poses a serious danger.
         </p>
-      </div>
-      
-      <div class="mt-6 p-4 rounded" style="background-color: #E0F2FE; border-left: 3px solid #0284C7;">
-        <h5 class="text-sm font-bold mb-2" style="color: #0C4A6E;">Information Sources</h5>
-        <div class="text-xs space-y-1" style="color: #0C4A6E;">
-          <p><strong>Australian Government - Department of Climate Change, Energy, the Environment and Water</strong></p>
-          <p class="ml-3">Wildlife protection guidelines and native bird behavior information</p>
-          
-          <p class="mt-2"><strong>Birdlife Australia</strong></p>
-          <p class="ml-3">National bird conservation organization - swooping bird education and safety advice</p>
-          
-          <p class="mt-2"><strong>Australian Museum</strong></p>
-          <p class="ml-3">Scientific research on Australian bird species behavior and nesting patterns</p>
-          
-          <p class="mt-2"><strong>NSW Environment and Heritage</strong></p>
-          <p class="ml-3">State-based wildlife management and public safety guidelines</p>
-          
-          <p class="mt-2"><strong>Queensland Museum</strong></p>
-          <p class="ml-3">Educational resources on Queensland bird species and behavior</p>
-          
-          <p class="mt-2"><strong>Local Council Wildlife Services</strong></p>
-          <p class="ml-3">ACT, NSW, VIC, QLD council guidelines for managing swooping birds in urban areas</p>
-          
-          <p class="mt-3 italic" style="opacity: 0.8;">This information is compiled from publicly available wildlife safety resources and scientific literature. Always follow local authority advice and report dangerous wildlife encounters to your local council or wildlife rescue services.</p>
-        </div>
       </div>
     `;
     
@@ -5125,7 +5111,7 @@
       </div>
       <div class="mt-6 p-4 rounded" style="background-color: #DCFCE7; border-left: 3px solid #059669;">
         <p class="text-sm font-medium" style="color: #14532D;">
-          💚 Remember: Preventative measures work best when practiced consistently throughout the year, 
+          Remember: Preventative measures work best when practiced consistently throughout the year, 
           not just during nesting season. Birds have excellent memories and can recognize individual humans!
         </p>
       </div>
@@ -5137,6 +5123,74 @@
       console.log('✅ Preventative tips content updated');
     } else {
       console.error('❌ preventativeTipsContent element not found');
+    }
+  }
+  
+  // Function to display sources
+  function displaySources() {
+    const sources = [
+      {
+        name: 'Australian Government - Department of Climate Change, Energy, the Environment and Water',
+        description: 'Wildlife protection guidelines and native bird behavior information'
+      },
+      {
+        name: 'Australian Museum',
+        description: 'Scientific research on Australian bird species behavior and nesting patterns'
+      },
+      {
+        name: 'Birdlife Australia',
+        description: 'National bird conservation organization - swooping bird education and safety advice'
+      },
+      {
+        name: 'Local Council Wildlife Services',
+        description: 'ACT, NSW, VIC, QLD council guidelines for managing swooping birds in urban areas'
+      },
+      {
+        name: 'NSW Environment and Heritage',
+        description: 'State-based wildlife management and public safety guidelines'
+      },
+      {
+        name: 'Queensland Museum',
+        description: 'Educational resources on Queensland bird species and behavior'
+      }
+    ];
+    
+    let html = `
+      <div class="mb-4">
+        <h4 class="text-lg font-bold mb-2" style="color: #422d1e;">Information Sources</h4>
+        <p class="text-sm mb-4" style="color: #422d1e; opacity: 0.8;">
+          All safety tips and preventative measures are compiled from the following trusted sources:
+        </p>
+      </div>
+      <div class="space-y-4">
+    `;
+    
+    sources.forEach((source, index) => {
+      html += `
+        <div class="p-4 rounded" style="background-color: #fff; border-left: 3px solid #0284C7;">
+          <p class="text-sm font-bold mb-1" style="color: #0C4A6E;">${escapeHtml(source.name)}</p>
+          <p class="text-xs" style="color: #422d1e; opacity: 0.8;">${escapeHtml(source.description)}</p>
+        </div>
+      `;
+    });
+    
+    html += `
+      </div>
+      <div class="mt-6 p-4 rounded" style="background-color: #E0F2FE; border-left: 3px solid #0284C7;">
+        <p class="text-xs italic" style="color: #0C4A6E; opacity: 0.8;">
+          This information is compiled from publicly available wildlife safety resources and scientific literature. 
+          Always follow local authority advice and report dangerous wildlife encounters to your local council or 
+          wildlife rescue services.
+        </p>
+      </div>
+    `;
+    
+    const sourcesElement = document.getElementById('sourcesContent');
+    if (sourcesElement) {
+      sourcesElement.innerHTML = html;
+      console.log('✅ Sources content updated');
+    } else {
+      console.error('❌ sourcesContent element not found');
     }
   }
 

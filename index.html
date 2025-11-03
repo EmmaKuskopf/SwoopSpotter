@@ -5545,13 +5545,94 @@
     checkLocation,
     supabase, // Expose for debugging
     loadAllFromSupabase, // Expose for manual refresh
-    syncEnabled // Expose to toggle sync
+    syncEnabled, // Expose to toggle sync
+    openProfileModal, // Expose for mobile nav
+    currentUser, // Expose current user state
+    userProfile // Expose user profile
   };
 
-  // ----------------------------
-  // Mobile Navigation
-  // ----------------------------
-  
+})(); // IIFE end
+</script>
+
+<!-- Mobile Navigation Bar -->
+<nav class="mobile-nav" id="mobileNav">
+  <div class="mobile-nav-items">
+    <button class="mobile-nav-item" id="navLogout" data-view="logout">
+      <img src="Assets/Menu Icons/Light Mode/menu-logout.svg" alt="Logout">
+      <span>Logout</span>
+    </button>
+    <button class="mobile-nav-item" id="navProfile" data-view="profile">
+      <img src="Assets/Menu Icons/Light Mode/menu-profile.svg" alt="Profile">
+      <span>Profile</span>
+    </button>
+    <button class="mobile-nav-item active" id="navHome" data-view="home">
+      <img src="Assets/Menu Icons/Light Mode/menu-home.svg" alt="Home">
+      <span>Home</span>
+    </button>
+    <button class="mobile-nav-item" id="navTips" data-view="tips">
+      <img src="Assets/Menu Icons/Light Mode/menu-tips.svg" alt="Tips">
+      <span>Tips</span>
+    </button>
+    <button class="mobile-nav-item" id="navStats" data-view="stats">
+      <img src="Assets/Menu Icons/Light Mode/menu-stats.svg" alt="Stats">
+      <span>Stats</span>
+    </button>
+  </div>
+</nav>
+
+<!-- Stats Modal for Mobile -->
+<div class="stats-modal" id="statsModal">
+  <div class="rounded-lg w-full max-w-2xl mx-auto max-h-[90vh] overflow-y-auto relative" style="background-color: #f2eceb;">
+    <div class="p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-2xl font-bold" style="color: #422d1e;">Activity Stats</h2>
+        <button id="closeStatsModal" class="text-2xl font-bold" style="color: #422d1e;" aria-label="Close">&times;</button>
+      </div>
+
+      <!-- Time Period Tabs -->
+      <div class="flex gap-2 mb-4">
+        <button class="stats-period-tab-modal active flex-1 text-sm py-2 px-3 rounded" data-period="today" style="background-color: #422d1e; color: white;">
+          Today
+        </button>
+        <button class="stats-period-tab-modal flex-1 text-sm py-2 px-3 rounded" data-period="week" style="background-color: transparent; color: #422d1e; border: 1px solid #d4cac7;">
+          This Week
+        </button>
+        <button class="stats-period-tab-modal flex-1 text-sm py-2 px-3 rounded" data-period="season" style="background-color: transparent; color: #422d1e; border: 1px solid #d4cac7;">
+          This Season
+        </button>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="space-y-3">
+        <!-- Total Reports -->
+        <div class="flex justify-between items-center p-3 rounded" style="background-color: #e8e2e1;">
+          <span style="color: #422d1e; font-weight: 500;">Total Reports</span>
+          <span class="font-bold text-lg" style="color: #422d1e;" id="statTotalReportsModal">0</span>
+        </div>
+        
+        <!-- Injuries -->
+        <div class="flex justify-between items-center p-3 rounded" style="background-color: #e8e2e1;">
+          <span style="color: #DC2626; font-weight: 500;">⚠ Injuries</span>
+          <span class="font-bold text-lg" style="color: #DC2626;" id="statInjuriesModal">0</span>
+        </div>
+        
+        <!-- Bird Species Breakdown -->
+        <div class="p-3 rounded" style="background-color: #e8e2e1;">
+          <div class="font-semibold mb-3" style="color: #422d1e;">By Species:</div>
+          <div id="statSpeciesBreakdownModal" class="space-y-2">
+            <div style="color: #422d1e; opacity: 0.6;">No reports yet</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ----------------------------
+// Mobile Navigation - runs after DOM is loaded
+// ----------------------------
+(function() {
   const navHome = document.getElementById('navHome');
   const navProfile = document.getElementById('navProfile');
   const navStats = document.getElementById('navStats');
@@ -5559,6 +5640,10 @@
   const navLogout = document.getElementById('navLogout');
   const statsModal = document.getElementById('statsModal');
   const closeStatsModal = document.getElementById('closeStatsModal');
+  
+  // Access main app elements
+  const authModal = document.getElementById('authModal');
+  const safetyTipsModal = document.getElementById('safetyTipsModal');
   
   // Set active nav item
   function setActiveNavItem(activeItem) {
@@ -5573,29 +5658,43 @@
   // Logout button - signs user out
   if (navLogout) {
     navLogout.addEventListener('click', async () => {
+      // Access currentUser from the main app
+      const currentUser = window.SwoopSpotter?.supabase ? (await window.SwoopSpotter.supabase.auth.getUser()).data.user : null;
+      
       if (!currentUser) {
-        toast('You are not signed in', 2000);
-        authModal.classList.remove('hidden');
+        showToast('You are not signed in', 2000);
+        if (authModal) authModal.classList.remove('hidden');
         return;
       }
       
       if (confirm('Are you sure you want to sign out?')) {
-        await signOutUser();
-        toast('Signed out successfully', 2000);
-        setActiveNavItem(navHome);
+        // Call signOut through Supabase
+        if (window.SwoopSpotter?.supabase) {
+          await window.SwoopSpotter.supabase.auth.signOut();
+          showToast('Signed out successfully', 2000);
+          setActiveNavItem(navHome);
+          // Reload to reset state
+          window.location.reload();
+        }
       }
     });
   }
   
   // Profile button - opens profile on Contributions tab
   if (navProfile) {
-    navProfile.addEventListener('click', () => {
+    navProfile.addEventListener('click', async () => {
+      const currentUser = window.SwoopSpotter?.supabase ? (await window.SwoopSpotter.supabase.auth.getUser()).data.user : null;
+      
       if (!currentUser) {
-        toast('Please sign in to view your profile', 2000);
-        authModal.classList.remove('hidden');
+        showToast('Please sign in to view your profile', 2000);
+        if (authModal) authModal.classList.remove('hidden');
         return;
       }
-      openProfileModal('stats', false);
+      
+      // Call openProfileModal from main app
+      if (window.SwoopSpotter?.openProfileModal) {
+        window.SwoopSpotter.openProfileModal('stats', false);
+      }
       setActiveNavItem(navProfile);
     });
   }
@@ -5624,7 +5723,7 @@
     navStats.addEventListener('click', () => {
       if (statsModal) {
         statsModal.classList.add('active');
-        renderStatsModal(currentStatsPeriod);
+        renderStatsModal('today');
       }
       setActiveNavItem(navStats);
     });
@@ -5671,7 +5770,51 @@
   
   // Render stats in modal
   async function renderStatsModal(period = 'today') {
-    const stats = await calculateStats(period);
+    // Call calculateStats from main app if available
+    let stats = { totalReports: 0, injuries: 0, species: {} };
+    
+    if (window.SwoopSpotter?.supabase) {
+      const now = new Date();
+      let startDate;
+      
+      if (period === 'today') {
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      } else if (period === 'week') {
+        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      } else if (period === 'season') {
+        const currentMonth = now.getMonth() + 1;
+        if (currentMonth >= 8) {
+          startDate = new Date(now.getFullYear(), 7, 1);
+        } else {
+          startDate = new Date(now.getFullYear() - 1, 7, 1);
+        }
+      }
+      
+      try {
+        const { data: allReports } = await window.SwoopSpotter.supabase
+          .from('reports')
+          .select('id, timestamp, bird_behaviour, spots!inner (species)')
+          .gte('timestamp', startDate.toISOString());
+        
+        if (allReports) {
+          stats.totalReports = allReports.length;
+          
+          allReports.forEach(report => {
+            const species = report.spots?.species;
+            if (species) {
+              if (!stats.species[species]) stats.species[species] = 0;
+              stats.species[species]++;
+            }
+            
+            if (report.bird_behaviour && report.bird_behaviour.includes('made contact + injured')) {
+              stats.injuries++;
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching stats:', error);
+      }
+    }
     
     // Update totals
     const totalReportsEl = document.getElementById('statTotalReportsModal');
@@ -5689,9 +5832,7 @@
     if (Object.keys(stats.species).length === 0) {
       speciesBreakdown.innerHTML = '<div style="color: #422d1e; opacity: 0.6;">No reports yet</div>';
     } else {
-      // Sort species by count (descending)
-      const sortedSpecies = Object.entries(stats.species)
-        .sort((a, b) => b[1] - a[1]);
+      const sortedSpecies = Object.entries(stats.species).sort((a, b) => b[1] - a[1]);
       
       sortedSpecies.forEach(([species, count]) => {
         const row = document.createElement('div');
@@ -5704,8 +5845,34 @@
       });
     }
   }
+  
+  // Helper function for toast
+  function showToast(msg, duration = 1600) {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    
+    const toast = document.createElement('div');
+    toast.className = 'toast-message';
+    toast.textContent = msg;
+    container.appendChild(toast);
+    
+    setTimeout(() => toast.classList.add('show'), 10);
+    setTimeout(() => {
+      toast.classList.remove('show');
+      setTimeout(() => toast.remove(), 300);
+    }, duration);
+  }
+  
+  // Helper function for escaping HTML
+  function escapeHtml(s) {
+    if (s == null) return '';
+    return String(s).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+  }
+})();
+</script>
 
-})(); // IIFE end
+</body>
+</html>
 </script>
 
 <!-- Mobile Navigation Bar -->

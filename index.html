@@ -899,8 +899,8 @@
         <select id="tipsSpeciesSelect" class="w-full rounded-lg p-2" style="padding: 8px 12px; border-radius: 8px; border: 1px solid #d4cac7; background-color: #fff; color: #422d1e;">
           <option value="general">General Tips (All Birds)</option>
           <option value="Magpie">Magpie</option>
-          <option value="Magpie-Lark">Magpie-Lark</option>
-          <option value="Masked Lapwing (plover)">Masked Lapwing (Plover)</option>
+          <option value="Magpie-lark">Magpie-Lark</option>
+          <option value="Masked Lapwing">Masked Lapwing (Plover)</option>
           <option value="Butcherbird">Butcherbird</option>
           <option value="Crow">Crow</option>
           <option value="Noisy Miner">Noisy Miner</option>
@@ -4919,6 +4919,14 @@
   function displaySafetyTips(species) {
     const tips = SAFETY_TIPS[species] || SAFETY_TIPS.general;
     
+    console.log('📋 displaySafetyTips called with species:', species);
+    console.log('📋 Found tips:', tips ? tips.title : 'NOT FOUND');
+    
+    if (!tips || !tips.title || !tips.tips) {
+      console.error('❌ Invalid tips object for species:', species);
+      return;
+    }
+    
     let html = `
       <div class="mb-4">
         <h4 class="text-lg font-bold mb-2" style="color: #422d1e;">${escapeHtml(tips.title)}</h4>
@@ -4973,7 +4981,13 @@
       </div>
     `;
     
-    tipsContent.innerHTML = html;
+    const tipsContentElement = document.getElementById('tipsContent');
+    if (tipsContentElement) {
+      tipsContentElement.innerHTML = html;
+      console.log('✅ Tips content updated');
+    } else {
+      console.error('❌ tipsContent element not found');
+    }
   }
   
   // Safety tips modal event listeners

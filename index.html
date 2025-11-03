@@ -1117,13 +1117,29 @@
   let syncEnabled = true; // Can be toggled for offline mode
   
   // ----------------------------
-  // Test Date Functionality
+  // Test Date Functionality (Global)
   // ----------------------------
-  let testDate = null; // null = use real date, otherwise use this date for testing
+  // Initialize global test date manager BEFORE any code uses getCurrentDate()
+  if (!window.testDateManager) {
+    window.testDateManager = {
+      _testDate: null,
+      setTestDate(date) {
+        this._testDate = date;
+      },
+      getTestDate() {
+        return this._testDate;
+      },
+      getCurrentDate() {
+        return this._testDate ? new Date(this._testDate) : new Date();
+      }
+    };
+  }
   
-  // Helper function to get current date (real or test)
+  // Convenience accessor for this IIFE
+  let testDate = null; // Local reference
   function getCurrentDate() {
-    return testDate ? new Date(testDate) : new Date();
+    // Always use the global manager
+    return window.testDateManager.getCurrentDate();
   }
   
   // ----------------------------
@@ -5777,8 +5793,9 @@
   
   // Make this function globally accessible
   window.updateTestDateModalDisplay = function() {
-    if (testDate) {
-      const date = new Date(testDate);
+    const currentTestDate = window.testDateManager.getTestDate();
+    if (currentTestDate) {
+      const date = new Date(currentTestDate);
       if (currentTestDateModal) {
         currentTestDateModal.innerHTML = `<strong>Testing with date:</strong> ${date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
         currentTestDateModal.style.color = '#D97706';
@@ -5798,7 +5815,8 @@
       const selectedDate = testDateInputModal.value;
       
       if (selectedDate) {
-        testDate = new Date(selectedDate).toISOString();
+        const isoDate = new Date(selectedDate).toISOString();
+        window.testDateManager.setTestDate(isoDate);
         window.updateTestDateModalDisplay();
         
         // Reload all spots
@@ -5811,14 +5829,14 @@
         await loadAllFromSupabase(true);
         renderAlerts();
         
-        toast(`Test date set to ${new Date(testDate).toLocaleDateString()}`, 2000);
+        toast(`Test date set to ${new Date(isoDate).toLocaleDateString()}`, 2000);
       }
     });
   }
   
   if (resetTestDateModal) {
     resetTestDateModal.addEventListener('click', async () => {
-      testDate = null;
+      window.testDateManager.setTestDate(null);
       window.updateTestDateModalDisplay();
       
       // Reload all spots
@@ -6142,7 +6160,7 @@
   closeSpotModal.addEventListener('click', initializeAllTagUIs);
   closeDetails.addEventListener('click', initializeAllTagUIs);
 
-  // expose some for debugging
+  // expose some for debugging and cross-scope access
   window.SwoopSpotter = { 
     spots, 
     map, 
@@ -6155,7 +6173,9 @@
     openProfileModal, // Expose for mobile nav
     openSafetyTipsModal, // Expose for mobile nav
     currentUser, // Expose current user state
-    userProfile // Expose user profile
+    userProfile, // Expose user profile
+    testDate, // Expose test date for testing tools
+    getCurrentDate // Expose date function for global access
   };
 
 })(); // IIFE end

@@ -1257,7 +1257,7 @@
         "Only 10% of male magpies actually swoop humans"
       ]
     },
-    "Magpie-Lark": {
+    "Magpie-lark": {
       title: "Magpie-Lark (Peewee) Safety Tips",
       description: "Magpie-larks are smaller but can be very aggressive defenders of their territory. Despite the name, they're not related to magpies.",
       tips: [
@@ -1272,13 +1272,79 @@
         "Nesting season is shorter than magpies (usually 3-4 weeks of swooping)"
       ]
     },
-    "Masked Lapwing (plover)": {
+    "Masked Lapwing": {
       title: "Masked Lapwing (Plover) Safety Tips",
       description: "Plovers nest on the ground and are extremely protective of their eggs and chicks. They have distinctive yellow facial wattles and wing spurs.",
       tips: [
         "Watch for their distinctive alarm call - a loud, urgent cry",
         "Look for ground nests (small depressions) and give them wide berth",
-        "Don't approach chicks - parents will attack"
+        "Don't approach chicks - parents will attack",
+        "Keep dogs on leash in areas where plovers nest",
+        "They rarely make contact but will divebomb repeatedly",
+        "Walk around known nesting areas - plovers defend a small territory",
+        "The swooping usually lasts 4-6 weeks while chicks are vulnerable",
+        "Once chicks can fly, parents become less aggressive",
+        "Respect temporary fencing around plover nests in parks"
+      ]
+    },
+    Butcherbird: {
+      title: "Butcherbird Safety Tips",
+      description: "Butcherbirds are highly territorial and can be aggressive defenders. They're less common swoopers but very persistent when protecting nests.",
+      tips: [
+        "Avoid the area if possible during nesting season",
+        "Wear a broad-brimmed hat or helmet",
+        "Travel in groups - butcherbirds usually target individuals",
+        "Don't run - move calmly and quickly through the area",
+        "Face the bird and maintain eye contact while moving away",
+        "Carry an umbrella above your head",
+        "Butcherbirds are powerful flyers - give wide berth to nesting trees",
+        "They typically defend a larger territory than magpies",
+        "Don't attempt to harm or provoke the bird"
+      ]
+    },
+    Crow: {
+      title: "Crow Safety Tips",
+      description: "Crows have exceptional memory and can recognize individual humans. They're less likely to swoop than other species but can be very persistent.",
+      tips: [
+        "Crows remember faces for years - avoid provoking them",
+        "Never harm or threaten crows - they communicate threats to other crows",
+        "Wear a hat or helmet for head protection",
+        "Move calmly through the area",
+        "Face the bird and maintain eye contact",
+        "Crows typically swoop from behind - stay alert",
+        "Travel in groups when possible",
+        "Take an alternate route during nesting season",
+        "Respect their territory and they'll usually leave you alone"
+      ]
+    },
+    "Noisy Miner": {
+      title: "Noisy Miner Safety Tips",
+      description: "Noisy miners are highly communal and aggressive defenders of their colony territory. Multiple birds may swoop together.",
+      tips: [
+        "Avoid the area if possible - entire colony may defend territory",
+        "Wear a broad-brimmed hat or helmet",
+        "Move quickly but calmly through the area",
+        "Don't run - this may trigger multiple birds to chase",
+        "Face the birds and maintain eye contact",
+        "Travel in groups when possible",
+        "Miners are less likely to make contact than magpies",
+        "Take an alternate route during nesting season",
+        "Don't attempt to harm or provoke the birds"
+      ]
+    },
+    "Noisy Friarbird": {
+      title: "Noisy Friarbird Safety Tips",
+      description: "Friarbirds are less aggressive than other species but can be territorial around flowering trees during breeding season.",
+      tips: [
+        "Wear a hat or helmet for head protection",
+        "Move calmly through the area",
+        "Don't linger near flowering trees during nesting season",
+        "Face the bird and maintain eye contact",
+        "Friarbirds rarely make contact - they're mostly bluffing",
+        "Travel in groups when possible",
+        "Take an alternate route if available",
+        "They're less persistent than magpies or plovers",
+        "Respect their territory and move through quickly"
       ]
     }
   };
@@ -3990,6 +4056,14 @@
   }
   
   function handleSafePassageFromExit(spotId) {
+    // Check if user is signed in
+    if (!currentUser) {
+      toast('Please sign in to mark safe passages', 2000);
+      authModal.classList.remove('hidden');
+      document.body.classList.add('modal-open');
+      return;
+    }
+    
     const spot = spots.find(s => s.id === spotId);
     if(!spot) return;
     

@@ -3109,6 +3109,15 @@
 
     // No bird button
     detailsModal.querySelector('#noBirdBtn').addEventListener('click', () => {
+      // Check if user is signed in
+      if (!currentUser) {
+        toast('Please sign in to mark safe passages', 2000);
+        authModal.classList.remove('hidden');
+        document.body.classList.add('modal-open');
+        detailsModal.classList.add('hidden');
+        return;
+      }
+      
       // Just increment the safe passage counter
       if (!s.safePassageCount) s.safePassageCount = 0;
       s.safePassageCount++;

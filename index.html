@@ -1117,6 +1117,16 @@
   let syncEnabled = true; // Can be toggled for offline mode
   
   // ----------------------------
+  // Test Date Functionality
+  // ----------------------------
+  let testDate = null; // null = use real date, otherwise use this date for testing
+  
+  // Helper function to get current date (real or test)
+  function getCurrentDate() {
+    return testDate ? new Date(testDate) : new Date();
+  }
+  
+  // ----------------------------
   // Setup map + icons + DOM refs
   // ----------------------------
   // Initialize map with a slight delay to ensure DOM is ready
@@ -1307,8 +1317,7 @@
   const trackBtnText = document.getElementById('trackBtnText');
   const useGPSBtn = document.getElementById('useGPSBtn');
 
-  const playSim = document.getElementById('playSim');
-  const stopSim = document.getElementById('stopSim');
+  // Walk simulator elements are now in Testing Modal - see lines ~5700+ for handlers
 
   // constants + data arrays
   const STORAGE_KEY = 'swoop_reports_v1';
@@ -5342,33 +5351,7 @@
     }
   }
 
-  // ----------------------------
-  // Walk simulator (straight line)
-  // ----------------------------
-  document.getElementById('playSim').addEventListener('click', async ()=>{
-    const s = document.getElementById('simStart').value.trim();
-    const e = document.getElementById('simEnd').value.trim();
-    if(!s || !e){ toast('Enter both addresses'); return; }
-    try {
-      const g1 = await geocodeAddress(s);
-      const g2 = await geocodeAddress(e);
-      const steps = 80; simPath = [];
-      for(let i=0;i<=steps;i++) simPath.push({ lat: g1.lat + (g2.lat - g1.lat)*(i/steps), lng: g1.lng + (g2.lng - g1.lng)*(i/steps) });
-      simIndex = 0;
-      if(userMarker) try{ map.removeLayer(userMarker); } catch(e){}
-      userMarker = L.marker([simPath[0].lat, simPath[0].lng], { icon: getUserIcon() }).addTo(map);
-      if(simTimer) clearInterval(simTimer);
-      simTimer = setInterval(()=> {
-        simIndex++;
-        if(simIndex >= simPath.length){ clearInterval(simTimer); simTimer = null; return; }
-        const p = simPath[simIndex];
-        try{ userMarker.setLatLng([p.lat,p.lng]); } catch(e){}
-        checkLocation(p.lat, p.lng);
-        map.setView([p.lat,p.lng], map.getZoom());
-      }, 400);
-    } catch(err){ toast('Simulator error: ' + (err.message || err)); }
-  });
-  document.getElementById('stopSim').addEventListener('click', ()=> { if(simTimer) clearInterval(simTimer); simTimer=null; });
+  // NOTE: Walk simulator event handlers moved to Testing Modal section (lines ~5850+)
 
   // ----------------------------
   // Location Tracking (Continuous)
@@ -5567,14 +5550,9 @@
   });
 
   // ----------------------------
-  // Test Date Functionality
+  // Test Date Modal Display Update
   // ----------------------------
-  let testDate = null; // null = use real date, otherwise use this date
-  
-  // Helper function to get current date (real or test)
-  function getCurrentDate() {
-    return testDate ? new Date(testDate) : new Date();
-  }
+  // NOTE: testDate variable and getCurrentDate() function are now declared at top of IIFE (lines ~1118)
   
   // Debug: Check if test date elements exist
   console.log('🔍 Test Date Elements Check:', {

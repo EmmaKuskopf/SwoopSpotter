@@ -571,6 +571,11 @@
     filter: brightness(0) saturate(100%) invert(8%) sepia(18%) saturate(1753%) hue-rotate(347deg) brightness(93%) contrast(92%);
   }
   
+  /* Make non-active desktop nav icons beige in dark mode */
+  body.dark-mode .desktop-nav-item:not(.active) img {
+    filter: brightness(0) saturate(100%) invert(93%) sepia(8%) saturate(502%) hue-rotate(330deg) brightness(102%) contrast(93%);
+  }
+  
   /* ===== Dark Mode - Logo Color ===== */
   body.dark-mode .cls-1 {
     fill: var(--text-primary) !important;
@@ -593,6 +598,11 @@
   
   body.dark-mode .mobile-nav-item.active {
     opacity: 1;
+  }
+  
+  /* Make non-active mobile nav icons beige in dark mode */
+  body.dark-mode .mobile-nav-item:not(.active) img {
+    filter: brightness(0) saturate(100%) invert(93%) sepia(8%) saturate(502%) hue-rotate(330deg) brightness(102%) contrast(93%);
   }
   
   #alertBox.show { display:block; opacity:1; pointer-events:auto; }
@@ -746,6 +756,7 @@
   .desktop-nav-items {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
     max-width: 1200px;
     margin: 0 auto;

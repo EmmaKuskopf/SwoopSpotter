@@ -868,26 +868,6 @@
     <div class="flex-1"></div>
     <img src="Assets/Logo/Logo-Horizontal.svg" alt="Swoop Spotter Logo" class="h-8" />
     <div class="flex-1 flex justify-end items-center gap-1 relative">
-      <!-- Dark Mode Toggle -->
-      <button id="darkModeToggle" class="p-2 rounded-full transition-colors bg-secondary text-primary" title="Toggle dark mode">
-        <!-- Moon icon (shown in light mode) -->
-        <svg class="moon-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-        </svg>
-        <!-- Sun icon (shown in dark mode) -->
-        <svg class="sun-icon hidden" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="5"></circle>
-          <line x1="12" y1="1" x2="12" y2="3"></line>
-          <line x1="12" y1="21" x2="12" y2="23"></line>
-          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-          <line x1="1" y1="12" x2="3" y2="12"></line>
-          <line x1="21" y1="12" x2="23" y2="12"></line>
-          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-        </svg>
-      </button>
-      
       <!-- Hamburger Menu Button -->
       <button id="hamburgerMenuButton" class="p-2 rounded transition-colors text-primary hover:bg-secondary" title="Menu">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -955,6 +935,25 @@
           Testing
         </button>
         
+        <!-- Dark Mode Toggle -->
+        <button id="menuDarkMode" class="w-full text-left px-3 py-2 rounded mb-1 text-primary hover:bg-secondary flex items-center gap-2">
+          <svg class="moon-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+          <svg class="sun-icon hidden" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <span class="dark-mode-text">Dark Mode</span>
+        </button>
+        
         <!-- Divider (only shown when signed in) -->
         <div id="menuDivider" class="hidden border-themed my-1" style="border-bottom-width: 1px;"></div>
         
@@ -1011,13 +1010,6 @@
 </nav>
 
 <main class="max-w-4xl mx-auto px-4 pb-12 pt-4">
-  <!-- Action buttons below logo, above map -->
-  <div class="flex gap-2 mb-4 justify-center flex-wrap">
-    <button id="trackLocationBtn" class="text-sm px-4 py-2 rounded text-white btn-primary">
-      <span id="trackBtnText">Start Tracking</span>
-    </button>
-  </div>
-
   <div id="map" class="shadow rounded relative">
     <button id="openAddBtn" class="fab bird-add-btn" title="Add Swoop Spot">
       <img src="Assets/Icons/bird_background.svg" alt="">
@@ -1900,8 +1892,9 @@ window.getCurrentDate = function() {
     userMenuProfile: !!userMenuProfile
   });
 
-  const trackLocationBtn = document.getElementById('trackLocationBtn');
-  const trackBtnText = document.getElementById('trackBtnText');
+  // NOTE: trackLocationBtn removed from UI - tracking functionality commented out
+  // const trackLocationBtn = document.getElementById('trackLocationBtn');
+  // const trackBtnText = document.getElementById('trackBtnText');
   const useGPSBtn = document.getElementById('useGPSBtn');
 
   // Walk simulator elements are now in Testing Modal - see lines ~5700+ for handlers
@@ -5978,8 +5971,8 @@ window.getCurrentDate = function() {
         
         if (!isTracking) {
           isTracking = true;
-          trackBtnText.textContent = 'Stop Tracking';
-          trackLocationBtn.style.backgroundColor = '#ef4444'; // Red when tracking
+          // trackBtnText.textContent = 'Stop Tracking';
+          // trackLocationBtn.style.backgroundColor = '#ef4444'; // Red when tracking
           toast('Location tracking active', 2000);
         }
       },
@@ -6025,12 +6018,13 @@ window.getCurrentDate = function() {
     }
     
     isTracking = false;
-    trackBtnText.textContent = 'Start Tracking';
-    trackLocationBtn.style.backgroundColor = '#422d1e'; // Back to dark color
+    // trackBtnText.textContent = 'Start Tracking';
+    // trackLocationBtn.style.backgroundColor = '#422d1e'; // Back to dark color
     toast('Location tracking stopped');
   }
 
-  // Track location button click handler
+  // Track location button click handler - DISABLED (button removed from UI)
+  /*
   trackLocationBtn.addEventListener('click', () => {
     if (isTracking) {
       stopLocationTracking();
@@ -6038,6 +6032,7 @@ window.getCurrentDate = function() {
       startLocationTracking();
     }
   });
+  */
 
   // Auto-start tracking on mobile devices (with user interaction)
   function isMobileDevice() {
@@ -6575,9 +6570,10 @@ window.getCurrentDate = function() {
   // Dark Mode Toggle
   // ----------------------------
   function initDarkMode() {
-    const darkModeToggle = document.getElementById('darkModeToggle');
+    const darkModeToggle = document.getElementById('menuDarkMode');
     const moonIcon = darkModeToggle?.querySelector('.moon-icon');
     const sunIcon = darkModeToggle?.querySelector('.sun-icon');
+    const darkModeText = darkModeToggle?.querySelector('.dark-mode-text');
     
     // Load saved preference
     const savedTheme = localStorage.getItem('theme');
@@ -6588,6 +6584,7 @@ window.getCurrentDate = function() {
       document.body.classList.add('dark-mode');
       if (moonIcon) moonIcon.classList.add('hidden');
       if (sunIcon) sunIcon.classList.remove('hidden');
+      if (darkModeText) darkModeText.textContent = 'Light Mode';
     }
     
     // Toggle dark mode
@@ -6595,14 +6592,16 @@ window.getCurrentDate = function() {
       const isDark = document.body.classList.toggle('dark-mode');
       localStorage.setItem('theme', isDark ? 'dark' : 'light');
       
-      // Toggle icons
+      // Toggle icons and text
       if (moonIcon && sunIcon) {
         if (isDark) {
           moonIcon.classList.add('hidden');
           sunIcon.classList.remove('hidden');
+          if (darkModeText) darkModeText.textContent = 'Light Mode';
         } else {
           moonIcon.classList.remove('hidden');
           sunIcon.classList.add('hidden');
+          if (darkModeText) darkModeText.textContent = 'Dark Mode';
         }
       }
     });

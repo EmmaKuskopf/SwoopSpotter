@@ -202,6 +202,62 @@
     display: flex;
   }
   
+  /* Desktop/Web Top Navigation */
+  .desktop-nav {
+    display: none;
+    background-color: #f2eceb;
+    border-bottom: 2px solid #d4cac7;
+    box-shadow: 0 2px 10px rgba(66, 45, 30, 0.1);
+  }
+
+  .desktop-nav-items {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+
+  .desktop-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #422d1e;
+    opacity: 0.6;
+    transition: all 0.2s;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    border-bottom: 3px solid transparent;
+  }
+
+  .desktop-nav-item.active {
+    opacity: 1;
+    border-bottom-color: #422d1e;
+  }
+
+  .desktop-nav-item:hover {
+    opacity: 1;
+    background-color: #e8e2e1;
+  }
+
+  .desktop-nav-item img {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* Show desktop nav on larger screens, hide mobile nav */
+  @media (min-width: 769px) {
+    .desktop-nav {
+      display: block;
+    }
+  }
+  
   
   /* Safari-specific form element fixes */
   select, input, textarea {
@@ -313,13 +369,42 @@
   </div>
 </header>
 
+<!-- Desktop/Web Top Navigation -->
+<nav class="desktop-nav" id="desktopNav">
+  <div class="desktop-nav-items">
+    <button class="desktop-nav-item active" id="desktopNavHome" data-view="home">
+      <img src="Assets/Menu Icons/Light Mode/menu-home.svg" alt="Home">
+      <span>Home</span>
+    </button>
+    <button class="desktop-nav-item" id="desktopNavProfile" data-view="profile">
+      <img src="Assets/Menu Icons/Light Mode/menu-profile.svg" alt="Profile">
+      <span>Profile</span>
+    </button>
+    <button class="desktop-nav-item" id="desktopNavTips" data-view="tips">
+      <img src="Assets/Menu Icons/Light Mode/menu-tips.svg" alt="Safety Tips">
+      <span>Safety Tips</span>
+    </button>
+    <button class="desktop-nav-item" id="desktopNavStats" data-view="stats">
+      <img src="Assets/Menu Icons/Light Mode/menu-stats.svg" alt="Stats">
+      <span>Stats</span>
+    </button>
+    <button class="desktop-nav-item" id="desktopNavTesting" data-view="testing">
+      <span>🧪</span>
+      <span>Testing</span>
+    </button>
+    <button class="desktop-nav-item" id="desktopNavLogout" data-view="logout">
+      <img src="Assets/Menu Icons/Light Mode/menu-logout.svg" alt="Logout">
+      <span>Logout</span>
+    </button>
+  </div>
+</nav>
+
 <main class="max-w-4xl mx-auto px-4 pb-12 pt-4">
   <!-- Action buttons below logo, above map -->
   <div class="flex gap-2 mb-4 justify-center flex-wrap">
     <button id="trackLocationBtn" class="text-sm px-4 py-2 rounded text-white" style="background-color: #422d1e;">
       <span id="trackBtnText">Start Tracking</span>
     </button>
-    <button id="useGPSBtn" class="text-sm px-4 py-2 rounded text-white" style="background-color: #422d1e;">Find Me</button>
   </div>
 
   <div id="map" class="shadow rounded relative">
@@ -337,12 +422,6 @@
     <button id="safetyTipsBtn" class="px-6 py-2 rounded text-white font-medium flex items-center gap-2" style="background-color: #10B981;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
       <img src="Assets/Icons/tips.svg" alt="Tips" style="width: 20px; height: 20px; filter: brightness(0) invert(1);">
       Safety Tips
-    </button>
-    <button id="testVibrateBtn" class="px-4 py-2 rounded text-sm border" style="border-color: #d4cac7; color: #422d1e;" onmouseover="this.style.backgroundColor='#e8e2e1'" onmouseout="this.style.backgroundColor='transparent'">
-      Test Vibration
-    </button>
-    <button id="testDateBtn" class="px-4 py-2 rounded text-sm border" style="border-color: #d4cac7; color: #422d1e;" onmouseover="this.style.backgroundColor='#e8e2e1'" onmouseout="this.style.backgroundColor='transparent'">
-      Test Date
     </button>
   </div>
 
@@ -392,19 +471,6 @@
               <div style="color: #422d1e; opacity: 0.6;">No reports yet</div>
             </div>
           </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="p-3 rounded shadow" style="background-color: #f2eceb;">
-      <h2 class="font-semibold mb-2" style="color: #422d1e;">Walk Simulator</h2>
-      <div class="text-xs mb-2" style="color: #422d1e; opacity: 0.7;">Simulate a straight-line walk (Start → End addresses)</div>
-      <div class="grid gap-2">
-        <input id="simStart" placeholder="Start walk: Address" class="p-2 rounded w-full" style="border: 1px solid #d4cac7; background-color: #f2eceb;"/>
-        <input id="simEnd" placeholder="End walk: Address" class="p-2 rounded w-full" style="border: 1px solid #d4cac7; background-color: #f2eceb;"/>
-        <div class="flex gap-2">
-          <button id="playSim" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded">Play</button>
-          <button id="stopSim" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded">Stop</button>
         </div>
       </div>
     </section>
@@ -950,6 +1016,78 @@
       <!-- Close button at bottom -->
       <div class="mt-6 text-center">
         <button id="closeSafetyTipsBottom" class="px-6 py-2 text-white rounded font-medium" style="background-color: #422d1e;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Testing Modal -->
+<div id="testingModal" class="hidden fixed inset-0 flex items-center justify-center bg-black/40 z-50 p-4 overflow-y-auto">
+  <div class="rounded-lg shadow-lg w-full max-w-2xl mx-auto my-auto" style="background-color: #f2eceb;">
+    <div class="p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-bold" style="color: #422d1e;">Testing & Debug Tools</h3>
+        <button id="closeTestingModal" class="text-2xl" style="color: #422d1e; opacity: 0.7;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">&times;</button>
+      </div>
+      
+      <!-- Find Me / GPS -->
+      <div class="mb-6 p-4 rounded" style="background-color: white; border: 2px solid #d4cac7;">
+        <h4 class="font-semibold mb-3" style="color: #422d1e;">GPS Location</h4>
+        <button id="useGPSBtnModal" class="w-full px-4 py-2 rounded text-white font-medium" style="background-color: #422d1e;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+          Find Me (GPS)
+        </button>
+      </div>
+      
+      <!-- Test Vibration -->
+      <div class="mb-6 p-4 rounded" style="background-color: white; border: 2px solid #d4cac7;">
+        <h4 class="font-semibold mb-3" style="color: #422d1e;">Vibration Test</h4>
+        <p class="text-sm mb-3" style="color: #422d1e; opacity: 0.7;">Test device vibration (mobile only)</p>
+        <button id="testVibrateBtnModal" class="w-full px-4 py-2 rounded text-white font-medium" style="background-color: #422d1e;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+          Test Vibration
+        </button>
+      </div>
+      
+      <!-- Test Date -->
+      <div class="mb-6 p-4 rounded" style="background-color: white; border: 2px solid #d4cac7;">
+        <h4 class="font-semibold mb-3" style="color: #422d1e;">Date Testing</h4>
+        <p class="text-sm mb-3" style="color: #422d1e; opacity: 0.7;">Test with a specific date to check seasonal behaviors</p>
+        <div id="currentTestDateModal" class="mb-3 text-sm" style="color: #422d1e;">Using real date (today)</div>
+        <div class="grid gap-2">
+          <input type="date" id="testDateInputModal" class="w-full px-3 py-2 border rounded" style="border-color: #d4cac7; background-color: #f2eceb;">
+          <div class="flex gap-2">
+            <button id="applyTestDateModal" class="flex-1 px-4 py-2 rounded text-white font-medium" style="background-color: #10B981;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+              Apply Test Date
+            </button>
+            <button id="resetTestDateModal" class="flex-1 px-4 py-2 rounded border font-medium" style="border-color: #d4cac7; color: #422d1e;" onmouseover="this.style.backgroundColor='#e8e2e1'" onmouseout="this.style.backgroundColor='transparent'">
+              Reset to Today
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Walk Simulator -->
+      <div class="mb-6 p-4 rounded" style="background-color: white; border: 2px solid #d4cac7;">
+        <h4 class="font-semibold mb-3" style="color: #422d1e;">Walk Simulator</h4>
+        <p class="text-sm mb-3" style="color: #422d1e; opacity: 0.7;">Simulate a straight-line walk between two addresses</p>
+        <div class="grid gap-2">
+          <input id="simStartModal" placeholder="Start walk: Address" class="p-2 rounded w-full" style="border: 1px solid #d4cac7; background-color: #f2eceb;"/>
+          <input id="simEndModal" placeholder="End walk: Address" class="p-2 rounded w-full" style="border: 1px solid #d4cac7; background-color: #f2eceb;"/>
+          <div class="flex gap-2">
+            <button id="playSimModal" class="flex-1 px-4 py-2 rounded text-white font-medium" style="background-color: #10B981;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+              Play
+            </button>
+            <button id="stopSimModal" class="flex-1 px-4 py-2 rounded text-white font-medium" style="background-color: #DC2626;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+              Stop
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Close button -->
+      <div class="text-center">
+        <button id="closeTestingModalBottom" class="px-6 py-2 text-white rounded font-medium" style="background-color: #422d1e;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
           Close
         </button>
       </div>
@@ -5545,6 +5683,206 @@
   updateTestDateDisplay();
 
   // ----------------------------
+  // Testing Modal Event Handlers
+  // ----------------------------
+  const testingModal = document.getElementById('testingModal');
+  const closeTestingModal = document.getElementById('closeTestingModal');
+  const closeTestingModalBottom = document.getElementById('closeTestingModalBottom');
+  
+  // Close Testing Modal
+  if (closeTestingModal && testingModal) {
+    closeTestingModal.addEventListener('click', () => {
+      testingModal.classList.add('hidden');
+      document.body.classList.remove('modal-open');
+    });
+  }
+  
+  if (closeTestingModalBottom && testingModal) {
+    closeTestingModalBottom.addEventListener('click', () => {
+      testingModal.classList.add('hidden');
+      document.body.classList.remove('modal-open');
+    });
+  }
+  
+  // Find Me / GPS button in modal
+  const useGPSBtnModal = document.getElementById('useGPSBtnModal');
+  if (useGPSBtnModal) {
+    useGPSBtnModal.addEventListener('click', () => {
+      if(!navigator.geolocation) {
+        toast('Geolocation is not supported by your browser');
+        return;
+      }
+      
+      toast('Getting your location...');
+      
+      navigator.geolocation.getCurrentPosition(
+        p => {
+          map.setView([p.coords.latitude, p.coords.longitude], 15);
+          checkLocation(p.coords.latitude, p.coords.longitude);
+          toast('Location found!');
+        }, 
+        err => {
+          console.error('Geolocation error:', err);
+          let errorMsg = 'GPS error: ';
+          
+          switch(err.code) {
+            case err.PERMISSION_DENIED:
+              errorMsg += 'Location permission denied. Please enable location services.';
+              break;
+            case err.POSITION_UNAVAILABLE:
+              errorMsg += 'Location information unavailable.';
+              break;
+            case err.TIMEOUT:
+              errorMsg += 'Location request timed out.';
+              break;
+            default:
+              errorMsg += 'Unknown error occurred.';
+          }
+          
+          toast(errorMsg, 4000);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+        }
+      );
+    });
+  }
+  
+  // Test Vibration button in modal
+  const testVibrateBtnModal = document.getElementById('testVibrateBtnModal');
+  if (testVibrateBtnModal) {
+    testVibrateBtnModal.addEventListener('click', () => {
+      console.log('📳 Testing vibration...');
+      
+      if ('vibrate' in navigator) {
+        toast('Testing vibration...', 1000);
+        
+        const vibrationPattern = [300, 100, 300, 100, 300];
+        const result = navigator.vibrate(vibrationPattern);
+        
+        console.log('Vibration API called, result:', result);
+        
+        if (result) {
+          setTimeout(() => toast('Vibration test complete', 1000), 1000);
+        } else {
+          setTimeout(() => toast('Vibration may not be supported on this device', 2000), 1000);
+        }
+      } else {
+        console.log('Vibration API not available');
+        
+        if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
+          toast('iOS does not support web vibration API', 3000);
+        } else {
+          toast('Vibration not supported on this device', 2000);
+        }
+      }
+    });
+  }
+  
+  // Test Date functionality in modal
+  const testDateInputModal = document.getElementById('testDateInputModal');
+  const applyTestDateModal = document.getElementById('applyTestDateModal');
+  const resetTestDateModal = document.getElementById('resetTestDateModal');
+  const currentTestDateModal = document.getElementById('currentTestDateModal');
+  
+  function updateTestDateModalDisplay() {
+    if (testDate) {
+      const date = new Date(testDate);
+      currentTestDateModal.innerHTML = `<strong>Testing with date:</strong> ${date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
+      currentTestDateModal.style.color = '#D97706';
+      currentTestDateModal.style.fontWeight = 'bold';
+    } else {
+      currentTestDateModal.innerHTML = 'Using real date (today)';
+      currentTestDateModal.style.color = '#422d1e';
+      currentTestDateModal.style.fontWeight = 'normal';
+    }
+  }
+  
+  if (applyTestDateModal && testDateInputModal) {
+    applyTestDateModal.addEventListener('click', async () => {
+      const selectedDate = testDateInputModal.value;
+      
+      if (selectedDate) {
+        testDate = new Date(selectedDate).toISOString();
+        updateTestDateModalDisplay();
+        
+        // Reload all spots
+        spots.forEach(s => {
+          try { map.removeLayer(s.marker); } catch(e) {}
+          try { map.removeLayer(s.circle); } catch(e) {}
+        });
+        spots = [];
+        
+        await loadAllFromSupabase(true);
+        renderAlerts();
+        
+        toast(`Test date set to ${new Date(testDate).toLocaleDateString()}`, 2000);
+      }
+    });
+  }
+  
+  if (resetTestDateModal) {
+    resetTestDateModal.addEventListener('click', async () => {
+      testDate = null;
+      updateTestDateModalDisplay();
+      
+      // Reload all spots
+      spots.forEach(s => {
+        try { map.removeLayer(s.marker); } catch(e) {}
+        try { map.removeLayer(s.circle); } catch(e) {}
+      });
+      spots = [];
+      
+      await loadAllFromSupabase(true);
+      renderAlerts();
+      
+      toast('Reset to real date', 2000);
+    });
+  }
+  
+  // Walk Simulator in modal
+  const simStartModal = document.getElementById('simStartModal');
+  const simEndModal = document.getElementById('simEndModal');
+  const playSimModal = document.getElementById('playSimModal');
+  const stopSimModal = document.getElementById('stopSimModal');
+  
+  if (playSimModal) {
+    playSimModal.addEventListener('click', async () => {
+      const s = simStartModal.value.trim();
+      const e = simEndModal.value.trim();
+      if(!s || !e){ toast('Enter both addresses'); return; }
+      try {
+        const g1 = await geocodeAddress(s);
+        const g2 = await geocodeAddress(e);
+        const steps = 80; simPath = [];
+        for(let i=0;i<=steps;i++) simPath.push({ lat: g1.lat + (g2.lat - g1.lat)*(i/steps), lng: g1.lng + (g2.lng - g1.lng)*(i/steps) });
+        simIndex = 0;
+        if(userMarker) try{ map.removeLayer(userMarker); } catch(e){}
+        userMarker = L.marker([simPath[0].lat, simPath[0].lng], { icon: getUserIcon() }).addTo(map);
+        if(simTimer) clearInterval(simTimer);
+        simTimer = setInterval(()=> {
+          simIndex++;
+          if(simIndex >= simPath.length){ clearInterval(simTimer); simTimer = null; return; }
+          const p = simPath[simIndex];
+          try{ userMarker.setLatLng([p.lat,p.lng]); } catch(e){}
+          checkLocation(p.lat, p.lng);
+          map.setView([p.lat,p.lng], map.getZoom());
+        }, 400);
+        toast('Simulator started', 1500);
+      } catch(err){ toast('Simulator error: ' + (err.message || err)); }
+    });
+  }
+  
+  if (stopSimModal) {
+    stopSimModal.addEventListener('click', () => { 
+      if(simTimer) clearInterval(simTimer); 
+      simTimer=null;
+      toast('Simulator stopped', 1500);
+    });
+  }
+
+  // ----------------------------
   // ----------------------------
   // Auth UI Event Listeners
   // ----------------------------
@@ -5852,6 +6190,10 @@
       <img src="Assets/Menu Icons/Light Mode/menu-stats.svg" alt="Stats">
       <span>Stats</span>
     </button>
+    <button class="mobile-nav-item" id="navTesting" data-view="testing">
+      <span style="font-size: 20px;">🧪</span>
+      <span>Testing</span>
+    </button>
   </div>
 </nav>
 
@@ -5912,6 +6254,7 @@
   const navProfile = document.getElementById('navProfile');
   const navStats = document.getElementById('navStats');
   const navTips = document.getElementById('navTips');
+  const navTesting = document.getElementById('navTesting');
   const navLogout = document.getElementById('navLogout');
   const statsModal = document.getElementById('statsModal');
   const closeStatsModal = document.getElementById('closeStatsModal');
@@ -6036,6 +6379,20 @@
     });
   }
   
+  // Testing button - opens Testing modal
+  if (navTesting) {
+    navTesting.addEventListener('click', () => {
+      const testingModal = document.getElementById('testingModal');
+      if (testingModal) {
+        testingModal.classList.remove('hidden');
+        document.body.classList.add('modal-open');
+        // Update test date display
+        updateTestDateModalDisplay();
+      }
+      setActiveNavItem(navTesting);
+    });
+  }
+  
   // Close stats modal
   if (closeStatsModal) {
     closeStatsModal.addEventListener('click', () => {
@@ -6151,6 +6508,102 @@
         speciesBreakdown.appendChild(row);
       });
     }
+  }
+  
+  // Desktop Navigation Event Handlers
+  // Get desktop nav elements
+  const desktopNavHome = document.getElementById('desktopNavHome');
+  const desktopNavProfile = document.getElementById('desktopNavProfile');
+  const desktopNavTips = document.getElementById('desktopNavTips');
+  const desktopNavStats = document.getElementById('desktopNavStats');
+  const desktopNavTesting = document.getElementById('desktopNavTesting');
+  const desktopNavLogout = document.getElementById('desktopNavLogout');
+  
+  // Helper function to set active desktop nav item
+  function setActiveDesktopNavItem(activeItem) {
+    [desktopNavHome, desktopNavProfile, desktopNavTips, desktopNavStats, desktopNavTesting, desktopNavLogout].forEach(item => {
+      if (item) {
+        if (item === activeItem) {
+          item.classList.add('active');
+        } else {
+          item.classList.remove('active');
+        }
+      }
+    });
+  }
+  
+  // Logout button
+  if (desktopNavLogout) {
+    desktopNavLogout.addEventListener('click', async () => {
+      if (window.SwoopSpotter?.supabase) {
+        await window.SwoopSpotter.supabase.auth.signOut();
+        window.location.reload();
+      }
+      setActiveDesktopNavItem(desktopNavLogout);
+    });
+  }
+  
+  // Profile button - opens profile on Contributions tab
+  if (desktopNavProfile) {
+    desktopNavProfile.addEventListener('click', async () => {
+      const currentUser = window.SwoopSpotter?.supabase ? (await window.SwoopSpotter.supabase.auth.getUser()).data.user : null;
+      
+      if (!currentUser) {
+        showToast('Please sign in to view your profile', 2000);
+        if (authModal) authModal.classList.remove('hidden');
+        return;
+      }
+      
+      // Call openProfileModal from main app
+      if (window.SwoopSpotter?.openProfileModal) {
+        window.SwoopSpotter.openProfileModal('stats', false);
+      }
+      setActiveDesktopNavItem(desktopNavProfile);
+    });
+  }
+  
+  // Home button - scroll to top (main map view)
+  if (desktopNavHome) {
+    desktopNavHome.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setActiveDesktopNavItem(desktopNavHome);
+    });
+  }
+  
+  // Tips button - opens Safety Tips modal
+  if (desktopNavTips) {
+    desktopNavTips.addEventListener('click', () => {
+      // Call openSafetyTipsModal
+      if (window.SwoopSpotter?.openSafetyTipsModal) {
+        window.SwoopSpotter.openSafetyTipsModal('general');
+      }
+      setActiveDesktopNavItem(desktopNavTips);
+    });
+  }
+  
+  // Stats button - opens Activity Stats modal
+  if (desktopNavStats) {
+    desktopNavStats.addEventListener('click', () => {
+      if (statsModal) {
+        statsModal.classList.add('active');
+        renderStatsModal('today');
+      }
+      setActiveDesktopNavItem(desktopNavStats);
+    });
+  }
+  
+  // Testing button - opens Testing modal
+  if (desktopNavTesting) {
+    desktopNavTesting.addEventListener('click', () => {
+      const testingModal = document.getElementById('testingModal');
+      if (testingModal) {
+        testingModal.classList.remove('hidden');
+        document.body.classList.add('modal-open');
+        // Update test date display
+        updateTestDateModalDisplay();
+      }
+      setActiveDesktopNavItem(desktopNavTesting);
+    });
   }
   
   // Helper function for toast

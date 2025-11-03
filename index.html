@@ -1838,7 +1838,7 @@
       console.log('✅ Profile reloaded, total_safe_passages:', userProfile?.total_safe_passages);
       
       // Update the displayed stat if profile modal is open
-      const statElement = document.getElementById('statSafePassages');
+      const statElement = document.getElementById('profileStatSafePassages');
       if (statElement && userProfile) {
         statElement.textContent = userProfile.total_safe_passages || 0;
         console.log('✅ Updated UI element to:', userProfile.total_safe_passages || 0);
@@ -1874,7 +1874,7 @@
       await loadUserProfile();
       
       // Update the displayed stat if profile modal is open
-      const statElement = document.getElementById('statSpotsCreated');
+      const statElement = document.getElementById('profileStatSpotsCreated');
       if (statElement && userProfile) {
         statElement.textContent = userProfile.total_spots_created || 0;
       }
@@ -1902,7 +1902,7 @@
       await loadUserProfile();
       
       // Update the displayed stat if profile modal is open
-      const statElement = document.getElementById('statReportsCreated');
+      const statElement = document.getElementById('profileStatReportsCreated');
       if (statElement && userProfile) {
         statElement.textContent = userProfile.total_reports_created || 0;
       }

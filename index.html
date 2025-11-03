@@ -5644,6 +5644,7 @@
     loadAllFromSupabase, // Expose for manual refresh
     syncEnabled, // Expose to toggle sync
     openProfileModal, // Expose for mobile nav
+    openSafetyTipsModal, // Expose for mobile nav
     currentUser, // Expose current user state
     userProfile // Expose user profile
   };
@@ -5807,7 +5808,39 @@
   // Tips button - opens Safety Tips modal
   if (navTips) {
     navTips.addEventListener('click', () => {
-      if (safetyTipsModal) {
+      // Call openSafetyTipsModal to ensure tips are displayed
+      if (window.SwoopSpotter?.openSafetyTipsModal) {
+        window.SwoopSpotter.openSafetyTipsModal('general');
+      } else if (safetyTipsModal) {
+        // Fallback: manually set up the modal
+        const tipsSpeciesSelect = document.getElementById('tipsSpeciesSelect');
+        if (tipsSpeciesSelect) tipsSpeciesSelect.value = 'general';
+        
+        // Call displaySafetyTips if available
+        const tipsContentElement = document.getElementById('tipsContent');
+        if (tipsContentElement && typeof SAFETY_TIPS !== 'undefined') {
+          const tips = SAFETY_TIPS.general;
+          let html = `
+            <div class="mb-4">
+              <h4 class="text-lg font-bold mb-2" style="color: #422d1e;">${tips.title}</h4>
+              <p class="text-sm mb-4" style="color: #422d1e; opacity: 0.8;">${tips.description}</p>
+            </div>
+            <div class="space-y-3">
+          `;
+          tips.tips.forEach((tip, index) => {
+            html += `
+              <div class="flex items-start gap-3 p-3 rounded" style="background-color: #fff; border-left: 3px solid #10B981;">
+                <span class="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white" style="background-color: #10B981;">
+                  ${index + 1}
+                </span>
+                <p class="text-sm" style="color: #422d1e;">${tip}</p>
+              </div>
+            `;
+          });
+          html += '</div>';
+          tipsContentElement.innerHTML = html;
+        }
+        
         safetyTipsModal.classList.remove('hidden');
         document.body.classList.add('modal-open');
       }

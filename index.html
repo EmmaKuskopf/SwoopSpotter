@@ -6020,6 +6020,11 @@ window.getCurrentDate = function() {
 
   // Minimize centered alert (show as small flashing icon)
   function minimizeCenteredAlert() {
+    // Ensure alert is visible first
+    alertBox.style.display = 'block';
+    // Keep the show class for proper state
+    alertBox.classList.add('show');
+    // Add minimized class - this will override styles with !important
     alertBox.classList.add('minimized');
     console.log('📌 Alert minimized - showing as pulsing icon');
   }

@@ -129,6 +129,32 @@
     -webkit-overflow-scrolling: touch;
   }
   
+  /* Ensure all modals have max height and scrollable content */
+  .modal-overlay > div,
+  #profileModal > div,
+  #authModal > div,
+  #safetyTipsModal > div,
+  #testingModal > div,
+  #statsModal > div,
+  #detailsModal > div,
+  #spotModal > div {
+    max-height: 90vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* Ensure modal headers stay fixed at top */
+  .modal-overlay h2,
+  .modal-overlay h3 {
+    position: sticky;
+    top: 0;
+    background: inherit;
+    z-index: 10;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+  
   .tag-box { 
     min-height: 2.6rem; 
     display: flex; 
@@ -173,9 +199,9 @@
     display:none; 
   }
   
-  /* Minimized alert state - small icon in top right corner of map */
+  /* Minimized alert state - small icon in top right corner of map (below header) */
   #alertBox.minimized {
-    top: 20px !important;
+    top: 80px !important;
     bottom: auto !important;
     right: 20px !important;
     left: auto !important;
@@ -194,7 +220,7 @@
     background: #f59e0b !important;
     border: none !important;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
-    z-index: 1000000 !important;
+    z-index: 999 !important;
   }
   
   @keyframes pulse-alert {

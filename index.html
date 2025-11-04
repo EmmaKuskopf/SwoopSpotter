@@ -4908,6 +4908,7 @@ window.getCurrentDate = function() {
   let hasShownCalmFeedback = false; // Track if we've already shown calm feedback this journey
   let recentlyReportedSpots = new Set(); // Track spots user just reported to prevent immediate alerts
   let alreadyReportedThisJourney = new Set(); // Track spots we've reported on during this journey (won't trigger feedback)
+  let dismissedAlerts = new Set(); // Track alerts user manually dismissed (cleared while still in zone)
   
   function checkLocation(lat,lng){
     if(userMarker){ try{ userMarker.setLatLng([lat,lng]); } catch(e){} } else { userMarker = L.marker([lat,lng], { icon: getUserIcon() }).addTo(map); }
@@ -4927,9 +4928,11 @@ window.getCurrentDate = function() {
     // Filter out calm birds from alerts - they're preventative info, not danger warnings
     // Users can still see them on the map and click for info
     // Also filter out spots the user just reported on (suppress alert for 10 seconds)
+    // Also filter out spots the user manually dismissed (until they exit and re-enter)
     const activeThreats = insideSpots.filter(s => 
       s.risk !== 'Calm - All clear' && 
-      !recentlyReportedSpots.has(s.id)
+      !recentlyReportedSpots.has(s.id) &&
+      !dismissedAlerts.has(s.id)
     );
     
     // Sort by risk level (highest first) for display
@@ -4971,6 +4974,7 @@ window.getCurrentDate = function() {
         // Clear visited spots for next journey
         visitedSpots.clear();
         alreadyReportedThisJourney.clear(); // Also clear reported tracking for next journey
+        dismissedAlerts.clear(); // Clear dismissed alerts when exiting all zones
         hasShownCalmFeedback = false; // Reset calm feedback flag for next journey
       } else {
         currentAlertSpots = [];
@@ -5711,9 +5715,12 @@ window.getCurrentDate = function() {
       }
       
       document.getElementById('clearAlertBtn').onclick = () => {
+        // Add all current alert spots to dismissed list
+        currentAlertSpots.forEach(spot => dismissedAlerts.add(spot.id));
+        console.log('🔕 User dismissed alert for:', currentAlertSpots.map(s => s.name).join(', '));
         currentAlertSpots = [];
         hideCenteredAlert();
-        if (userMarker) try { map.removeLayer(userMarker); } catch(e){}
+        // Don't remove user marker - user location should remain visible
       };
     } else {
       // Multiple spots - show list with Show More button for each
@@ -5793,9 +5800,12 @@ window.getCurrentDate = function() {
       });
       
       document.getElementById('clearAlertBtn').onclick = () => {
+        // Add all current alert spots to dismissed list
+        currentAlertSpots.forEach(spot => dismissedAlerts.add(spot.id));
+        console.log('🔕 User dismissed alert for:', currentAlertSpots.map(s => s.name).join(', '));
         currentAlertSpots = [];
         hideCenteredAlert();
-        if (userMarker) try { map.removeLayer(userMarker); } catch(e){}
+        // Don't remove user marker - user location should remain visible
       };
     }
   }

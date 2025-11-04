@@ -5091,40 +5091,50 @@ window.getCurrentDate = function() {
       // User has exited ALL active threat zones (or dismissed all of them)
       // Check allCurrentSpots (which includes dismissed) to see if we truly exited
       if(allCurrentSpots.length > 0){
+        // User is STILL IN ZONES but dismissed all alerts
+        // Don't trigger exit logic - they haven't left yet!
+        console.log('🔕 User still in zone but all alerts dismissed - no exit prompt');
+        currentAlertSpots = [];
+        hideCenteredAlert();
+        // DON'T clear dismissedAlerts, visitedSpots, or show exit prompt
+        // Those will be handled when user ACTUALLY exits (allCurrentSpots becomes empty)
+      } else {
+        // User has TRULY EXITED all zones (allCurrentSpots is empty)
+        // Now check if they were visiting active threat spots or calm spots
         const spotsToReport = Array.from(visitedSpots).map(id => spots.find(s => s.id === id)).filter(Boolean);
-        // Filter out calm birds from exit prompt too
+        
+        // Separate active threats from calm spots
         const activeSpotsToReport = spotsToReport.filter(s => s.risk !== 'Calm - All clear');
         
-        // Clear tracking variables
-        currentAlertSpots = [];
-        allCurrentSpots = [];
-        hideCenteredAlert();
-        
-        // Play happy tone when exiting all zones
-        playHappyTone();
-        
-        // Only show prompt if they visited active threat spots
-        if(activeSpotsToReport.length > 0){
-          showExitPrompt(activeSpotsToReport);
-        }
-        
-        // Clear visited spots for next journey
-        visitedSpots.clear();
-        alreadyReportedThisJourney.clear(); // Also clear reported tracking for next journey
-        dismissedAlerts.clear(); // Clear dismissed alerts when exiting all zones
-        hasShownCalmFeedback = false; // Reset calm feedback flag for next journey
-      } else {
-        currentAlertSpots = [];
-        allCurrentSpots = [];
-        hideCenteredAlert();
-        
-        // Check if user just exited a calm spot during/near active season - ask for feedback!
-        // Only show once per journey!
-        if (!hasShownCalmFeedback) {
-          const spotsToReport = Array.from(visitedSpots).map(id => spots.find(s => s.id === id)).filter(Boolean);
-          console.log('🔍 Spots visited during journey:', spotsToReport.length, spotsToReport.map(s => `${s.name} (${s.risk})`));
+        if(activeSpotsToReport.length > 0) {
+          // They visited active threat spots - show exit prompt
+          currentAlertSpots = [];
+          allCurrentSpots = [];
+          hideCenteredAlert();
           
-          const calmSpotsNeedingFeedback = spotsToReport.filter(s => {
+          // Play happy tone when exiting all zones
+          playHappyTone();
+          
+          showExitPrompt(activeSpotsToReport);
+          
+          // Clear visited spots for next journey
+          visitedSpots.clear();
+          alreadyReportedThisJourney.clear(); // Also clear reported tracking for next journey
+          dismissedAlerts.clear(); // Clear dismissed alerts when exiting all zones
+          hasShownCalmFeedback = false; // Reset calm feedback flag for next journey
+        } else {
+          // They only visited calm spots (or no spots) - check for calm feedback
+          currentAlertSpots = [];
+          allCurrentSpots = [];
+          hideCenteredAlert();
+        
+          // Check if user just exited a calm spot during/near active season - ask for feedback!
+          // Only show once per journey!
+          if (!hasShownCalmFeedback) {
+            const spotsToReport = Array.from(visitedSpots).map(id => spots.find(s => s.id === id)).filter(Boolean);
+            console.log('🔍 Spots visited during journey:', spotsToReport.length, spotsToReport.map(s => `${s.name} (${s.risk})`));
+            
+            const calmSpotsNeedingFeedback = spotsToReport.filter(s => {
             if (s.risk !== 'Calm - All clear') {
               console.log(`⏭️ Skipping ${s.name} - not calm (${s.risk})`);
               return false;
@@ -5179,15 +5189,23 @@ window.getCurrentDate = function() {
           } else {
             console.log('❌ No calm spots need feedback at this time');
           }
+          
+          // Clear journey tracking when exiting all zones
+          visitedSpots.clear();
+          dismissedAlerts.clear();
+          alreadyReportedThisJourney.clear();
+          hasShownCalmFeedback = false;
         } else {
           console.log('🚫 hasShownCalmFeedback is already true - skipping check');
           // Clear visited spots since we're not showing a modal and journey is over
           visitedSpots.clear();
+          dismissedAlerts.clear();
+          alreadyReportedThisJourney.clear();
         }
         
-        // Note: hasShownCalmFeedback flag is NOT reset here!
-        // It will be reset only when entering a new zone (starting a new journey)
-        // This prevents duplicate modals during the same journey
+        // Note: Journey tracking cleared above
+        // This ensures dismissed alerts are reset for next journey
+        }
       }
     }
     renderAlerts();

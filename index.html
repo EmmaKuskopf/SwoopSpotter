@@ -1026,6 +1026,11 @@
       <img src="Assets/Icons/bird_background.svg" alt="">
       <span class="plus-icon">+</span>
     </button>
+    
+    <!-- Enable Location Button (shows when location not enabled) -->
+    <button id="enableLocationBtn" class="hidden" style="position: absolute; top: 10px; left: 10px; z-index: 1000; background-color: #422d1e; color: white; padding: 8px 16px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 8px; border: none; cursor: pointer;" onmouseover="this.style.backgroundColor='#5a3d2a'" onmouseout="this.style.backgroundColor='#422d1e'">
+      📍 Enable Location
+    </button>
   </div>
 
   <!-- Add Swoop Spot button below map -->
@@ -1754,9 +1759,17 @@ window.getCurrentDate = function() {
     }
   };
   
-  // Automatically get user's location on page load and center map
-  if (navigator.geolocation) {
-    console.log('🌍 Requesting user location on page load...');
+  // Enable Location Button functionality
+  const enableLocationBtn = document.getElementById('enableLocationBtn');
+  
+  function requestUserLocation() {
+    if (!navigator.geolocation) {
+      toast('Geolocation is not supported by your browser');
+      return;
+    }
+    
+    console.log('🌍 Requesting user location...');
+    
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const lat = position.coords.latitude;
@@ -1769,16 +1782,26 @@ window.getCurrentDate = function() {
         // Add user marker
         checkLocation(lat, lng);
         
+        // Hide the enable location button
+        if (enableLocationBtn) {
+          enableLocationBtn.classList.add('hidden');
+        }
+        
         toast('Location found! Showing your area', 2000);
       },
       (error) => {
         console.warn('⚠️ Location access denied or unavailable:', error);
         
+        // Show the enable location button
+        if (enableLocationBtn && error.code === error.PERMISSION_DENIED) {
+          enableLocationBtn.classList.remove('hidden');
+        }
+        
         // Show friendly message based on error
         let message = '';
         switch(error.code) {
           case error.PERMISSION_DENIED:
-            message = 'Location access denied. Showing default area. You can enable location in your browser settings.';
+            message = 'Location access denied. Click "Enable Location" button on the map to try again.';
             break;
           case error.POSITION_UNAVAILABLE:
             message = 'Location unavailable. Showing default area.';
@@ -1799,6 +1822,18 @@ window.getCurrentDate = function() {
         maximumAge: 60000 // Accept cached location up to 1 minute old
       }
     );
+  }
+  
+  // Attach click handler to enable location button
+  if (enableLocationBtn) {
+    enableLocationBtn.addEventListener('click', () => {
+      requestUserLocation();
+    });
+  }
+  
+  // Automatically try to get user's location on page load
+  if (navigator.geolocation) {
+    requestUserLocation();
   } else {
     console.warn('⚠️ Geolocation not supported by browser');
     toast('Location services not available. Showing default area.', 3000);

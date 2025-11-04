@@ -5825,6 +5825,8 @@ window.getCurrentDate = function() {
           // Add all current alert spots to dismissed list (same as Clear Alert)
           currentAlertSpots.forEach(spot => dismissedAlerts.add(spot.id));
           console.log('🔕 User dismissed alert via Show More:', currentAlertSpots.map(s => s.name).join(', '));
+          // Clear currentAlertSpots to prevent exit logic on next location update
+          currentAlertSpots = [];
           hideCenteredAlert();
           openDetailsModal(s.id);
         };
@@ -5842,8 +5844,9 @@ window.getCurrentDate = function() {
         // Add all current alert spots to dismissed list
         currentAlertSpots.forEach(spot => dismissedAlerts.add(spot.id));
         console.log('🔕 User dismissed alert for:', currentAlertSpots.map(s => s.name).join(', '));
-        // Don't reset currentAlertSpots - keep track that we're still in these zones
-        // This prevents re-showing the alert when still in the same zones
+        // Clear currentAlertSpots so next location update doesn't trigger exit logic
+        // The dismissedAlerts Set will prevent re-showing the alert
+        currentAlertSpots = [];
         hideCenteredAlert();
         // Don't remove user marker - user location should remain visible
       };
@@ -5913,6 +5916,8 @@ window.getCurrentDate = function() {
           // Add all current alert spots to dismissed list (same as Clear Alert)
           currentAlertSpots.forEach(spot => dismissedAlerts.add(spot.id));
           console.log('🔕 User dismissed alert via Show More:', currentAlertSpots.map(s => s.name).join(', '));
+          // Clear currentAlertSpots to prevent exit logic on next location update
+          currentAlertSpots = [];
           hideCenteredAlert();
           openDetailsModal(spotId);
         };
@@ -5931,8 +5936,9 @@ window.getCurrentDate = function() {
         // Add all current alert spots to dismissed list
         currentAlertSpots.forEach(spot => dismissedAlerts.add(spot.id));
         console.log('🔕 User dismissed alert for:', currentAlertSpots.map(s => s.name).join(', '));
-        // Don't reset currentAlertSpots - keep track that we're still in these zones
-        // This prevents re-showing the alert when still in the same zones
+        // Clear currentAlertSpots so next location update doesn't trigger exit logic
+        // The dismissedAlerts Set will prevent re-showing the alert
+        currentAlertSpots = [];
         hideCenteredAlert();
         // Don't remove user marker - user location should remain visible
       };

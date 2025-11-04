@@ -755,12 +755,14 @@
     /* Profile Modal & Auth Modal */
     #profileModal,
     #authModal {
+      align-items: flex-start !important;
+      padding-top: 2rem !important;
       padding-bottom: calc(80px + env(safe-area-inset-bottom) + 1rem) !important;
     }
     
     #profileModal > div,
     #authModal > div {
-      max-height: calc(100vh - 2rem - 80px - env(safe-area-inset-bottom)) !important;
+      max-height: calc(100vh - 4rem - 80px - env(safe-area-inset-bottom)) !important;
       overflow-y: auto !important;
     }
     

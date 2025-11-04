@@ -129,30 +129,26 @@
     -webkit-overflow-scrolling: touch;
   }
   
-  /* Ensure all modals have max height and scrollable content */
+  /* Ensure modals don't exceed viewport and content scrolls within */
   .modal-overlay > div,
-  #profileModal > div,
-  #authModal > div,
-  #safetyTipsModal > div,
-  #testingModal > div,
-  #statsModal > div,
-  #detailsModal > div,
-  #spotModal > div {
-    max-height: 90vh;
-    overflow-y: auto;
+  #profileModal > div:first-child,
+  #authModal > div:first-child,
+  #safetyTipsModal > div:first-child,
+  #testingModal > div:first-child,
+  #statsModal > div:first-child {
+    max-height: 90vh !important;
     display: flex;
     flex-direction: column;
   }
   
-  /* Ensure modal headers stay fixed at top */
-  .modal-overlay h2,
-  .modal-overlay h3 {
-    position: sticky;
-    top: 0;
-    background: inherit;
-    z-index: 10;
-    padding-top: 0.5rem;
-    padding-bottom: 0.5rem;
+  /* Make modal content areas scrollable while keeping headers/buttons visible */
+  #profileModal .p-6:not(:first-child),
+  #authModal form,
+  #safetyTipsModal .overflow-y-auto,
+  #testingModal .space-y-4,
+  #statsModal .p-6 {
+    overflow-y: auto !important;
+    flex: 1 1 auto;
   }
   
   .tag-box { 
@@ -5925,7 +5921,7 @@ window.getCurrentDate = function() {
           </div>
         </div>
         <div class="flex gap-2">
-          <button id="clearAlertBtn" class="flex-1 text-xs border rounded px-3 py-1">Clear Alert</button>
+          <button id="clearAlertBtn" class="flex-1 text-xs border rounded px-3 py-1">Minimise for now</button>
         </div>
       `;
 
@@ -6007,7 +6003,7 @@ window.getCurrentDate = function() {
           }).join('')}
         </div>
         <div class="flex gap-2">
-          <button id="clearAlertBtn" class="flex-1 text-xs border rounded px-3 py-1">Clear Alert</button>
+          <button id="clearAlertBtn" class="flex-1 text-xs border rounded px-3 py-1">Minimise for now</button>
         </div>
       `;
 

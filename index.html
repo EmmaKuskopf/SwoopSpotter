@@ -5059,22 +5059,26 @@ window.getCurrentDate = function() {
       const currentIds = currentAlertSpots.map(s => s.id).sort().join(',');
       const newIds = activeThreats.map(s => s.id).sort().join(',');
       
+      console.log('🔍 Zone change check:', {
+        currentIds,
+        newIds,
+        areEqual: currentIds === newIds,
+        currentAlertSpots: currentAlertSpots.map(s => s.name),
+        activeThreats: activeThreats.map(s => s.name),
+        dismissedAlerts: Array.from(dismissedAlerts)
+      });
+      
       // Only show alert if we're entering different zones than we're currently alerted for
       if(currentIds !== newIds){
-        console.log('🆕 Zone change detected:', {
-          previousZones: currentAlertSpots.map(s => s.name),
-          newZones: activeThreats.map(s => s.name),
-          dismissedZones: Array.from(dismissedAlerts)
-        });
+        console.log('🆕 Zone change detected - showing alert');
         
         // New journey starting - reset the calm feedback flag
         hasShownCalmFeedback = false;
-        currentAlertSpots = activeThreats;
         
         // Show the alert for the new zones
         showCenteredAlert(activeThreats);
       } else {
-        console.log('⏸️ Still in same zones:', activeThreats.map(s => s.name));
+        console.log('⏸️ Still in same zones - no alert needed');
       }
       
       // Always update currentAlertSpots to match activeThreats (non-dismissed zones)

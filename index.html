@@ -5928,7 +5928,8 @@ window.getCurrentDate = function() {
         };
       }
       
-      document.getElementById('clearAlertBtn').onclick = () => {
+      document.getElementById('clearAlertBtn').onclick = (e) => {
+        e.stopPropagation(); // Prevent click from bubbling to alertBox
         minimizeCenteredAlert();
         console.log('📌 User minimized alert');
       };
@@ -6010,7 +6011,8 @@ window.getCurrentDate = function() {
         };
       });
       
-      document.getElementById('clearAlertBtn').onclick = () => {
+      document.getElementById('clearAlertBtn').onclick = (e) => {
+        e.stopPropagation(); // Prevent click from bubbling to alertBox
         minimizeCenteredAlert();
         console.log('📌 User minimized alert');
       };
@@ -6029,6 +6031,7 @@ window.getCurrentDate = function() {
   // Minimize centered alert (show as small flashing icon)
   function minimizeCenteredAlert() {
     console.log('📌 minimizeCenteredAlert called');
+    toast('Minimizing alert...', 1000); // Visual confirmation
     console.log('📌 Before minimizing - classes:', alertBox.className);
     console.log('📌 Before minimizing - display:', alertBox.style.display);
     
@@ -6042,6 +6045,20 @@ window.getCurrentDate = function() {
     console.log('📌 After minimizing - classes:', alertBox.className);
     console.log('📌 After minimizing - display:', alertBox.style.display);
     console.log('📌 Alert minimized - showing as pulsing icon');
+    
+    // Extra check - log the computed styles
+    setTimeout(() => {
+      const computed = window.getComputedStyle(alertBox);
+      console.log('📌 Computed styles:', {
+        display: computed.display,
+        width: computed.width,
+        height: computed.height,
+        bottom: computed.bottom,
+        right: computed.right,
+        opacity: computed.opacity,
+        zIndex: computed.zIndex
+      });
+    }, 100);
   }
 
   // Hide centered alert (completely remove)

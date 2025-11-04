@@ -224,6 +224,11 @@
     color: #991B1B;
   }
   
+  /* Enable Location Button - display as flex when visible */
+  #enableLocationBtn:not(.hidden) {
+    display: flex !important;
+  }
+  
   body.dark-mode .error-box {
     background-color: #7F1D1D;
     color: #FECACA;
@@ -1068,7 +1073,7 @@
     </button>
     
     <!-- Enable Location Button (shows when location not enabled) -->
-    <button id="enableLocationBtn" class="hidden" style="position: absolute; bottom: 10px; left: 10px; z-index: 1000; background-color: #422d1e; color: white; padding: 8px 16px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 8px; border: none; cursor: pointer;" onmouseover="this.style.backgroundColor='#5a3d2a'" onmouseout="this.style.backgroundColor='#422d1e'">
+    <button id="enableLocationBtn" class="hidden" style="position: absolute; bottom: 10px; left: 10px; z-index: 1000; background-color: #422d1e; color: white; padding: 8px 16px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); font-size: 14px; font-weight: 500; align-items: center; gap: 8px; border: none; cursor: pointer;" onmouseover="this.style.backgroundColor='#5a3d2a'" onmouseout="this.style.backgroundColor='#422d1e'">
       Enable Location
     </button>
   </div>
@@ -5836,6 +5841,8 @@ window.getCurrentDate = function() {
           // Add all current alert spots to dismissed list (same as Clear Alert)
           currentAlertSpots.forEach(spot => dismissedAlerts.add(spot.id));
           console.log('🔕 User dismissed alert via Show More:', currentAlertSpots.map(s => s.name).join(', '));
+          // Update currentAlertSpots to reflect dismissed state (filter out dismissed spots)
+          currentAlertSpots = currentAlertSpots.filter(spot => !dismissedAlerts.has(spot.id));
           hideCenteredAlert();
           openDetailsModal(s.id);
         };
@@ -5853,6 +5860,8 @@ window.getCurrentDate = function() {
         // Add all current alert spots to dismissed list
         currentAlertSpots.forEach(spot => dismissedAlerts.add(spot.id));
         console.log('🔕 User dismissed alert for:', currentAlertSpots.map(s => s.name).join(', '));
+        // Update currentAlertSpots to reflect dismissed state (filter out dismissed spots)
+        currentAlertSpots = currentAlertSpots.filter(spot => !dismissedAlerts.has(spot.id));
         hideCenteredAlert();
       };
     } else {
@@ -5921,6 +5930,8 @@ window.getCurrentDate = function() {
           // Add all current alert spots to dismissed list (same as Clear Alert)
           currentAlertSpots.forEach(spot => dismissedAlerts.add(spot.id));
           console.log('🔕 User dismissed alert via Show More:', currentAlertSpots.map(s => s.name).join(', '));
+          // Update currentAlertSpots to reflect dismissed state (filter out dismissed spots)
+          currentAlertSpots = currentAlertSpots.filter(spot => !dismissedAlerts.has(spot.id));
           hideCenteredAlert();
           openDetailsModal(spotId);
         };
@@ -5939,6 +5950,8 @@ window.getCurrentDate = function() {
         // Add all current alert spots to dismissed list
         currentAlertSpots.forEach(spot => dismissedAlerts.add(spot.id));
         console.log('🔕 User dismissed alert for:', currentAlertSpots.map(s => s.name).join(', '));
+        // Update currentAlertSpots to reflect dismissed state (filter out dismissed spots)
+        currentAlertSpots = currentAlertSpots.filter(spot => !dismissedAlerts.has(spot.id));
         hideCenteredAlert();
       };
     }

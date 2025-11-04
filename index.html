@@ -4993,6 +4993,8 @@ window.getCurrentDate = function() {
   let dismissedAlerts = new Set(); // Track alerts user manually dismissed (cleared while still in zone)
   
   function checkLocation(lat,lng){
+    console.log('🎯 checkLocation called:', { lat, lng, timestamp: new Date().toISOString() });
+    
     if(userMarker){ 
       try{ 
         userMarker.setLatLng([lat,lng]); 
@@ -5015,6 +5017,8 @@ window.getCurrentDate = function() {
       }
     }
     
+    console.log('📍 Inside spots:', insideSpots.map(s => `${s.name} (${s.risk})`));
+    
     // Filter out calm birds from alerts - they're preventative info, not danger warnings
     // Users can still see them on the map and click for info
     // Also filter out spots the user just reported on (suppress alert for 10 seconds)
@@ -5024,6 +5028,13 @@ window.getCurrentDate = function() {
       !recentlyReportedSpots.has(s.id) &&
       !dismissedAlerts.has(s.id)
     );
+    
+    console.log('⚠️ Active threats (after filtering):', {
+      count: activeThreats.length,
+      spots: activeThreats.map(s => s.name),
+      dismissed: Array.from(dismissedAlerts),
+      recentlyReported: Array.from(recentlyReportedSpots)
+    });
     
     // Sort by risk level (highest first) for display
     if(activeThreats.length > 0){
@@ -5043,15 +5054,20 @@ window.getCurrentDate = function() {
       // Only show alert if we're entering different zones than we're currently alerted for
       // This prevents re-showing the alert when user clears it but is still in the zone
       if(currentIds !== newIds){
+        console.log('🆕 Zone change detected:', {
+          previousZones: currentActiveSpots.map(s => s.name),
+          newZones: activeThreats.map(s => s.name),
+          dismissedZones: Array.from(dismissedAlerts)
+        });
+        
         // New journey starting - reset the calm feedback flag
         hasShownCalmFeedback = false;
         currentAlertSpots = activeThreats;
         
-        // Only show alert if it's not already visible
-        // This prevents duplicate alerts while modal is open
-        if(alertBox.style.display !== 'block'){
-          showCenteredAlert(activeThreats);
-        }
+        // Show the alert for the new zones
+        showCenteredAlert(activeThreats);
+      } else {
+        console.log('⏸️ Still in same zones, alert already shown/dismissed:', activeThreats.map(s => s.name));
       }
       // If currentIds === newIds, user is still in the same zones - don't re-show alert
     } else {
@@ -5730,6 +5746,11 @@ window.getCurrentDate = function() {
 
   // Show alert when entering a spot's radius
   function showCenteredAlert(spots) {
+    console.log('🚨 showCenteredAlert called:', { 
+      spots: Array.isArray(spots) ? spots.map(s => s.name) : [spots.name],
+      timestamp: new Date().toISOString() 
+    });
+    
     // Handle both single spot and array of spots
     const spotArray = Array.isArray(spots) ? spots : [spots];
     

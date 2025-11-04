@@ -7035,6 +7035,63 @@ window.getCurrentDate = function() {
   
   // Initialize authentication
   initAuth();
+  
+  // Check location permission and start tracking if granted
+  (async () => {
+    console.log('🌍 Checking location permission state...');
+    
+    // Check if Permissions API is available
+    if (navigator.permissions && navigator.permissions.query) {
+      try {
+        const permissionStatus = await navigator.permissions.query({ name: 'geolocation' });
+        console.log('📍 Geolocation permission state:', permissionStatus.state);
+        
+        if (permissionStatus.state === 'granted') {
+          // Permission already granted - start tracking automatically
+          console.log('✅ Location permission granted - starting tracking');
+          startLocationTracking();
+        } else if (permissionStatus.state === 'prompt') {
+          // Permission not yet requested - show the button
+          console.log('⏸️ Location permission not yet requested - showing button');
+          const enableLocationBtn = document.getElementById('enableLocationBtn');
+          if (enableLocationBtn) {
+            enableLocationBtn.classList.remove('hidden');
+          }
+        } else {
+          // Permission denied - show the button
+          console.log('❌ Location permission denied - showing button');
+          const enableLocationBtn = document.getElementById('enableLocationBtn');
+          if (enableLocationBtn) {
+            enableLocationBtn.classList.remove('hidden');
+          }
+        }
+        
+        // Listen for permission changes
+        permissionStatus.addEventListener('change', () => {
+          console.log('📍 Geolocation permission changed to:', permissionStatus.state);
+          
+          if (permissionStatus.state === 'granted' && !isTracking) {
+            startLocationTracking();
+          }
+        });
+      } catch (err) {
+        // Permissions API not supported or query failed
+        console.log('⚠️ Permissions API not available:', err.message);
+        // Fall back to showing the button
+        const enableLocationBtn = document.getElementById('enableLocationBtn');
+        if (enableLocationBtn) {
+          enableLocationBtn.classList.remove('hidden');
+        }
+      }
+    } else {
+      // Permissions API not supported - show button so user can request location
+      console.log('⚠️ Permissions API not supported');
+      const enableLocationBtn = document.getElementById('enableLocationBtn');
+      if (enableLocationBtn) {
+        enableLocationBtn.classList.remove('hidden');
+      }
+    }
+  })();
 
   // Load spots from Supabase (with fallback to localStorage)
   (async () => {

@@ -5776,14 +5776,25 @@ window.getCurrentDate = function() {
     // Handle both single spot and array of spots
     const spotArray = Array.isArray(spots) ? spots : [spots];
     
-    // CRITICAL: Prevent duplicate alerts - if alert box is already showing, don't re-show
-    if (alertBox.classList.contains('show')) {
-      console.log('⏸️ Alert already visible - skipping duplicate');
+    // CRITICAL: Prevent duplicate alerts - check if all spots are already dismissed
+    const allSpotsDismissed = spotArray.every(spot => dismissedAlerts.has(spot.id));
+    if (allSpotsDismissed) {
+      console.log('⏸️ All spots already dismissed - skipping alert:', spotArray.map(s => s.name));
       return;
     }
     
+    // Filter out dismissed spots before showing alert
+    const nonDismissedSpots = spotArray.filter(spot => !dismissedAlerts.has(spot.id));
+    if (nonDismissedSpots.length === 0) {
+      console.log('⏸️ No non-dismissed spots to show');
+      return;
+    }
+    
+    // Update spotArray to only include non-dismissed spots
+    const finalSpots = nonDismissedSpots;
+    
     // Check if any spots are pre-season warnings
-    const preseasonSpots = spotArray.filter(s => s.isPreseason);
+    const preseasonSpots = finalSpots.filter(s => s.isPreseason);
     if (preseasonSpots.length > 0) {
       // Show pre-season alert for the first one (they're all calm anyway)
       showPreseasonAlert(preseasonSpots[0]);
@@ -5793,9 +5804,9 @@ window.getCurrentDate = function() {
     // Play sound and vibrate when alert is shown
     playAlertNotification();
     
-    if(spotArray.length === 1) {
+    if(finalSpots.length === 1) {
       // Single spot - styled to match multi-bird view
-      const s = spotArray[0];
+      const s = finalSpots[0];
       const borderColor = s.risk === 'Danger - Avoid' ? 'border-red-400 bg-red-50' : 
                          s.risk === 'Take caution' ? 'border-yellow-400 bg-yellow-50' : 
                          s.risk === 'Calm - All clear' ? 'border-blue-400 bg-blue-50' :
@@ -5878,7 +5889,7 @@ window.getCurrentDate = function() {
       };
     } else {
       // Multiple spots - show list with Show More button for each
-      const highestRisk = spotArray[0].risk;
+      const highestRisk = finalSpots[0].risk;
       
       // Determine risk class for alert box styling based on highest risk
       let riskClass = 'risk-caution';
@@ -5899,7 +5910,7 @@ window.getCurrentDate = function() {
           <span class="ml-1 ${highestRisk==='Danger - Avoid'?'text-red-600': highestRisk==='Take caution' ? 'text-yellow-600' : 'text-green-600'}">${escapeHtml(highestRisk)}</span>
         </div>
         <div class="max-h-48 overflow-y-auto space-y-2 mb-2">
-          ${spotArray.map(spot => {
+          ${finalSpots.map(spot => {
             const borderColor = spot.risk === 'Danger - Avoid' ? 'border-red-400 bg-red-50' : 
                                spot.risk === 'Take caution' ? 'border-yellow-400 bg-yellow-50' : 
                                'border-green-400 bg-green-50';

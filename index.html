@@ -5080,15 +5080,17 @@ window.getCurrentDate = function() {
         
         // Show the alert for the new zones
         showCenteredAlert(activeThreats);
+        
+        // Update currentAlertSpots to match the new zones
+        currentAlertSpots = activeThreats;
       } else if (alertHidden) {
         console.log('🙈 Alert hidden by user - keeping it hidden');
-        // Don't re-show the alert if user manually hid it
+        // Don't update currentAlertSpots - keep tracking the zones even though alert is hidden
       } else {
         console.log('⏸️ Still in same zones - no alert needed');
+        // Update currentAlertSpots to keep tracking
+        currentAlertSpots = activeThreats;
       }
-      
-      // Always update currentAlertSpots to match activeThreats
-      currentAlertSpots = activeThreats;
     } else {
       // User has exited ALL active threat zones
       // Check allCurrentSpots (which includes all non-calm) to see if we truly exited

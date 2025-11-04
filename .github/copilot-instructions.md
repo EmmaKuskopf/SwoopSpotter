@@ -15,6 +15,8 @@ SwoopSpotter is a community-driven web application for reporting and tracking ag
   - Exception: Icon images are fine (e.g., SVG icons for birds, users, etc.)
 
 ### Console Logging Standards
+**MANDATORY**: All functions must include console logging for debugging, especially on mobile where developers cannot easily access the console.
+
 Use descriptive emoji prefixes for different log types:
 - 🎯 Function start/initialization
 - ✅ Success/completion
@@ -27,6 +29,85 @@ Use descriptive emoji prefixes for different log types:
 - 🛑 Stop/cleanup
 - 💾 Save operations
 - 📂 Load operations
+- 📌 UI state changes (minimize, show, hide)
+- 🔔 Alerts and notifications
+- 🐦 Bird/spot related operations
+
+#### Logging Best Practices
+
+1. **Log at function entry with context:**
+   ```javascript
+   function myFunction(param1, param2) {
+     console.log('🎯 myFunction called:', { param1, param2 });
+     // ... function body
+   }
+   ```
+
+2. **Log state changes before and after:**
+   ```javascript
+   console.log('📌 Before state change:', element.className);
+   element.classList.add('new-class');
+   console.log('📌 After state change:', element.className);
+   ```
+
+3. **Log critical paths and decision points:**
+   ```javascript
+   if (condition) {
+     console.log('✅ Condition met - executing branch A');
+     // ... 
+   } else {
+     console.log('⚠️ Condition not met - executing branch B');
+     // ...
+   }
+   ```
+
+4. **Log computed/calculated values:**
+   ```javascript
+   const computed = window.getComputedStyle(element);
+   console.log('📊 Computed styles:', {
+     display: computed.display,
+     width: computed.width,
+     opacity: computed.opacity
+   });
+   ```
+
+5. **Always log errors with context:**
+   ```javascript
+   try {
+     // operation
+   } catch (error) {
+     console.error('❌ Operation failed:', error);
+     console.error('❌ Context:', { relevantData });
+     toast('User-friendly error message', 3000);
+   }
+   ```
+
+6. **Log async operations:**
+   ```javascript
+   console.log('🔄 Starting async operation...');
+   const result = await asyncFunction();
+   console.log('✅ Async operation complete:', result);
+   ```
+
+#### When to Add Extra Logging
+
+Add extra diagnostic logging when:
+- Working with UI state changes (show/hide/minimize)
+- Handling user interactions (clicks, gestures)
+- Processing location data
+- Managing real-time updates
+- Debugging mobile-specific issues
+- Event handler attachment/removal
+- CSS class manipulation
+- DOM manipulation
+
+#### Mobile Debugging Support
+
+Since mobile users cannot easily access the console:
+- Include `toast()` messages for critical user-facing state changes during development
+- Log computed styles when debugging layout issues
+- Log event handler attachment to verify they're connected
+- Use timeouts to log delayed state for async operations
 
 ### JavaScript Style
 - Use ES6+ features (arrow functions, destructuring, async/await)

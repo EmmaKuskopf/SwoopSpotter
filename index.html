@@ -5046,6 +5046,10 @@ window.getCurrentDate = function() {
     // This includes dismissed ones, unlike activeThreats
     const allNonCalmSpots = insideSpots.filter(s => s.risk !== 'Calm - All clear');
     
+    // ALWAYS update allCurrentSpots (even when activeThreats is empty due to dismissal)
+    // This is critical for proper exit detection
+    allCurrentSpots = allNonCalmSpots;
+    
     // Sort by risk level (highest first) for display
     if(activeThreats.length > 0){
       activeThreats.sort((a,b) => {
@@ -5083,8 +5087,6 @@ window.getCurrentDate = function() {
       
       // Always update currentAlertSpots to match activeThreats (non-dismissed zones)
       currentAlertSpots = activeThreats;
-      // Update allCurrentSpots to include dismissed zones too
-      allCurrentSpots = allNonCalmSpots;
     } else {
       // User has exited ALL active threat zones (or dismissed all of them)
       // Check allCurrentSpots (which includes dismissed) to see if we truly exited

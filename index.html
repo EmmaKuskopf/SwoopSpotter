@@ -4985,7 +4985,8 @@ window.getCurrentDate = function() {
   // ----------------------------
   // checkLocation - shows userMarker and center alert if within any spot
   // ----------------------------
-  let currentAlertSpots = []; // Track currently displayed spots
+  let currentAlertSpots = []; // Track currently displayed alert spots (non-dismissed threats)
+  let allCurrentSpots = []; // Track ALL spots we're currently in (including dismissed ones)
   let visitedSpots = new Set(); // Track spots visited during current journey
   let hasShownCalmFeedback = false; // Track if we've already shown calm feedback this journey
   let recentlyReportedSpots = new Set(); // Track spots user just reported to prevent immediate alerts
@@ -5036,6 +5037,10 @@ window.getCurrentDate = function() {
       recentlyReported: Array.from(recentlyReportedSpots)
     });
     
+    // Track ALL non-calm spots we're currently in (for exit detection)
+    // This includes dismissed ones, unlike activeThreats
+    const allNonCalmSpots = insideSpots.filter(s => s.risk !== 'Calm - All clear');
+    
     // Sort by risk level (highest first) for display
     if(activeThreats.length > 0){
       activeThreats.sort((a,b) => {
@@ -5046,16 +5051,13 @@ window.getCurrentDate = function() {
     
     if(activeThreats.length > 0){
       // Check if the spots have changed (only show alert if entering NEW zones)
-      // Filter currentAlertSpots to exclude dismissed ones for fair comparison
-      const currentActiveSpots = currentAlertSpots.filter(s => !dismissedAlerts.has(s.id));
-      const currentIds = currentActiveSpots.map(s => s.id).sort().join(',');
+      const currentIds = currentAlertSpots.map(s => s.id).sort().join(',');
       const newIds = activeThreats.map(s => s.id).sort().join(',');
       
       // Only show alert if we're entering different zones than we're currently alerted for
-      // This prevents re-showing the alert when user clears it but is still in the zone
       if(currentIds !== newIds){
         console.log('🆕 Zone change detected:', {
-          previousZones: currentActiveSpots.map(s => s.name),
+          previousZones: currentAlertSpots.map(s => s.name),
           newZones: activeThreats.map(s => s.name),
           dismissedZones: Array.from(dismissedAlerts)
         });
@@ -5067,16 +5069,24 @@ window.getCurrentDate = function() {
         // Show the alert for the new zones
         showCenteredAlert(activeThreats);
       } else {
-        console.log('⏸️ Still in same zones, alert already shown/dismissed:', activeThreats.map(s => s.name));
+        console.log('⏸️ Still in same zones:', activeThreats.map(s => s.name));
       }
-      // If currentIds === newIds, user is still in the same zones - don't re-show alert
+      
+      // Always update currentAlertSpots to match activeThreats (non-dismissed zones)
+      currentAlertSpots = activeThreats;
+      // Update allCurrentSpots to include dismissed zones too
+      allCurrentSpots = allNonCalmSpots;
     } else {
-      // User has exited ALL active threat zones (calm birds don't count)
-      if(currentAlertSpots.length > 0){
+      // User has exited ALL active threat zones (or dismissed all of them)
+      // Check allCurrentSpots (which includes dismissed) to see if we truly exited
+      if(allCurrentSpots.length > 0){
         const spotsToReport = Array.from(visitedSpots).map(id => spots.find(s => s.id === id)).filter(Boolean);
         // Filter out calm birds from exit prompt too
         const activeSpotsToReport = spotsToReport.filter(s => s.risk !== 'Calm - All clear');
+        
+        // Clear tracking variables
         currentAlertSpots = [];
+        allCurrentSpots = [];
         hideCenteredAlert();
         
         // Play happy tone when exiting all zones
@@ -5094,6 +5104,7 @@ window.getCurrentDate = function() {
         hasShownCalmFeedback = false; // Reset calm feedback flag for next journey
       } else {
         currentAlertSpots = [];
+        allCurrentSpots = [];
         hideCenteredAlert();
         
         // Check if user just exited a calm spot during/near active season - ask for feedback!
@@ -5825,8 +5836,6 @@ window.getCurrentDate = function() {
           // Add all current alert spots to dismissed list (same as Clear Alert)
           currentAlertSpots.forEach(spot => dismissedAlerts.add(spot.id));
           console.log('🔕 User dismissed alert via Show More:', currentAlertSpots.map(s => s.name).join(', '));
-          // Clear currentAlertSpots to prevent exit logic on next location update
-          currentAlertSpots = [];
           hideCenteredAlert();
           openDetailsModal(s.id);
         };
@@ -5844,11 +5853,7 @@ window.getCurrentDate = function() {
         // Add all current alert spots to dismissed list
         currentAlertSpots.forEach(spot => dismissedAlerts.add(spot.id));
         console.log('🔕 User dismissed alert for:', currentAlertSpots.map(s => s.name).join(', '));
-        // Clear currentAlertSpots so next location update doesn't trigger exit logic
-        // The dismissedAlerts Set will prevent re-showing the alert
-        currentAlertSpots = [];
         hideCenteredAlert();
-        // Don't remove user marker - user location should remain visible
       };
     } else {
       // Multiple spots - show list with Show More button for each
@@ -5916,8 +5921,6 @@ window.getCurrentDate = function() {
           // Add all current alert spots to dismissed list (same as Clear Alert)
           currentAlertSpots.forEach(spot => dismissedAlerts.add(spot.id));
           console.log('🔕 User dismissed alert via Show More:', currentAlertSpots.map(s => s.name).join(', '));
-          // Clear currentAlertSpots to prevent exit logic on next location update
-          currentAlertSpots = [];
           hideCenteredAlert();
           openDetailsModal(spotId);
         };
@@ -5936,11 +5939,7 @@ window.getCurrentDate = function() {
         // Add all current alert spots to dismissed list
         currentAlertSpots.forEach(spot => dismissedAlerts.add(spot.id));
         console.log('🔕 User dismissed alert for:', currentAlertSpots.map(s => s.name).join(', '));
-        // Clear currentAlertSpots so next location update doesn't trigger exit logic
-        // The dismissedAlerts Set will prevent re-showing the alert
-        currentAlertSpots = [];
         hideCenteredAlert();
-        // Don't remove user marker - user location should remain visible
       };
     }
   }

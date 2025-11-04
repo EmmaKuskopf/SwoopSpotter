@@ -1964,7 +1964,9 @@ window.getCurrentDate = function() {
   
   // Attach click handler to enable location button
   if (enableLocationBtn) {
-    enableLocationBtn.addEventListener('click', () => {
+    enableLocationBtn.addEventListener('click', (e) => {
+      e.stopPropagation(); // Prevent map click event from firing
+      console.log('🔘 Enable Location button clicked');
       requestUserLocation();
     });
   }

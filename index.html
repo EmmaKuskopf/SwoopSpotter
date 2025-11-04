@@ -657,12 +657,52 @@
     height: 100%;
   }
   
-  /* Ensure modal content is scrollable on mobile */
+  /* Ensure modal content is scrollable on mobile and not hidden behind mobile nav */
   @media (max-width: 768px) {
+    /* Standard modal overlays (spotModal, detailsModal) */
     .modal-overlay {
       align-items: flex-start !important;
       padding-top: 1rem;
-      padding-bottom: 1rem;
+      padding-bottom: calc(80px + env(safe-area-inset-bottom) + 1rem) !important;
+    }
+    
+    /* Ensure modal inner content has proper spacing and max height */
+    .modal-overlay > div {
+      max-height: calc(100vh - 2rem - 80px - env(safe-area-inset-bottom)) !important;
+      overflow-y: auto !important;
+    }
+    
+    /* Profile Modal & Auth Modal */
+    #profileModal,
+    #authModal {
+      padding-bottom: calc(80px + env(safe-area-inset-bottom) + 1rem) !important;
+    }
+    
+    #profileModal > div,
+    #authModal > div {
+      max-height: calc(100vh - 2rem - 80px - env(safe-area-inset-bottom)) !important;
+      overflow-y: auto !important;
+    }
+    
+    /* Safety Tips Modal & Testing Modal */
+    #safetyTipsModal,
+    #testingModal {
+      padding-bottom: calc(80px + env(safe-area-inset-bottom) + 1rem) !important;
+    }
+    
+    #safetyTipsModal > div,
+    #testingModal > div {
+      max-height: calc(100vh - 2rem - 80px - env(safe-area-inset-bottom)) !important;
+      overflow-y: auto !important;
+    }
+    
+    /* Stats Modal */
+    .stats-modal {
+      padding-bottom: calc(80px + env(safe-area-inset-bottom) + 1rem) !important;
+    }
+    
+    .stats-modal > div {
+      max-height: calc(100vh - 2rem - 80px - env(safe-area-inset-bottom)) !important;
     }
   }
 
@@ -1028,8 +1068,8 @@
     </button>
     
     <!-- Enable Location Button (shows when location not enabled) -->
-    <button id="enableLocationBtn" class="hidden" style="position: absolute; top: 10px; left: 10px; z-index: 1000; background-color: #422d1e; color: white; padding: 8px 16px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 8px; border: none; cursor: pointer;" onmouseover="this.style.backgroundColor='#5a3d2a'" onmouseout="this.style.backgroundColor='#422d1e'">
-      📍 Enable Location
+    <button id="enableLocationBtn" class="hidden" style="position: absolute; bottom: 10px; left: 10px; z-index: 1000; background-color: #422d1e; color: white; padding: 8px 16px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 8px; border: none; cursor: pointer;" onmouseover="this.style.backgroundColor='#5a3d2a'" onmouseout="this.style.backgroundColor='#422d1e'">
+      Enable Location
     </button>
   </div>
 
@@ -1099,7 +1139,7 @@
                 <input id="addressField" placeholder="Enter an address" class="w-full rounded-lg p-2" style="padding: 8px 12px; border-radius: 8px; border: 1px solid #d4cac7; background-color: #f2eceb; color: #422d1e;" />
                 <div id="addressField_suggestions"></div>
               </div>
-              <button type="button" id="geoBtn" class="px-3 py-2 rounded text-sm whitespace-nowrap" style="border: 1px solid #d4cac7; background-color: #f2eceb; color: #422d1e;" onmouseover="this.style.backgroundColor='#e8e2e1'" onmouseout="this.style.backgroundColor='#f2eceb'">📍 Find Me</button>
+              <button type="button" id="geoBtn" class="px-3 py-2 rounded text-sm whitespace-nowrap" style="border: 1px solid #d4cac7; background-color: #f2eceb; color: #422d1e;" onmouseover="this.style.backgroundColor='#e8e2e1'" onmouseout="this.style.backgroundColor='#f2eceb'">Find Me</button>
             </div>
             <div id="addressInfo" class="text-xs mt-1" style="color: #422d1e; opacity: 0.7;"></div>
           </div>
@@ -1759,6 +1799,100 @@ window.getCurrentDate = function() {
     }
   };
   
+  // ----------------------------
+  // Location Tracking (Continuous)
+  // ----------------------------
+  function startLocationTracking() {
+    if (!navigator.geolocation) {
+      toast('Geolocation is not supported by your browser');
+      return;
+    }
+
+    if (isTracking) {
+      // Already tracking, stop it
+      stopLocationTracking();
+      return;
+    }
+
+    console.log('🎯 Starting continuous location tracking...');
+
+    // Use watchPosition for continuous tracking
+    locationWatchId = navigator.geolocation.watchPosition(
+      // Success callback
+      (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        
+        console.log(`📍 Location update: ${lat}, ${lng}`);
+        
+        // Update user location on map and check for alerts
+        checkLocation(lat, lng);
+        
+        // Center map on user only on first successful track
+        if (!isTracking) {
+          map.setView([lat, lng], Math.max(map.getZoom(), 14));
+          isTracking = true;
+          
+          // Hide the enable location button since tracking is active
+          const enableLocationBtn = document.getElementById('enableLocationBtn');
+          if (enableLocationBtn) {
+            enableLocationBtn.classList.add('hidden');
+          }
+          
+          console.log('✅ Location tracking active');
+        }
+      },
+      // Error callback
+      (err) => {
+        console.error('Location tracking error:', err);
+        let errorMsg = 'Tracking error: ';
+        
+        switch(err.code) {
+          case err.PERMISSION_DENIED:
+            errorMsg += 'Location permission denied. Please enable location access.';
+            break;
+          case err.POSITION_UNAVAILABLE:
+            errorMsg += 'Location unavailable. Check your device settings.';
+            break;
+          case err.TIMEOUT:
+            errorMsg += 'Location request timed out. Retrying...';
+            break;
+          default:
+            errorMsg += err.message || 'Unknown error';
+        }
+        
+        toast(errorMsg, 3000);
+        
+        // If permission denied, stop tracking and show enable button
+        if (err.code === err.PERMISSION_DENIED) {
+          stopLocationTracking();
+          
+          // Show the enable location button
+          const enableLocationBtn = document.getElementById('enableLocationBtn');
+          if (enableLocationBtn) {
+            enableLocationBtn.classList.remove('hidden');
+          }
+        }
+      },
+      // Options - optimized for mobile walking/cycling
+      {
+        enableHighAccuracy: true,  // Use GPS for better accuracy
+        timeout: 10000,            // 10 second timeout
+        maximumAge: 3000           // Accept positions up to 3 seconds old (checks ~every 3 seconds)
+      }
+    );
+  }
+
+  function stopLocationTracking() {
+    if (locationWatchId !== null) {
+      navigator.geolocation.clearWatch(locationWatchId);
+      locationWatchId = null;
+    }
+    
+    isTracking = false;
+    console.log('🛑 Location tracking stopped');
+  }
+  
   // Enable Location Button functionality
   const enableLocationBtn = document.getElementById('enableLocationBtn');
   
@@ -1787,7 +1921,11 @@ window.getCurrentDate = function() {
           enableLocationBtn.classList.add('hidden');
         }
         
-        toast('Location found! Showing your area', 2000);
+        toast('Location found! Tracking your position...', 2000);
+        
+        // Start continuous location tracking
+        console.log('🎯 Starting continuous location tracking...');
+        startLocationTracking();
       },
       (error) => {
         console.warn('⚠️ Location access denied or unavailable:', error);
@@ -2833,7 +2971,6 @@ window.getCurrentDate = function() {
         const timeAgo = getTimeAgo(date);
         
         activityEl.innerHTML = `
-          <span>📍</span>
           <div class="flex-1">
             <span class="font-medium">${spot.name}</span>
             <span style="opacity: 0.7;"> - ${spot.species}</span>
@@ -6133,90 +6270,8 @@ window.getCurrentDate = function() {
   // NOTE: Walk simulator event handlers moved to Testing Modal section (lines ~5850+)
 
   // ----------------------------
-  // Location Tracking (Continuous)
+  // NOTE: Location Tracking functions moved earlier in code (near map initialization)
   // ----------------------------
-  function startLocationTracking() {
-    if (!navigator.geolocation) {
-      toast('Geolocation is not supported by your browser');
-      return;
-    }
-
-    if (isTracking) {
-      // Already tracking, stop it
-      stopLocationTracking();
-      return;
-    }
-
-    toast('Starting location tracking...');
-
-    // Use watchPosition for continuous tracking
-    locationWatchId = navigator.geolocation.watchPosition(
-      // Success callback
-      (position) => {
-        const lat = position.coords.latitude;
-        const lng = position.coords.longitude;
-        
-        // Update user location on map and check for alerts
-        checkLocation(lat, lng);
-        
-        // Optionally center map on user (only on first location)
-        if (!isTracking) {
-          map.setView([lat, lng], Math.max(map.getZoom(), 14));
-        }
-        
-        if (!isTracking) {
-          isTracking = true;
-          // trackBtnText.textContent = 'Stop Tracking';
-          // trackLocationBtn.style.backgroundColor = '#ef4444'; // Red when tracking
-          toast('Location tracking active', 2000);
-        }
-      },
-      // Error callback
-      (err) => {
-        console.error('Location tracking error:', err);
-        let errorMsg = 'Tracking error: ';
-        
-        switch(err.code) {
-          case err.PERMISSION_DENIED:
-            errorMsg += 'Location permission denied. Please enable location access.';
-            break;
-          case err.POSITION_UNAVAILABLE:
-            errorMsg += 'Location unavailable. Check your device settings.';
-            break;
-          case err.TIMEOUT:
-            errorMsg += 'Location request timed out. Retrying...';
-            break;
-          default:
-            errorMsg += err.message || 'Unknown error';
-        }
-        
-        toast(errorMsg, 3000);
-        
-        // If permission denied, stop tracking
-        if (err.code === err.PERMISSION_DENIED) {
-          stopLocationTracking();
-        }
-      },
-      // Options - optimized for mobile walking/cycling
-      {
-        enableHighAccuracy: true,  // Use GPS for better accuracy
-        timeout: 10000,            // 10 second timeout
-        maximumAge: 3000           // Accept positions up to 3 seconds old (checks ~every 3 seconds)
-      }
-    );
-  }
-
-  function stopLocationTracking() {
-    if (locationWatchId !== null) {
-      navigator.geolocation.clearWatch(locationWatchId);
-      locationWatchId = null;
-    }
-    
-    isTracking = false;
-    // trackBtnText.textContent = 'Start Tracking';
-    // trackLocationBtn.style.backgroundColor = '#422d1e'; // Back to dark color
-    toast('Location tracking stopped');
-  }
 
   // Track location button click handler - DISABLED (button removed from UI)
   /*

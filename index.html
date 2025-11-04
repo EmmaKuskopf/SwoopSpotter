@@ -5140,7 +5140,11 @@ window.getCurrentDate = function() {
         // User is STILL IN ZONES but no active threats (all calm or recently reported)
         // Just keep the tracking active, don't trigger exit
         console.log('🔕 No active threats but user still in zones');
-        hideCenteredAlert();
+        // Only clear/hide if alert is not minimized
+        if (!alertBox.classList.contains('minimized')) {
+          currentAlertSpots = [];
+          hideCenteredAlert();
+        }
       } else {
         // User has TRULY EXITED all zones (allCurrentSpots is empty)
         // Now check if they were visiting active threat spots or calm spots

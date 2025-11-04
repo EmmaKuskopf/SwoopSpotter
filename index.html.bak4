@@ -5140,6 +5140,7 @@ window.getCurrentDate = function() {
         // User is STILL IN ZONES but no active threats (all calm or recently reported)
         // Just keep the tracking active, don't trigger exit
         console.log('🔕 No active threats but user still in zones');
+        currentAlertSpots = [];
         hideCenteredAlert();
       } else {
         // User has TRULY EXITED all zones (allCurrentSpots is empty)
@@ -5151,6 +5152,7 @@ window.getCurrentDate = function() {
         
         if(activeSpotsToReport.length > 0) {
           // They visited active threat spots - show exit prompt
+          currentAlertSpots = [];
           allCurrentSpots = [];
           hideCenteredAlert();
           
@@ -5165,6 +5167,7 @@ window.getCurrentDate = function() {
           hasShownCalmFeedback = false;
         } else {
           // They only visited calm spots (or no spots) - check for calm feedback
+          currentAlertSpots = [];
           allCurrentSpots = [];
           hideCenteredAlert();
         
@@ -5902,8 +5905,12 @@ window.getCurrentDate = function() {
       const showMoreBtn = alertBox.querySelector('.show-more-btn');
       if(showMoreBtn) {
         showMoreBtn.onclick = () => {
-          minimizeCenteredAlert();
-          console.log('📌 User minimized alert via Show More');
+          // Hide the alert
+          alertHidden = true;
+          console.log('� User hid alert via Show More:', currentAlertSpots.map(s => s.name).join(', '));
+          // Clear currentAlertSpots so zone change detection sees empty -> empty (no change)
+          currentAlertSpots = [];
+          hideCenteredAlert();
           openDetailsModal(s.id);
         };
       }
@@ -5917,8 +5924,12 @@ window.getCurrentDate = function() {
       }
       
       document.getElementById('clearAlertBtn').onclick = () => {
-        minimizeCenteredAlert();
-        console.log('📌 User minimized alert');
+        // Hide the alert
+        alertHidden = true;
+        console.log('� User hid alert for:', currentAlertSpots.map(s => s.name).join(', '));
+        // Clear currentAlertSpots so zone change detection sees empty -> empty (no change)
+        currentAlertSpots = [];
+        hideCenteredAlert();
       };
     } else {
       // Multiple spots - show list with Show More button for each
@@ -5983,8 +5994,12 @@ window.getCurrentDate = function() {
       alertBox.querySelectorAll('.show-more-btn').forEach(btn => {
         btn.onclick = () => {
           const spotId = btn.dataset.spotId;
-          minimizeCenteredAlert();
-          console.log('📌 User minimized alert via Show More');
+          // Hide the alert
+          alertHidden = true;
+          console.log('� User hid alert via Show More:', currentAlertSpots.map(s => s.name).join(', '));
+          // Clear currentAlertSpots so zone change detection sees empty -> empty (no change)
+          currentAlertSpots = [];
+          hideCenteredAlert();
           openDetailsModal(spotId);
         };
       });
@@ -5999,19 +6014,14 @@ window.getCurrentDate = function() {
       });
       
       document.getElementById('clearAlertBtn').onclick = () => {
-        minimizeCenteredAlert();
-        console.log('📌 User minimized alert');
+        // Hide the alert
+        alertHidden = true;
+        console.log('� User hid alert for:', currentAlertSpots.map(s => s.name).join(', '));
+        // Clear currentAlertSpots so zone change detection sees empty -> empty (no change)
+        currentAlertSpots = [];
+        hideCenteredAlert();
       };
     }
-    
-    // Add click handler to minimized alert to re-expand it
-    alertBox.onclick = (e) => {
-      if (alertBox.classList.contains('minimized')) {
-        console.log('🔄 User clicked minimized alert - expanding');
-        alertBox.classList.remove('minimized');
-        e.stopPropagation();
-      }
-    };
   }
 
   // Minimize centered alert (show as small flashing icon)

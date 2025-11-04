@@ -1836,6 +1836,7 @@ window.getCurrentDate = function() {
           // Hide the enable location button since tracking is active
           const enableLocationBtn = document.getElementById('enableLocationBtn');
           if (enableLocationBtn) {
+            console.log('🔘 Hiding Enable Location button - tracking is active');
             enableLocationBtn.classList.add('hidden');
           }
           
@@ -1859,6 +1860,7 @@ window.getCurrentDate = function() {
             stopLocationTracking();
             const enableLocationBtn = document.getElementById('enableLocationBtn');
             if (enableLocationBtn) {
+              console.log('🔘 Showing Enable Location button - permission denied');
               enableLocationBtn.classList.remove('hidden');
             }
             break;
@@ -1922,6 +1924,7 @@ window.getCurrentDate = function() {
         
         // Hide the enable location button
         if (enableLocationBtn) {
+          console.log('🔘 Hiding Enable Location button - location found');
           enableLocationBtn.classList.add('hidden');
         }
         
@@ -1948,6 +1951,7 @@ window.getCurrentDate = function() {
             message = 'Location access denied. Click "Enable Location" button on the map to try again.';
             // Show the enable location button
             if (enableLocationBtn) {
+              console.log('🔘 Showing Enable Location button - permission denied');
               enableLocationBtn.classList.remove('hidden');
             }
             break;
@@ -2065,6 +2069,13 @@ window.getCurrentDate = function() {
     const avatarPath = avatarFilename.startsWith('user_') 
       ? `Assets/Users Icons/${avatarFilename}` 
       : `Assets/Icons/${avatarFilename}`;
+    
+    console.log('🎭 getUserIcon called:', { 
+      hasUserProfile: !!userProfile, 
+      avatarFilename, 
+      avatarPath,
+      currentUser: !!currentUser 
+    });
     
     return L.divIcon({ 
       className:'', // Empty className to avoid default Leaflet divIcon styles
@@ -2597,7 +2608,13 @@ window.getCurrentDate = function() {
     
     if (profile) {
       userProfile = profile;
-      console.log('Profile loaded:', profile);
+      console.log('✅ Profile loaded:', profile);
+      
+      // Update user marker icon immediately if it exists
+      if (userMarker) {
+        console.log('🎭 Updating user marker icon after profile load');
+        userMarker.setIcon(getUserIcon());
+      }
     } else {
       console.log('No profile found, user metadata:', currentUser.user_metadata);
       // Profile might not exist yet, use metadata as fallback
@@ -5007,7 +5024,12 @@ window.getCurrentDate = function() {
         // New journey starting - reset the calm feedback flag
         hasShownCalmFeedback = false;
         currentAlertSpots = activeThreats;
-        showCenteredAlert(activeThreats);
+        
+        // Only show alert if it's not already visible
+        // This prevents duplicate alerts while modal is open
+        if(alertBox.style.display !== 'block'){
+          showCenteredAlert(activeThreats);
+        }
       }
       // If currentIds === newIds, user is still in the same zones - don't re-show alert
     } else {

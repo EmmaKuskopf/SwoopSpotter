@@ -7683,17 +7683,21 @@ window.getCurrentDate = function() {
   // Sign Out/Sign In button - signs user out if logged in, shows auth modal if logged out
   if (desktopNavLogout) {
     desktopNavLogout.addEventListener('click', async () => {
+      console.log('🖱️ Desktop Logout/Sign In button clicked');
       // Check if user is logged in
       const user = window.SwoopSpotter?.supabase ? (await window.SwoopSpotter.supabase.auth.getUser()).data.user : null;
+      console.log('👤 Current user:', user ? 'Logged in' : 'Not logged in');
       
       if (user) {
         // User is logged in - sign them out
+        console.log('🔓 Signing user out');
         if (window.SwoopSpotter?.supabase) {
           await window.SwoopSpotter.supabase.auth.signOut();
           window.location.reload();
         }
       } else {
         // User is logged out - show auth modal
+        console.log('🔐 Showing auth modal');
         if (authModal) {
           authModal.classList.remove('hidden');
         }
@@ -7701,25 +7705,36 @@ window.getCurrentDate = function() {
       
       setActiveDesktopNavItem(desktopNavLogout);
     });
+  } else {
+    console.warn('❌ desktopNavLogout button not found');
   }
   
   // Profile button - opens profile on Contributions tab
   if (desktopNavProfile) {
     desktopNavProfile.addEventListener('click', async () => {
+      console.log('🖱️ Desktop Profile button clicked');
       const currentUser = window.SwoopSpotter?.supabase ? (await window.SwoopSpotter.supabase.auth.getUser()).data.user : null;
+      console.log('👤 Current user:', currentUser ? 'Logged in' : 'Not logged in');
       
       if (!currentUser) {
+        console.log('⚠️ No user - showing auth modal');
         showToast('Please sign in to view your profile', 2000);
         if (authModal) authModal.classList.remove('hidden');
         return;
       }
       
       // Call openProfileModal from main app
+      console.log('📂 Attempting to open profile modal');
       if (window.SwoopSpotter?.openProfileModal) {
+        console.log('✅ openProfileModal found, calling it');
         window.SwoopSpotter.openProfileModal('stats', false);
+      } else {
+        console.error('❌ openProfileModal not found on window.SwoopSpotter');
       }
       setActiveDesktopNavItem(desktopNavProfile);
     });
+  } else {
+    console.warn('❌ desktopNavProfile button not found');
   }
   
   // Home button - scroll to top (main map view)

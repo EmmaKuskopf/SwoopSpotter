@@ -169,8 +169,53 @@
     box-shadow: 0 10px 30px var(--shadow-heavy); 
     opacity:0; 
     pointer-events:none; 
-    transition:opacity .26s ease; 
+    transition:all .26s ease; 
     display:none; 
+  }
+  
+  /* Minimized alert state - small flashing icon */
+  #alertBox.minimized {
+    top: auto !important;
+    bottom: 80px !important;
+    right: 20px !important;
+    left: auto !important;
+    transform: none !important;
+    width: 56px !important;
+    height: 56px !important;
+    max-width: none !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+    animation: pulse-alert 2s ease-in-out infinite;
+  }
+  
+  @keyframes pulse-alert {
+    0%, 100% { transform: scale(1); opacity: 0.9; }
+    50% { transform: scale(1.1); opacity: 1; }
+  }
+  
+  /* Hide alert content when minimized */
+  #alertBox.minimized > * {
+    display: none !important;
+  }
+  
+  /* Show only the icon when minimized */
+  #alertBox.minimized::before {
+    content: '';
+    display: block !important;
+    width: 32px;
+    height: 32px;
+    background-image: url('Assets/Icons/alert.svg');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    filter: brightness(0) saturate(100%);
   }
   
   /* ===== Dark Mode Utility Classes ===== */
@@ -4996,7 +5041,6 @@ window.getCurrentDate = function() {
   let hasShownCalmFeedback = false; // Track if we've already shown calm feedback this journey
   let recentlyReportedSpots = new Set(); // Track spots user just reported to prevent immediate alerts
   let alreadyReportedThisJourney = new Set(); // Track spots we've reported on during this journey (won't trigger feedback)
-  let alertHidden = false; // Track if user manually hid the alert (don't re-show until zone change)
   
   function checkLocation(lat,lng){
     console.log('🎯 checkLocation called:', { lat, lng, timestamp: new Date().toISOString() });
@@ -5036,8 +5080,7 @@ window.getCurrentDate = function() {
     console.log('⚠️ Active threats (after filtering):', {
       count: activeThreats.length,
       spots: activeThreats.map(s => s.name),
-      recentlyReported: Array.from(recentlyReportedSpots),
-      alertHidden: alertHidden
+      recentlyReported: Array.from(recentlyReportedSpots)
     });
     
     // Track ALL non-calm spots we're currently in (for exit detection)
@@ -5067,25 +5110,24 @@ window.getCurrentDate = function() {
         areEqual: currentIds === newIds,
         currentAlertSpots: currentAlertSpots.map(s => s.name),
         activeThreats: activeThreats.map(s => s.name),
-        alertHidden: alertHidden
+        isMinimized: alertBox.classList.contains('minimized')
       });
       
-      // Only show alert if we're entering different zones AND alert isn't manually hidden
+      // Only show alert if we're entering different zones
       if(currentIds !== newIds){
         console.log('🆕 Zone change detected - showing alert');
         
         // New journey starting - reset flags
         hasShownCalmFeedback = false;
-        alertHidden = false; // Reset hidden flag when entering new zones
         
-        // Show the alert for the new zones
+        // Show the alert for the new zones (restore from minimized if needed)
         showCenteredAlert(activeThreats);
         
         // Update currentAlertSpots to match the new zones
         currentAlertSpots = activeThreats;
-      } else if (alertHidden) {
-        console.log('🙈 Alert hidden by user - keeping it hidden');
-        // Don't update currentAlertSpots - keep tracking the zones even though alert is hidden
+      } else if (alertBox.classList.contains('minimized')) {
+        console.log('� Alert minimized - keeping it minimized');
+        // Keep the minimized state, don't update currentAlertSpots
       } else {
         console.log('⏸️ Still in same zones - no alert needed');
         // Update currentAlertSpots to keep tracking
@@ -5123,7 +5165,6 @@ window.getCurrentDate = function() {
           // Clear ALL journey tracking when exiting
           visitedSpots.clear();
           alreadyReportedThisJourney.clear();
-          alertHidden = false; // Reset hidden flag for next journey
           hasShownCalmFeedback = false;
         } else {
           // They only visited calm spots (or no spots) - check for calm feedback
@@ -5195,14 +5236,12 @@ window.getCurrentDate = function() {
           
           // Clear journey tracking when exiting all zones
           visitedSpots.clear();
-          alertHidden = false; // Reset for next journey
           alreadyReportedThisJourney.clear();
           hasShownCalmFeedback = false;
         } else {
           console.log('🚫 hasShownCalmFeedback is already true - skipping check');
           // Clear visited spots since we're not showing a modal and journey is over
           visitedSpots.clear();
-          alertHidden = false; // Reset for next journey
           alreadyReportedThisJourney.clear();
         }
         
@@ -5793,6 +5832,9 @@ window.getCurrentDate = function() {
       timestamp: new Date().toISOString() 
     });
     
+    // Remove minimized state if previously minimized
+    alertBox.classList.remove('minimized');
+    
     // Handle both single spot and array of spots
     const spotArray = Array.isArray(spots) ? spots : [spots];
     
@@ -5983,10 +6025,16 @@ window.getCurrentDate = function() {
     }
   }
 
-  // Hide centered alert
+  // Minimize centered alert (show as small flashing icon)
+  function minimizeCenteredAlert() {
+    alertBox.classList.add('minimized');
+    console.log('📌 Alert minimized - showing as pulsing icon');
+  }
+
+  // Hide centered alert (completely remove)
   function hideCenteredAlert() {
     alertBox.style.display = 'none';
-    alertBox.classList.remove('show');
+    alertBox.classList.remove('show', 'minimized');
     // Remove all risk classes when hiding
     alertBox.classList.remove('risk-danger', 'risk-caution', 'risk-calm', 'risk-low');
   }

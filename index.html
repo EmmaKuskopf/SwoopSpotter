@@ -1845,40 +1845,44 @@ window.getCurrentDate = function() {
       // Error callback
       (err) => {
         console.error('Location tracking error:', err);
+        console.log('Tracking error details:', {
+          code: err.code,
+          message: err.message
+        });
+        
         let errorMsg = 'Tracking error: ';
         
         switch(err.code) {
           case err.PERMISSION_DENIED:
             errorMsg += 'Location permission denied. Please enable location access.';
+            // Stop tracking and show enable button
+            stopLocationTracking();
+            const enableLocationBtn = document.getElementById('enableLocationBtn');
+            if (enableLocationBtn) {
+              enableLocationBtn.classList.remove('hidden');
+            }
             break;
           case err.POSITION_UNAVAILABLE:
-            errorMsg += 'Location unavailable. Check your device settings.';
+            errorMsg += 'Location unavailable. Make sure Location Services are enabled in your device settings.';
+            // Don't stop tracking - GPS might come back
+            console.log('⚠️ Location unavailable, will keep trying...');
             break;
           case err.TIMEOUT:
-            errorMsg += 'Location request timed out. Retrying...';
+            errorMsg += 'Location request timed out. Still tracking...';
+            // Don't stop tracking - timeout is temporary
+            console.log('⚠️ Location timeout, will keep trying...');
             break;
           default:
             errorMsg += err.message || 'Unknown error';
         }
         
         toast(errorMsg, 3000);
-        
-        // If permission denied, stop tracking and show enable button
-        if (err.code === err.PERMISSION_DENIED) {
-          stopLocationTracking();
-          
-          // Show the enable location button
-          const enableLocationBtn = document.getElementById('enableLocationBtn');
-          if (enableLocationBtn) {
-            enableLocationBtn.classList.remove('hidden');
-          }
-        }
       },
       // Options - optimized for mobile walking/cycling
       {
         enableHighAccuracy: true,  // Use GPS for better accuracy
-        timeout: 10000,            // 10 second timeout
-        maximumAge: 3000           // Accept positions up to 3 seconds old (checks ~every 3 seconds)
+        timeout: 15000,            // 15 second timeout (increased for better reliability)
+        maximumAge: 5000           // Accept positions up to 5 seconds old (checks ~every 5 seconds)
       }
     );
   }
@@ -1929,23 +1933,60 @@ window.getCurrentDate = function() {
       },
       (error) => {
         console.warn('⚠️ Location access denied or unavailable:', error);
-        
-        // Show the enable location button
-        if (enableLocationBtn && error.code === error.PERMISSION_DENIED) {
-          enableLocationBtn.classList.remove('hidden');
-        }
+        console.log('Error details:', {
+          code: error.code,
+          message: error.message,
+          PERMISSION_DENIED: error.PERMISSION_DENIED,
+          POSITION_UNAVAILABLE: error.POSITION_UNAVAILABLE,
+          TIMEOUT: error.TIMEOUT
+        });
         
         // Show friendly message based on error
         let message = '';
         switch(error.code) {
           case error.PERMISSION_DENIED:
             message = 'Location access denied. Click "Enable Location" button on the map to try again.';
+            // Show the enable location button
+            if (enableLocationBtn) {
+              enableLocationBtn.classList.remove('hidden');
+            }
             break;
           case error.POSITION_UNAVAILABLE:
-            message = 'Location unavailable. Showing default area.';
+            message = 'Location unavailable. Make sure Location Services are enabled in your device settings, then try again.';
+            // Try again with lower accuracy as fallback
+            console.log('🔄 Retrying with enableHighAccuracy: false...');
+            setTimeout(() => {
+              navigator.geolocation.getCurrentPosition(
+                (position) => {
+                  const lat = position.coords.latitude;
+                  const lng = position.coords.longitude;
+                  console.log(`✅ Location found (low accuracy): ${lat}, ${lng}`);
+                  map.setView([lat, lng], 14);
+                  checkLocation(lat, lng);
+                  if (enableLocationBtn) {
+                    enableLocationBtn.classList.add('hidden');
+                  }
+                  toast('Location found! Tracking your position...', 2000);
+                  startLocationTracking();
+                },
+                (retryError) => {
+                  console.error('❌ Retry failed:', retryError);
+                  toast('Could not get location. Please check device settings.', 4000);
+                  if (enableLocationBtn) {
+                    enableLocationBtn.classList.remove('hidden');
+                  }
+                },
+                { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 }
+              );
+            }, 1000);
             break;
           case error.TIMEOUT:
-            message = 'Location request timed out. Showing default area.';
+            message = 'Location request timed out. Retrying...';
+            // Auto-retry on timeout
+            setTimeout(() => {
+              console.log('🔄 Retrying location request after timeout...');
+              requestUserLocation();
+            }, 2000);
             break;
           default:
             message = 'Could not get your location. Showing default area.';
@@ -1956,7 +1997,7 @@ window.getCurrentDate = function() {
       },
       {
         enableHighAccuracy: true,
-        timeout: 10000,
+        timeout: 15000, // Increased from 10s to 15s
         maximumAge: 60000 // Accept cached location up to 1 minute old
       }
     );

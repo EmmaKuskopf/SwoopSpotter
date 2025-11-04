@@ -5776,6 +5776,12 @@ window.getCurrentDate = function() {
     // Handle both single spot and array of spots
     const spotArray = Array.isArray(spots) ? spots : [spots];
     
+    // CRITICAL: Prevent duplicate alerts - if alert box is already showing, don't re-show
+    if (alertBox.classList.contains('show')) {
+      console.log('⏸️ Alert already visible - skipping duplicate');
+      return;
+    }
+    
     // Check if any spots are pre-season warnings
     const preseasonSpots = spotArray.filter(s => s.isPreseason);
     if (preseasonSpots.length > 0) {

@@ -1014,8 +1014,8 @@
       <span>Testing</span>
     </button>
     <button class="desktop-nav-item" id="desktopNavLogout" data-view="logout">
-      <img src="Assets/Menu Icons/Light Mode/menu-logout.svg" alt="Logout">
-      <span>Logout</span>
+      <img src="Assets/Menu Icons/Light Mode/menu-logout.svg" alt="Sign Out">
+      <span>Sign Out</span>
     </button>
   </div>
 </nav>
@@ -1072,7 +1072,7 @@
             <label class="block text-sm font-medium mb-1" style="color: #422d1e;">Bird species <span class="text-red-500">*</span></label>
             <select id="birdSpecies" class="w-full rounded-lg p-2" style="padding: 8px 12px; border-radius: 8px; border: 1px solid #d4cac7; background-color: #f2eceb; color: #422d1e;">
               <option>Magpie</option>
-              <option>Magpie-Lark</option>
+              <option>Magpie-Lark (Peewee)</option>
               <option>Masked Lapwing (plover)</option>
               <option>Butcherbird</option>
               <option>Crow</option>
@@ -1409,7 +1409,6 @@
           <p id="profileJoined" class="text-xs mt-1" style="color: #422d1e; opacity: 0.6;"></p>
         </div>
       </div>
-      <p id="profileBio" class="mt-4 text-sm italic" style="color: #422d1e; opacity: 0.8;"></p>
     </div>
     
     <!-- New User Welcome Message -->
@@ -1498,12 +1497,6 @@
           </div>
         </div>
         
-        <div class="mb-4">
-          <label class="block text-sm font-medium mb-2" style="color: #422d1e;">Bio (optional)</label>
-          <textarea id="editBio" rows="3" maxlength="200" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2" style="border-color: #d4cac7; background-color: white;" placeholder="Tell us a bit about yourself..."></textarea>
-          <p class="text-xs mt-1" style="color: #422d1e; opacity: 0.6;">Max 200 characters</p>
-        </div>
-        
         <div id="profileEditError" class="hidden mb-4 p-3 rounded" style="background-color: #FEE2E2; color: #991B1B;"></div>
         <div id="profileEditSuccess" class="hidden mb-4 p-3 rounded" style="background-color: #DCFCE7; color: #14532D;"></div>
         
@@ -1550,7 +1543,7 @@
         <select id="tipsSpeciesSelect" class="w-full rounded-lg p-2" style="padding: 8px 12px; border-radius: 8px; border: 1px solid #d4cac7; background-color: #fff; color: #422d1e;">
           <option value="general">General Tips (All Birds)</option>
           <option value="Magpie">Magpie</option>
-          <option value="Magpie-lark">Magpie-Lark</option>
+          <option value="Magpie-Lark (Peewee)">Magpie-Lark (Peewee)</option>
           <option value="Masked Lapwing">Masked Lapwing (Plover)</option>
           <option value="Butcherbird">Butcherbird</option>
           <option value="Crow">Crow</option>
@@ -1968,7 +1961,6 @@ window.getCurrentDate = function() {
   const profileEditForm = document.getElementById('profileEditForm');
   const editDisplayName = document.getElementById('editDisplayName');
   const selectedAvatar = document.getElementById('selectedAvatar');
-  const editBio = document.getElementById('editBio');
   const profileEditError = document.getElementById('profileEditError');
   const profileEditSuccess = document.getElementById('profileEditSuccess');
   const cancelEditProfile = document.getElementById('cancelEditProfile');
@@ -1998,7 +1990,7 @@ window.getCurrentDate = function() {
   // Swooping season data (month ranges: 1 = January, 12 = December)
   const SWOOPING_SEASONS = {
     "Magpie": { start: 8, end: 11 },  // August to November
-    "Magpie-lark": { start: 8, end: 11 },  // August to November
+    "Magpie-Lark (Peewee)": { start: 8, end: 11 },  // August to November
     "Masked Lapwing": { start: 6, end: 12 },  // June to December (longer season)
     "Butcherbird": { start: 8, end: 11 },  // August to November
     "Crow": { start: 8, end: 10 },  // August to October
@@ -2031,7 +2023,7 @@ window.getCurrentDate = function() {
       "Only ~10% of male magpies swoop - consistent presence helps birds recognize you",
       "Give respectful distance to known nesting trees year-round"
     ],
-    "Magpie-lark": [
+    "Magpie-Lark (Peewee)": [
       "Provide water sources - magpie-larks love bathing",
       "Plant native shrubs that attract insects",
       "Avoid loud noises or sudden movements near their territory",
@@ -2108,7 +2100,7 @@ window.getCurrentDate = function() {
         "Only 10% of male magpies actually swoop humans"
       ]
     },
-    "Magpie-lark": {
+    "Magpie-Lark (Peewee)": {
       title: "Magpie-Lark (Peewee) Safety Tips",
       description: "Magpie-larks are smaller but can be very aggressive defenders of their territory. Despite the name, they're not related to magpies.",
       tips: [
@@ -2362,6 +2354,9 @@ window.getCurrentDate = function() {
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
       await handleAuthStateChange(session.user);
+    } else {
+      // No session - update UI to show logged out state
+      updateAuthUI();
     }
     
     // Listen for auth changes
@@ -2441,6 +2436,14 @@ window.getCurrentDate = function() {
     const menuSignOut = document.getElementById('menuSignOut');
     const menuDivider = document.getElementById('menuDivider');
     
+    // Desktop nav sign out/sign in button
+    const desktopNavLogout = document.getElementById('desktopNavLogout');
+    const desktopNavLogoutSpan = desktopNavLogout?.querySelector('span');
+    
+    // Mobile nav sign out/sign in button
+    const mobileNavLogout = document.getElementById('navLogout');
+    const mobileNavLogoutSpan = mobileNavLogout?.querySelector('span');
+    
     if (currentUser) {
       // Get display name from profile or user metadata or email
       const displayName = userProfile?.display_name || 
@@ -2468,6 +2471,12 @@ window.getCurrentDate = function() {
       // Hide sign in button
       if (menuSignIn) menuSignIn.classList.add('hidden');
       
+      // Update desktop nav button to show "Sign Out"
+      if (desktopNavLogoutSpan) desktopNavLogoutSpan.textContent = 'Sign Out';
+      
+      // Update mobile nav button to show "Sign Out"
+      if (mobileNavLogoutSpan) mobileNavLogoutSpan.textContent = 'Sign Out';
+      
       console.log('UI updated with display name:', displayName);
     } else {
       // Hide user info in hamburger menu
@@ -2482,6 +2491,12 @@ window.getCurrentDate = function() {
       
       // Show sign in button
       if (menuSignIn) menuSignIn.classList.remove('hidden');
+      
+      // Update desktop nav button to show "Sign In"
+      if (desktopNavLogoutSpan) desktopNavLogoutSpan.textContent = 'Sign In';
+      
+      // Update mobile nav button to show "Sign In"
+      if (mobileNavLogoutSpan) mobileNavLogoutSpan.textContent = 'Sign In';
     }
   }
   
@@ -2634,15 +2649,6 @@ window.getCurrentDate = function() {
     const joinDate = new Date(currentUser.created_at);
     document.getElementById('profileJoined').textContent = `Member since: ${joinDate.toLocaleDateString()}`;
     
-    // Display bio
-    const bioElement = document.getElementById('profileBio');
-    if (userProfile?.bio && userProfile.bio.trim()) {
-      bioElement.textContent = `"${userProfile.bio}"`;
-      bioElement.style.display = 'block';
-    } else {
-      bioElement.style.display = 'none';
-    }
-    
     // Update stats
     console.log('📊 Setting stats from userProfile:', {
       spots: userProfile?.total_spots_created,
@@ -2659,7 +2665,6 @@ window.getCurrentDate = function() {
     // Populate edit form
     editDisplayName.value = userProfile?.display_name || currentUser.email.split('@')[0];
     selectedAvatar.value = userProfile?.avatar_url || 'user_1.svg';
-    editBio.value = userProfile?.bio || '';
     
     // Update avatar picker selection
     document.querySelectorAll('.avatar-btn').forEach(btn => {
@@ -2828,7 +2833,6 @@ window.getCurrentDate = function() {
     
     const newDisplayName = editDisplayName.value.trim();
     const newAvatar = selectedAvatar.value;
-    const newBio = editBio.value.trim().substring(0, 200);
     
     if (!newDisplayName) {
       profileEditError.textContent = 'Display name is required';
@@ -2837,14 +2841,13 @@ window.getCurrentDate = function() {
     }
     
     try {
-      console.log('Updating profile:', { newDisplayName, newAvatar, newBio, userId: currentUser.id });
+      console.log('Updating profile:', { newDisplayName, newAvatar, userId: currentUser.id });
       
       const { data, error } = await supabase
         .from('profiles')
         .update({
           display_name: newDisplayName,
-          avatar_url: newAvatar,
-          bio: newBio
+          avatar_url: newAvatar
         })
         .eq('id', currentUser.id)
         .select();
@@ -2859,8 +2862,7 @@ window.getCurrentDate = function() {
       userProfile = {
         ...userProfile,
         display_name: newDisplayName,
-        avatar_url: newAvatar,
-        bio: newBio
+        avatar_url: newAvatar
       };
       
       updateAuthUI();
@@ -6874,8 +6876,8 @@ window.getCurrentDate = function() {
 <nav class="mobile-nav" id="mobileNav">
   <div class="mobile-nav-items">
     <button class="mobile-nav-item" id="navLogout" data-view="logout">
-      <img src="Assets/Menu Icons/Light Mode/menu-logout.svg" alt="Logout">
-      <span>Logout</span>
+      <img src="Assets/Menu Icons/Light Mode/menu-logout.svg" alt="Sign Out">
+      <span>Sign Out</span>
     </button>
     <button class="mobile-nav-item" id="navProfile" data-view="profile">
       <img src="Assets/Menu Icons/Light Mode/menu-profile.svg" alt="Profile">
@@ -6976,28 +6978,33 @@ window.getCurrentDate = function() {
     }
   }
   
-  // Logout button - signs user out
+  // Logout button - signs user out or shows auth modal
   if (navLogout) {
     navLogout.addEventListener('click', async () => {
       // Access currentUser from the main app
-      const currentUser = window.SwoopSpotter?.supabase ? (await window.SwoopSpotter.supabase.auth.getUser()).data.user : null;
+      const user = window.SwoopSpotter?.supabase ? 
+        (await window.SwoopSpotter.supabase.auth.getUser()).data.user : null;
       
-      if (!currentUser) {
-        showToast('You are not signed in', 2000);
-        if (authModal) authModal.classList.remove('hidden');
-        return;
-      }
-      
-      if (confirm('Are you sure you want to sign out?')) {
-        // Call signOut through Supabase
-        if (window.SwoopSpotter?.supabase) {
-          await window.SwoopSpotter.supabase.auth.signOut();
-          showToast('Signed out successfully', 2000);
-          setActiveNavItem(navHome);
-          // Reload to reset state
-          window.location.reload();
+      if (user) {
+        // User is logged in - sign them out
+        if (confirm('Are you sure you want to sign out?')) {
+          // Call signOut through Supabase
+          if (window.SwoopSpotter?.supabase) {
+            await window.SwoopSpotter.supabase.auth.signOut();
+            showToast('Signed out successfully', 2000);
+            setActiveNavItem(navHome);
+            // Reload to reset state
+            window.location.reload();
+          }
+        }
+      } else {
+        // User is logged out - show auth modal
+        if (authModal) {
+          authModal.classList.remove('hidden');
         }
       }
+      
+      setActiveNavItem(navLogout);
     });
   }
   
@@ -7241,13 +7248,25 @@ window.getCurrentDate = function() {
     });
   }
   
-  // Logout button
+  // Sign Out/Sign In button - signs user out if logged in, shows auth modal if logged out
   if (desktopNavLogout) {
     desktopNavLogout.addEventListener('click', async () => {
-      if (window.SwoopSpotter?.supabase) {
-        await window.SwoopSpotter.supabase.auth.signOut();
-        window.location.reload();
+      // Check if user is logged in
+      const user = window.SwoopSpotter?.supabase ? (await window.SwoopSpotter.supabase.auth.getUser()).data.user : null;
+      
+      if (user) {
+        // User is logged in - sign them out
+        if (window.SwoopSpotter?.supabase) {
+          await window.SwoopSpotter.supabase.auth.signOut();
+          window.location.reload();
+        }
+      } else {
+        // User is logged out - show auth modal
+        if (authModal) {
+          authModal.classList.remove('hidden');
+        }
       }
+      
       setActiveDesktopNavItem(desktopNavLogout);
     });
   }

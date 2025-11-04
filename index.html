@@ -5842,11 +5842,11 @@ window.getCurrentDate = function() {
       const showMoreBtn = alertBox.querySelector('.show-more-btn');
       if(showMoreBtn) {
         showMoreBtn.onclick = () => {
-          // Add all current alert spots to dismissed list (same as Clear Alert)
+          // Add all current alert spots to dismissed list
           currentAlertSpots.forEach(spot => dismissedAlerts.add(spot.id));
           console.log('🔕 User dismissed alert via Show More:', currentAlertSpots.map(s => s.name).join(', '));
-          // Update currentAlertSpots to reflect dismissed state (filter out dismissed spots)
-          currentAlertSpots = currentAlertSpots.filter(spot => !dismissedAlerts.has(spot.id));
+          // Clear currentAlertSpots so zone change detection sees empty -> empty (no change)
+          currentAlertSpots = [];
           hideCenteredAlert();
           openDetailsModal(s.id);
         };
@@ -5864,8 +5864,8 @@ window.getCurrentDate = function() {
         // Add all current alert spots to dismissed list
         currentAlertSpots.forEach(spot => dismissedAlerts.add(spot.id));
         console.log('🔕 User dismissed alert for:', currentAlertSpots.map(s => s.name).join(', '));
-        // Update currentAlertSpots to reflect dismissed state (filter out dismissed spots)
-        currentAlertSpots = currentAlertSpots.filter(spot => !dismissedAlerts.has(spot.id));
+        // Clear currentAlertSpots so zone change detection sees empty -> empty (no change)
+        currentAlertSpots = [];
         hideCenteredAlert();
       };
     } else {
@@ -5931,11 +5931,11 @@ window.getCurrentDate = function() {
       alertBox.querySelectorAll('.show-more-btn').forEach(btn => {
         btn.onclick = () => {
           const spotId = btn.dataset.spotId;
-          // Add all current alert spots to dismissed list (same as Clear Alert)
+          // Add all current alert spots to dismissed list
           currentAlertSpots.forEach(spot => dismissedAlerts.add(spot.id));
           console.log('🔕 User dismissed alert via Show More:', currentAlertSpots.map(s => s.name).join(', '));
-          // Update currentAlertSpots to reflect dismissed state (filter out dismissed spots)
-          currentAlertSpots = currentAlertSpots.filter(spot => !dismissedAlerts.has(spot.id));
+          // Clear currentAlertSpots so zone change detection sees empty -> empty (no change)
+          currentAlertSpots = [];
           hideCenteredAlert();
           openDetailsModal(spotId);
         };
@@ -5954,8 +5954,8 @@ window.getCurrentDate = function() {
         // Add all current alert spots to dismissed list
         currentAlertSpots.forEach(spot => dismissedAlerts.add(spot.id));
         console.log('🔕 User dismissed alert for:', currentAlertSpots.map(s => s.name).join(', '));
-        // Update currentAlertSpots to reflect dismissed state (filter out dismissed spots)
-        currentAlertSpots = currentAlertSpots.filter(spot => !dismissedAlerts.has(spot.id));
+        // Clear currentAlertSpots so zone change detection sees empty -> empty (no change)
+        currentAlertSpots = [];
         hideCenteredAlert();
       };
     }

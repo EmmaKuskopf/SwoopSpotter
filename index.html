@@ -4987,16 +4987,19 @@ window.getCurrentDate = function() {
     }
     
     if(activeThreats.length > 0){
-      // Check if the spots have changed
+      // Check if the spots have changed (only show alert if entering NEW zones)
       const currentIds = currentAlertSpots.map(s => s.id).sort().join(',');
       const newIds = activeThreats.map(s => s.id).sort().join(',');
       
+      // Only show alert if we're entering different zones than we're currently alerted for
+      // This prevents re-showing the alert when user clears it but is still in the zone
       if(currentIds !== newIds){
         // New journey starting - reset the calm feedback flag
         hasShownCalmFeedback = false;
         currentAlertSpots = activeThreats;
         showCenteredAlert(activeThreats);
       }
+      // If currentIds === newIds, user is still in the same zones - don't re-show alert
     } else {
       // User has exited ALL active threat zones (calm birds don't count)
       if(currentAlertSpots.length > 0){
@@ -5761,7 +5764,8 @@ window.getCurrentDate = function() {
         // Add all current alert spots to dismissed list
         currentAlertSpots.forEach(spot => dismissedAlerts.add(spot.id));
         console.log('🔕 User dismissed alert for:', currentAlertSpots.map(s => s.name).join(', '));
-        currentAlertSpots = [];
+        // Don't reset currentAlertSpots - keep track that we're still in these zones
+        // This prevents re-showing the alert when still in the same zones
         hideCenteredAlert();
         // Don't remove user marker - user location should remain visible
       };
@@ -5846,7 +5850,8 @@ window.getCurrentDate = function() {
         // Add all current alert spots to dismissed list
         currentAlertSpots.forEach(spot => dismissedAlerts.add(spot.id));
         console.log('🔕 User dismissed alert for:', currentAlertSpots.map(s => s.name).join(', '));
-        currentAlertSpots = [];
+        // Don't reset currentAlertSpots - keep track that we're still in these zones
+        // This prevents re-showing the alert when still in the same zones
         hideCenteredAlert();
         // Don't remove user marker - user location should remain visible
       };

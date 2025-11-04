@@ -191,13 +191,21 @@
     opacity: 1 !important;
     pointer-events: auto !important;
     cursor: pointer !important;
+    background: #f59e0b !important;
+    border: 3px solid #422d1e !important;
     box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
-    animation: pulse-alert 2s ease-in-out infinite;
+    animation: pulse-alert 1.5s ease-in-out infinite;
   }
   
   @keyframes pulse-alert {
-    0%, 100% { transform: scale(1); opacity: 0.9; }
-    50% { transform: scale(1.1); opacity: 1; }
+    0%, 100% { 
+      background: #f59e0b;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+    }
+    50% { 
+      background: #fbbf24;
+      box-shadow: 0 6px 20px rgba(245, 158, 11, 0.8);
+    }
   }
   
   /* Hide alert content when minimized */
@@ -215,7 +223,7 @@
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
-    filter: brightness(0) saturate(100%);
+    filter: brightness(0) invert(1);
   }
   
   /* ===== Dark Mode Utility Classes ===== */

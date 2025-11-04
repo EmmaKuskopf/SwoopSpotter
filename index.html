@@ -1956,9 +1956,13 @@ window.getCurrentDate = function() {
             }
             break;
           case error.POSITION_UNAVAILABLE:
-            message = 'Location unavailable. Make sure Location Services are enabled in your device settings, then try again.';
+            // Position unavailable means GPS/network can't determine location
+            // This is NOT a permission issue - device just can't get a fix
+            console.log('⚠️ POSITION_UNAVAILABLE - GPS/network signal unavailable');
+            
+            message = 'Location signal unavailable. Trying network positioning...';
             // Try again with lower accuracy as fallback
-            console.log('🔄 Retrying with enableHighAccuracy: false...');
+            console.log('🔄 Retrying with enableHighAccuracy: false (network-based)...');
             setTimeout(() => {
               navigator.geolocation.getCurrentPosition(
                 (position) => {
@@ -1974,8 +1978,26 @@ window.getCurrentDate = function() {
                   startLocationTracking();
                 },
                 (retryError) => {
-                  console.error('❌ Retry failed:', retryError);
-                  toast('Could not get location. Please check device settings.', 4000);
+                  console.error('❌ Network positioning also failed:', retryError);
+                  
+                  // Detect device type for helpful message
+                  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+                  const isAndroid = /Android/.test(navigator.userAgent);
+                  const isMobile = isIOS || isAndroid;
+                  
+                  let helpMessage = 'Cannot determine location. ';
+                  if (isIOS) {
+                    helpMessage += 'Check: Settings → Privacy & Security → Location Services → Safari → While Using';
+                  } else if (isAndroid) {
+                    helpMessage += 'Check: Settings → Location → turn on location';
+                  } else {
+                    helpMessage += 'Try: 1) Move near a window, 2) Enable Wi-Fi, 3) Reload page';
+                  }
+                  helpMessage += '. You can still browse the map manually.';
+                  
+                  toast(helpMessage, 8000);
+                  
+                  // Show enable button for retry
                   if (enableLocationBtn) {
                     enableLocationBtn.classList.remove('hidden');
                   }

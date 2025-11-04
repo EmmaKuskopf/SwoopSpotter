@@ -4996,7 +4996,7 @@ window.getCurrentDate = function() {
   let hasShownCalmFeedback = false; // Track if we've already shown calm feedback this journey
   let recentlyReportedSpots = new Set(); // Track spots user just reported to prevent immediate alerts
   let alreadyReportedThisJourney = new Set(); // Track spots we've reported on during this journey (won't trigger feedback)
-  let dismissedAlerts = new Set(); // Track alerts user manually dismissed (cleared while still in zone)
+  let alertHidden = false; // Track if user manually hid the alert (don't re-show until zone change)
   
   function checkLocation(lat,lng){
     console.log('🎯 checkLocation called:', { lat, lng, timestamp: new Date().toISOString() });
@@ -5028,18 +5028,16 @@ window.getCurrentDate = function() {
     // Filter out calm birds from alerts - they're preventative info, not danger warnings
     // Users can still see them on the map and click for info
     // Also filter out spots the user just reported on (suppress alert for 10 seconds)
-    // Also filter out spots the user manually dismissed (until they exit and re-enter)
     const activeThreats = insideSpots.filter(s => 
       s.risk !== 'Calm - All clear' && 
-      !recentlyReportedSpots.has(s.id) &&
-      !dismissedAlerts.has(s.id)
+      !recentlyReportedSpots.has(s.id)
     );
     
     console.log('⚠️ Active threats (after filtering):', {
       count: activeThreats.length,
       spots: activeThreats.map(s => s.name),
-      dismissed: Array.from(dismissedAlerts),
-      recentlyReported: Array.from(recentlyReportedSpots)
+      recentlyReported: Array.from(recentlyReportedSpots),
+      alertHidden: alertHidden
     });
     
     // Track ALL non-calm spots we're currently in (for exit detection)
@@ -5069,35 +5067,38 @@ window.getCurrentDate = function() {
         areEqual: currentIds === newIds,
         currentAlertSpots: currentAlertSpots.map(s => s.name),
         activeThreats: activeThreats.map(s => s.name),
-        dismissedAlerts: Array.from(dismissedAlerts)
+        alertHidden: alertHidden
       });
       
-      // Only show alert if we're entering different zones than we're currently alerted for
+      // Only show alert if we're entering different zones AND alert isn't manually hidden
       if(currentIds !== newIds){
         console.log('🆕 Zone change detected - showing alert');
         
-        // New journey starting - reset the calm feedback flag
+        // New journey starting - reset flags
         hasShownCalmFeedback = false;
+        alertHidden = false; // Reset hidden flag when entering new zones
         
         // Show the alert for the new zones
         showCenteredAlert(activeThreats);
+      } else if (alertHidden) {
+        console.log('🙈 Alert hidden by user - keeping it hidden');
+        // Don't re-show the alert if user manually hid it
       } else {
         console.log('⏸️ Still in same zones - no alert needed');
       }
       
-      // Always update currentAlertSpots to match activeThreats (non-dismissed zones)
+      // Always update currentAlertSpots to match activeThreats
       currentAlertSpots = activeThreats;
     } else {
-      // User has exited ALL active threat zones (or dismissed all of them)
-      // Check allCurrentSpots (which includes dismissed) to see if we truly exited
+      // User has exited ALL active threat zones
+      // Check allCurrentSpots (which includes all non-calm) to see if we truly exited
       if(allCurrentSpots.length > 0){
-        // User is STILL IN ZONES but dismissed all alerts
-        // Don't trigger exit logic - they haven't left yet!
-        console.log('🔕 User still in zone but all alerts dismissed - no exit prompt');
+        // User is STILL IN ZONES but no active threats (all calm or recently reported)
+        // Just keep the tracking active, don't trigger exit
+        console.log('🔕 No active threats but user still in zones');
         currentAlertSpots = [];
         hideCenteredAlert();
-        // DON'T clear dismissedAlerts, visitedSpots, or show exit prompt
-        // Those will be handled when user ACTUALLY exits (allCurrentSpots becomes empty)
+        // DON'T reset alertHidden or show exit prompt
       } else {
         // User has TRULY EXITED all zones (allCurrentSpots is empty)
         // Now check if they were visiting active threat spots or calm spots
@@ -5117,11 +5118,11 @@ window.getCurrentDate = function() {
           
           showExitPrompt(activeSpotsToReport);
           
-          // Clear visited spots for next journey
+          // Clear ALL journey tracking when exiting
           visitedSpots.clear();
-          alreadyReportedThisJourney.clear(); // Also clear reported tracking for next journey
-          dismissedAlerts.clear(); // Clear dismissed alerts when exiting all zones
-          hasShownCalmFeedback = false; // Reset calm feedback flag for next journey
+          alreadyReportedThisJourney.clear();
+          alertHidden = false; // Reset hidden flag for next journey
+          hasShownCalmFeedback = false;
         } else {
           // They only visited calm spots (or no spots) - check for calm feedback
           currentAlertSpots = [];
@@ -5192,19 +5193,18 @@ window.getCurrentDate = function() {
           
           // Clear journey tracking when exiting all zones
           visitedSpots.clear();
-          dismissedAlerts.clear();
+          alertHidden = false; // Reset for next journey
           alreadyReportedThisJourney.clear();
           hasShownCalmFeedback = false;
         } else {
           console.log('🚫 hasShownCalmFeedback is already true - skipping check');
           // Clear visited spots since we're not showing a modal and journey is over
           visitedSpots.clear();
-          dismissedAlerts.clear();
+          alertHidden = false; // Reset for next journey
           alreadyReportedThisJourney.clear();
         }
         
-        // Note: Journey tracking cleared above
-        // This ensures dismissed alerts are reset for next journey
+        // Journey tracking cleared above
         }
       }
     }
@@ -5794,25 +5794,8 @@ window.getCurrentDate = function() {
     // Handle both single spot and array of spots
     const spotArray = Array.isArray(spots) ? spots : [spots];
     
-    // CRITICAL: Prevent duplicate alerts - check if all spots are already dismissed
-    const allSpotsDismissed = spotArray.every(spot => dismissedAlerts.has(spot.id));
-    if (allSpotsDismissed) {
-      console.log('⏸️ All spots already dismissed - skipping alert:', spotArray.map(s => s.name));
-      return;
-    }
-    
-    // Filter out dismissed spots before showing alert
-    const nonDismissedSpots = spotArray.filter(spot => !dismissedAlerts.has(spot.id));
-    if (nonDismissedSpots.length === 0) {
-      console.log('⏸️ No non-dismissed spots to show');
-      return;
-    }
-    
-    // Update spotArray to only include non-dismissed spots
-    const finalSpots = nonDismissedSpots;
-    
     // Check if any spots are pre-season warnings
-    const preseasonSpots = finalSpots.filter(s => s.isPreseason);
+    const preseasonSpots = spotArray.filter(s => s.isPreseason);
     if (preseasonSpots.length > 0) {
       // Show pre-season alert for the first one (they're all calm anyway)
       showPreseasonAlert(preseasonSpots[0]);
@@ -5822,9 +5805,9 @@ window.getCurrentDate = function() {
     // Play sound and vibrate when alert is shown
     playAlertNotification();
     
-    if(finalSpots.length === 1) {
+    if(spotArray.length === 1) {
       // Single spot - styled to match multi-bird view
-      const s = finalSpots[0];
+      const s = spotArray[0];
       const borderColor = s.risk === 'Danger - Avoid' ? 'border-red-400 bg-red-50' : 
                          s.risk === 'Take caution' ? 'border-yellow-400 bg-yellow-50' : 
                          s.risk === 'Calm - All clear' ? 'border-blue-400 bg-blue-50' :
@@ -5879,9 +5862,9 @@ window.getCurrentDate = function() {
       const showMoreBtn = alertBox.querySelector('.show-more-btn');
       if(showMoreBtn) {
         showMoreBtn.onclick = () => {
-          // Add all current alert spots to dismissed list
-          currentAlertSpots.forEach(spot => dismissedAlerts.add(spot.id));
-          console.log('🔕 User dismissed alert via Show More:', currentAlertSpots.map(s => s.name).join(', '));
+          // Hide the alert
+          alertHidden = true;
+          console.log('� User hid alert via Show More:', currentAlertSpots.map(s => s.name).join(', '));
           // Clear currentAlertSpots so zone change detection sees empty -> empty (no change)
           currentAlertSpots = [];
           hideCenteredAlert();
@@ -5898,16 +5881,16 @@ window.getCurrentDate = function() {
       }
       
       document.getElementById('clearAlertBtn').onclick = () => {
-        // Add all current alert spots to dismissed list
-        currentAlertSpots.forEach(spot => dismissedAlerts.add(spot.id));
-        console.log('🔕 User dismissed alert for:', currentAlertSpots.map(s => s.name).join(', '));
+        // Hide the alert
+        alertHidden = true;
+        console.log('� User hid alert for:', currentAlertSpots.map(s => s.name).join(', '));
         // Clear currentAlertSpots so zone change detection sees empty -> empty (no change)
         currentAlertSpots = [];
         hideCenteredAlert();
       };
     } else {
       // Multiple spots - show list with Show More button for each
-      const highestRisk = finalSpots[0].risk;
+      const highestRisk = spotArray[0].risk;
       
       // Determine risk class for alert box styling based on highest risk
       let riskClass = 'risk-caution';
@@ -5928,7 +5911,7 @@ window.getCurrentDate = function() {
           <span class="ml-1 ${highestRisk==='Danger - Avoid'?'text-red-600': highestRisk==='Take caution' ? 'text-yellow-600' : 'text-green-600'}">${escapeHtml(highestRisk)}</span>
         </div>
         <div class="max-h-48 overflow-y-auto space-y-2 mb-2">
-          ${finalSpots.map(spot => {
+          ${spotArray.map(spot => {
             const borderColor = spot.risk === 'Danger - Avoid' ? 'border-red-400 bg-red-50' : 
                                spot.risk === 'Take caution' ? 'border-yellow-400 bg-yellow-50' : 
                                'border-green-400 bg-green-50';
@@ -5968,9 +5951,9 @@ window.getCurrentDate = function() {
       alertBox.querySelectorAll('.show-more-btn').forEach(btn => {
         btn.onclick = () => {
           const spotId = btn.dataset.spotId;
-          // Add all current alert spots to dismissed list
-          currentAlertSpots.forEach(spot => dismissedAlerts.add(spot.id));
-          console.log('🔕 User dismissed alert via Show More:', currentAlertSpots.map(s => s.name).join(', '));
+          // Hide the alert
+          alertHidden = true;
+          console.log('� User hid alert via Show More:', currentAlertSpots.map(s => s.name).join(', '));
           // Clear currentAlertSpots so zone change detection sees empty -> empty (no change)
           currentAlertSpots = [];
           hideCenteredAlert();
@@ -5988,9 +5971,9 @@ window.getCurrentDate = function() {
       });
       
       document.getElementById('clearAlertBtn').onclick = () => {
-        // Add all current alert spots to dismissed list
-        currentAlertSpots.forEach(spot => dismissedAlerts.add(spot.id));
-        console.log('🔕 User dismissed alert for:', currentAlertSpots.map(s => s.name).join(', '));
+        // Hide the alert
+        alertHidden = true;
+        console.log('� User hid alert for:', currentAlertSpots.map(s => s.name).join(', '));
         // Clear currentAlertSpots so zone change detection sees empty -> empty (no change)
         currentAlertSpots = [];
         hideCenteredAlert();

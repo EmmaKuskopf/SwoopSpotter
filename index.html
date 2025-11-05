@@ -428,6 +428,8 @@
   body.dark-mode #useGPSBtnModal,
   body.dark-mode #testVibrateBtnModal,
   body.dark-mode #closeTestingModalBottom,
+  body.dark-mode #showMoreBtn,
+  body.dark-mode .show-more-btn,
   body.dark-mode button[style*="background-color: #422d1e"] {
     background-color: var(--text-primary) !important;
     color: #422d1e !important;
@@ -439,13 +441,22 @@
     color: #422d1e !important;
   }
   
-  /* Safety Tips buttons - darker green in dark mode */
-  body.dark-mode .safety-tips-btn {
-    background-color: #047857 !important; /* green-700 - darker than default green-600 */
+  /* Safety Tips sources - lighter blue text for better contrast */
+  body.dark-mode p[style*="color: #0C4A6E"] {
+    color: #60A5FA !important; /* blue-400 - much lighter blue */
   }
   
-  body.dark-mode .safety-tips-btn:hover {
+  /* Safety Tips buttons - darker green in dark mode */
+  body.dark-mode .safety-tips-btn,
+  body.dark-mode button.safety-tips-btn.bg-green-600 {
+    background-color: #047857 !important; /* green-700 - darker than default green-600 */
+    border-color: #047857 !important;
+  }
+  
+  body.dark-mode .safety-tips-btn:hover,
+  body.dark-mode button.safety-tips-btn.bg-green-600:hover {
     background-color: #065f46 !important; /* green-800 - even darker on hover */
+    border-color: #065f46 !important;
   }
   
   /* Leaflet map zoom controls - dark background with light symbols */
@@ -1902,7 +1913,7 @@ window.getCurrentDate = function() {
   const map = L.map('map', {
     minZoom: 3,
     maxZoom: 18
-  }).setView([-27.4698, 153.0251], 14);
+  }).setView([-27.4698, 153.0251], 18);
   
   // Define light and dark tile layers
   const lightTileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
@@ -1970,7 +1981,7 @@ window.getCurrentDate = function() {
         
         // Center map on user only on first successful track
         if (!isTracking) {
-          map.setView([lat, lng], Math.max(map.getZoom(), 14));
+          map.setView([lat, lng], Math.max(map.getZoom(), 18));
           isTracking = true;
           
           // Hide the enable location button since tracking is active
@@ -2057,7 +2068,7 @@ window.getCurrentDate = function() {
         console.log(`✅ User location found: ${lat}, ${lng}`);
         
         // Center map on user's location
-        map.setView([lat, lng], 14);
+        map.setView([lat, lng], 18);
         
         // Add user marker
         checkLocation(lat, lng);
@@ -2109,7 +2120,7 @@ window.getCurrentDate = function() {
                   const lat = position.coords.latitude;
                   const lng = position.coords.longitude;
                   console.log(`✅ Location found (low accuracy): ${lat}, ${lng}`);
-                  map.setView([lat, lng], 14);
+                  map.setView([lat, lng], 18);
                   checkLocation(lat, lng);
                   if (enableLocationBtn) {
                     enableLocationBtn.classList.add('hidden');

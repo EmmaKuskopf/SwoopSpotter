@@ -2075,6 +2075,7 @@ window.getCurrentDate = function() {
     }
 
     console.log('🎯 Starting continuous location tracking...');
+    console.log(`📡 Location mode: ${useHighAccuracy ? 'GPS (high accuracy)' : 'Network (Wi-Fi/cell towers)'}`);
 
     // Use watchPosition for continuous tracking
     locationWatchId = navigator.geolocation.watchPosition(
@@ -2082,8 +2083,13 @@ window.getCurrentDate = function() {
       (position) => {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
+        const accuracy = position.coords.accuracy; // Accuracy in meters
         
-        console.log(`📍 Location update: ${lat}, ${lng}`);
+        console.log(`📍 Location update: ${lat}, ${lng} (accuracy: ${Math.round(accuracy)}m)`);
+        console.log(`📡 Source: ${useHighAccuracy ? 'GPS' : 'Network (Wi-Fi/cell)'}`);
+        
+        // Reset error counter on success
+        consecutiveErrors = 0;
         
         // Update user location on map and check for alerts
         checkLocation(lat, lng);
@@ -2100,22 +2106,31 @@ window.getCurrentDate = function() {
             enableLocationBtn.classList.add('hidden');
           }
           
-          console.log('✅ Location tracking active');
+          // Show success message with location method
+          const method = useHighAccuracy ? 'GPS' : 'network location';
+          const accuracyQuality = accuracy < 50 ? 'excellent' : accuracy < 100 ? 'good' : 'approximate';
+          toast(`Location tracking active (${method} - ${accuracyQuality} accuracy)`, 2000);
+          console.log(`✅ Location tracking active via ${method}`);
         }
       },
       // Error callback
       (err) => {
-        console.error('Location tracking error:', err);
-        console.log('Tracking error details:', {
+        console.error('❌ Location tracking error:', err);
+        console.log('📊 Error details:', {
           code: err.code,
-          message: err.message
+          message: err.message,
+          consecutiveErrors: consecutiveErrors + 1,
+          currentMode: useHighAccuracy ? 'GPS' : 'Network'
         });
         
-        let errorMsg = 'Tracking error: ';
+        consecutiveErrors++;
+        
+        let errorMsg = '';
+        let shouldFallback = false;
         
         switch(err.code) {
           case err.PERMISSION_DENIED:
-            errorMsg += 'Location permission denied. Please enable location access.';
+            errorMsg = 'Location permission denied. Please enable location access in your device settings.';
             // Stop tracking and show enable button
             stopLocationTracking();
             const enableLocationBtn = document.getElementById('enableLocationBtn');
@@ -2124,27 +2139,60 @@ window.getCurrentDate = function() {
               enableLocationBtn.classList.remove('hidden');
             }
             break;
+            
           case err.POSITION_UNAVAILABLE:
-            errorMsg += 'Location unavailable. Make sure Location Services are enabled in your device settings.';
-            // Don't stop tracking - GPS might come back
-            console.log('⚠️ Location unavailable, will keep trying...');
+            errorMsg = 'Location unavailable.';
+            // Try fallback to network-based location after 2 consecutive errors
+            shouldFallback = useHighAccuracy && consecutiveErrors >= 2;
+            if (shouldFallback) {
+              console.log('⚠️ GPS unavailable, switching to network-based location...');
+              errorMsg = 'GPS signal weak - switching to network location...';
+            } else if (!useHighAccuracy) {
+              errorMsg = 'Location services unavailable. Check device settings.';
+            } else {
+              console.log('⚠️ GPS unavailable, will keep trying... (attempt ' + consecutiveErrors + ')');
+              errorMsg = 'Searching for GPS signal...';
+            }
             break;
+            
           case err.TIMEOUT:
-            errorMsg += 'Location request timed out. Still tracking...';
-            // Don't stop tracking - timeout is temporary
-            console.log('⚠️ Location timeout, will keep trying...');
+            errorMsg = 'Location request timed out.';
+            // Try fallback to network-based location after 3 consecutive timeouts
+            shouldFallback = useHighAccuracy && consecutiveErrors >= 3;
+            if (shouldFallback) {
+              console.log('⏱️ GPS timeout repeatedly - switching to network-based location...');
+              errorMsg = 'GPS taking too long - switching to network location...';
+            } else {
+              console.log('⏱️ Location timeout, will keep trying... (attempt ' + consecutiveErrors + ')');
+              errorMsg = 'Still searching for location...';
+            }
             break;
+            
           default:
-            errorMsg += err.message || 'Unknown error';
+            errorMsg = err.message || 'Unknown location error';
         }
         
-        toast(errorMsg, 3000);
+        // Show error message (don't spam if already tracking)
+        if (!isTracking || consecutiveErrors === 1) {
+          toast(errorMsg, 3000);
+        }
+        
+        // Implement fallback: restart tracking with network-based location
+        if (shouldFallback) {
+          console.log('🔄 Restarting tracking with network-based location...');
+          stopLocationTracking();
+          useHighAccuracy = false; // Switch to network mode
+          consecutiveErrors = 0; // Reset counter
+          setTimeout(() => {
+            startLocationTracking(); // Restart with network mode
+          }, 1000);
+        }
       },
-      // Options - optimized for mobile walking/cycling
+      // Options - GPS or Network based on useHighAccuracy flag
       {
-        enableHighAccuracy: true,  // Use GPS for better accuracy
-        timeout: 15000,            // 15 second timeout (increased for better reliability)
-        maximumAge: 5000           // Accept positions up to 5 seconds old (checks ~every 5 seconds)
+        enableHighAccuracy: useHighAccuracy,  // true = GPS, false = Network (Wi-Fi/cell)
+        timeout: useHighAccuracy ? 20000 : 10000,  // GPS gets more time (20s), network is faster (10s)
+        maximumAge: useHighAccuracy ? 5000 : 30000  // GPS needs fresh data (5s), network can be older (30s)
       }
     );
   }
@@ -2156,6 +2204,8 @@ window.getCurrentDate = function() {
     }
     
     isTracking = false;
+    consecutiveErrors = 0; // Reset error counter
+    useHighAccuracy = true; // Reset to GPS for next time
     console.log('🛑 Location tracking stopped');
   }
   
@@ -2716,6 +2766,8 @@ window.getCurrentDate = function() {
   // Location tracking state
   let locationWatchId = null;
   let isTracking = false;
+  let useHighAccuracy = true; // Start with GPS, fall back to network if needed
+  let consecutiveErrors = 0; // Track consecutive errors to trigger fallback
   
   // Sync queue state
   let syncQueue = []; // Array of {spotId, action: 'create'|'update', timestamp, retryCount}

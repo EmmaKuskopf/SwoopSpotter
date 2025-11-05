@@ -6073,7 +6073,7 @@ window.getCurrentDate = function() {
           <div class="font-medium ${textColor}">${escapeHtml(s.risk)}</div>
           <div class="flex gap-2 mt-2">
             <button class="show-more-btn text-xs text-white rounded px-3 py-1" style="background-color: #422d1e;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'" data-spot-id="${s.id}">Show More</button>
-            <button class="safety-tips-btn text-xs bg-green-600 hover:bg-green-700 text-white rounded px-3 py-1 flex items-center gap-1" data-species="${escapeHtml(s.species)}">
+            <button class="safety-tips-btn text-xs text-white rounded px-3 py-1 flex items-center gap-1" style="background-color: #047857;" onmouseover="this.style.backgroundColor='#065f46'" onmouseout="this.style.backgroundColor='#047857'" data-species="${escapeHtml(s.species)}">
               <img src="Assets/Icons/tips.svg" alt="Tips" style="width: 12px; height: 12px; filter: brightness(0) invert(1);">
               Tips
             </button>
@@ -6152,7 +6152,7 @@ window.getCurrentDate = function() {
                 <div class="font-medium ${textColor}">${escapeHtml(spot.risk)}</div>
                 <div class="flex gap-2 mt-2">
                   <button class="show-more-btn text-xs text-white rounded px-3 py-1" style="background-color: #422d1e;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'" data-spot-id="${spot.id}">Show More</button>
-                  <button class="safety-tips-btn text-xs bg-green-600 hover:bg-green-700 text-white rounded px-3 py-1 flex items-center gap-1" data-species="${escapeHtml(spot.species)}">
+                  <button class="safety-tips-btn text-xs text-white rounded px-3 py-1 flex items-center gap-1" style="background-color: #047857;" onmouseover="this.style.backgroundColor='#065f46'" onmouseout="this.style.backgroundColor='#047857'" data-species="${escapeHtml(spot.species)}">
                     <img src="Assets/Icons/tips.svg" alt="Tips" style="width: 12px; height: 12px; filter: brightness(0) invert(1);">
                     Tips
                   </button>
@@ -7967,8 +7967,8 @@ window.getCurrentDate = function() {
 
 <!-- Force dark mode button styles after Tailwind CDN loads -->
 <script>
-  // AGGRESSIVE APPROACH: Directly modify button classes and styles
-  // Tailwind CDN utilities are too powerful to override with CSS alone
+  // Apply dark mode styles to Show More buttons only
+  // Safety Tips buttons now use inline dark green by default
   
   function forceDarkModeStyles() {
     console.log('🎨 Forcing dark mode button styles');
@@ -7992,38 +7992,6 @@ window.getCurrentDate = function() {
       
       buttonsModified++;
       console.log('✅ Modified Show More button:', btn);
-    });
-    
-    // Safety Tips buttons - Remove Tailwind classes and add inline styles
-    document.querySelectorAll('.safety-tips-btn').forEach(btn => {
-      // Remove Tailwind background classes
-      btn.classList.remove('bg-green-600', 'hover:bg-green-700');
-      
-      // Add custom dark mode classes
-      btn.classList.add('dark-green-btn');
-      
-      // Force inline styles
-      btn.style.cssText = (btn.style.cssText || '') + 
-        'background-color: #047857 !important; ' +
-        'border-color: #047857 !important;';
-      
-      // Add hover effect via event listeners
-      btn.addEventListener('mouseenter', function() {
-        if (document.body.classList.contains('dark-mode')) {
-          this.style.backgroundColor = '#065f46';
-          this.style.borderColor = '#065f46';
-        }
-      });
-      
-      btn.addEventListener('mouseleave', function() {
-        if (document.body.classList.contains('dark-mode')) {
-          this.style.backgroundColor = '#047857';
-          this.style.borderColor = '#047857';
-        }
-      });
-      
-      buttonsModified++;
-      console.log('✅ Modified Safety Tips button:', btn);
     });
     
     console.log(`✅ Modified ${buttonsModified} buttons for dark mode`);

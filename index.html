@@ -2955,16 +2955,35 @@ window.getCurrentDate = function() {
   
   // Check auth state on load
   async function initAuth() {
+    console.log('🔐 Initializing authentication...');
+    
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
+      console.log('✅ User session found:', session.user.email);
       await handleAuthStateChange(session.user);
+      
+      // Load and process sync queue now that user is authenticated
+      loadSyncQueue();
+      updateSyncIndicator();
+      
+      // Process any pending syncs after a short delay
+      if (syncQueue.length > 0) {
+        console.log(`🔄 User authenticated, will process ${syncQueue.length} pending syncs`);
+        setTimeout(() => processSyncQueue(), 2000);
+      }
     } else {
+      console.log('⚠️ No user session found');
       // No session - update UI to show logged out state
       updateAuthUI();
+      
+      // Still load sync queue for display (but won't process until sign in)
+      loadSyncQueue();
+      updateSyncIndicator();
     }
     
     // Listen for auth changes
     supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('🔐 Auth state changed:', event);
       if (event === 'SIGNED_IN' && session) {
         await handleAuthStateChange(session.user);
       } else if (event === 'SIGNED_OUT') {
@@ -3020,13 +3039,13 @@ window.getCurrentDate = function() {
     // Subscribe to real-time updates now that user is authenticated
     subscribeToRealtimeUpdates();
     
-    // Load and process sync queue now that user is authenticated
-    loadSyncQueue();
+    // Sync queue is now loaded in initAuth() before this function
+    // Just update the indicator in case it changed
     updateSyncIndicator();
     
-    // Process any pending syncs
+    // Process any pending syncs (queue was already loaded in initAuth)
     if (syncQueue.length > 0) {
-      console.log(`🔄 User signed in, processing ${syncQueue.length} pending syncs`);
+      console.log(`🔄 Processing ${syncQueue.length} pending syncs after sign in`);
       setTimeout(() => processSyncQueue(), 2000);
     }
     
@@ -3674,12 +3693,14 @@ window.getCurrentDate = function() {
       syncQueue[existingIndex].retryCount = (syncQueue[existingIndex].retryCount || 0);
       console.log(`🔄 Updated existing queue item for ${spotId}`);
     } else {
-      // Add new queue item
+      // Add new queue item with user tracking
       syncQueue.push({
         spotId: spotId,
         action: action,
         timestamp: Date.now(),
-        retryCount: 0
+        retryCount: 0,
+        user_id: currentUser?.id, // Track ownership
+        created_by_name: userProfile?.display_name || currentUser?.email?.split('@')[0] || 'Unknown'
       });
       console.log(`✅ Added new queue item for ${spotId}`);
     }
@@ -3743,16 +3764,37 @@ window.getCurrentDate = function() {
   // Process sync queue - retry all failed syncs
   async function processSyncQueue() {
     if (syncInProgress || syncQueue.length === 0 || !syncEnabled || !currentUser) {
+      console.log('⚠️ Cannot process sync queue:', {
+        syncInProgress,
+        queueLength: syncQueue.length,
+        syncEnabled,
+        hasUser: !!currentUser
+      });
       return;
     }
     
     console.log(`🔄 Processing sync queue: ${syncQueue.length} items`);
+    console.log('📊 Sync queue state:', {
+      total: syncQueue.length,
+      pending: syncQueue.filter(i => (i.retryCount || 0) < 5).length,
+      failed: syncQueue.filter(i => (i.retryCount || 0) >= 5).length,
+      currentUserId: currentUser?.id
+    });
+    
     syncInProgress = true;
     
     // Create a copy to iterate over (in case queue changes during processing)
     const itemsToSync = [...syncQueue];
     
     for (const item of itemsToSync) {
+      // Validate ownership (skip if created by different user)
+      // Backward compatible: if user_id is missing, assume it belongs to current user
+      if (item.user_id && item.user_id !== currentUser?.id) {
+        console.log(`⚠️ Skipping sync - spot ${item.spotId} created by different user (${item.created_by_name || 'unknown'})`);
+        removeFromSyncQueue(item.spotId);
+        continue;
+      }
+      
       // Find the spot in our local spots array
       const spot = spots.find(s => s.id === item.spotId);
       
@@ -3762,7 +3804,7 @@ window.getCurrentDate = function() {
         continue;
       }
       
-      console.log(`🔄 Attempting to sync: ${spot.name} (retry ${item.retryCount})`);
+      console.log(`🔄 Attempting to sync: ${spot.name} (retry ${item.retryCount || 0})`);
       
       try {
         // Attempt to save to Supabase
@@ -8001,10 +8043,9 @@ window.getCurrentDate = function() {
     console.log('📡 Connection lost - will queue changes');
     toast('Offline - changes will sync later', 2000);
   });
-  
-  // Load sync queue on startup
-  loadSyncQueue();
-  updateSyncIndicator();
+
+  // Sync queue is now loaded in initAuth() after authentication check
+  // No need to load it here - initAuth() handles it properly
 
   // Load spots from Supabase (with fallback to localStorage)
   (async () => {

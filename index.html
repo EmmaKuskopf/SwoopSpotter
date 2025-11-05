@@ -4541,7 +4541,7 @@ window.getCurrentDate = function() {
       // Save to Supabase if sync is enabled
       if (syncEnabled && currentUser) {
         console.log('💾 Syncing safe passage count to Supabase for spot:', s.name);
-        saveToSupabase(s);
+        saveSpotToSupabase(s);
       }
       
       // Increment user's safe passage count in profile
@@ -5519,7 +5519,7 @@ window.getCurrentDate = function() {
     // Save to Supabase if sync is enabled
     if (syncEnabled && currentUser) {
       console.log('💾 Syncing safe passage count to Supabase for spot:', spot.name);
-      saveToSupabase(spot);
+      saveSpotToSupabase(spot);
     }
     
     // Increment user's safe passage count in profile
@@ -5689,7 +5689,7 @@ window.getCurrentDate = function() {
           // Save to Supabase if sync is enabled
           if (syncEnabled && currentUser) {
             console.log('💾 Syncing safe passage count to Supabase for spot:', spot.name);
-            saveToSupabase(spot);
+            saveSpotToSupabase(spot);
           }
           
           incrementUserSafePassages();

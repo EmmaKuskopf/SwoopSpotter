@@ -7967,43 +7967,112 @@ window.getCurrentDate = function() {
 
 <!-- Force dark mode button styles after Tailwind CDN loads -->
 <script>
-  // Wait for Tailwind to fully load, then inject our override styles
-  window.addEventListener('load', function() {
+  // CRITICAL: Apply dark mode button overrides with maximum specificity
+  // This must execute AFTER Tailwind CDN loads to override its utility classes
+  
+  function injectDarkModeOverrides() {
     console.log('🎨 Injecting dark mode button overrides after Tailwind load');
+    
+    // Remove existing override if present
+    const existing = document.getElementById('dark-mode-button-overrides');
+    if (existing) existing.remove();
     
     const style = document.createElement('style');
     style.id = 'dark-mode-button-overrides';
     style.textContent = `
-      /* Ultra-specific selectors to override Tailwind CDN */
+      /* MAXIMUM SPECIFICITY - Override Tailwind CDN utility classes */
       
-      /* Show More button - dark brown text in dark mode */
+      /* Show More button - beige bg with dark brown text in dark mode */
       body.dark-mode button.show-more-btn.text-xs.text-white,
+      body.dark-mode button.show-more-btn.text-white,
       body.dark-mode button#showMoreBtn.text-xs.text-white,
-      body.dark-mode button.text-xs.text-white[style*="background-color: #422d1e"] {
+      body.dark-mode button#showMoreBtn.text-white,
+      body.dark-mode .show-more-btn.text-white,
+      body.dark-mode button.text-xs.text-white[style*="background-color: #422d1e"],
+      body.dark-mode button[style*="background-color: #422d1e"].text-white {
         color: #422d1e !important;
         background-color: #f2eceb !important;
       }
       
-      /* Safety Tips button - dark green in dark mode */
-      body.dark-mode button.safety-tips-btn.text-xs.bg-green-600.hover\\:bg-green-700.text-white {
+      /* Safety Tips button - dark green background in dark mode */
+      body.dark-mode button.safety-tips-btn,
+      body.dark-mode .safety-tips-btn,
+      body.dark-mode button.safety-tips-btn.bg-green-600,
+      body.dark-mode button.safety-tips-btn.text-xs.bg-green-600,
+      body.dark-mode button.text-xs.bg-green-600.safety-tips-btn,
+      body.dark-mode button.bg-green-600.safety-tips-btn {
         background-color: #047857 !important;
+        border-color: #047857 !important;
       }
       
-      body.dark-mode button.safety-tips-btn.text-xs.bg-green-600.hover\\:bg-green-700.text-white:hover {
+      /* Safety Tips button hover - even darker green */
+      body.dark-mode button.safety-tips-btn:hover,
+      body.dark-mode .safety-tips-btn:hover,
+      body.dark-mode button.safety-tips-btn.bg-green-600:hover,
+      body.dark-mode button.safety-tips-btn:hover.bg-green-600 {
         background-color: #065f46 !important;
-      }
-      
-      body.dark-mode .safety-tips-btn.bg-green-600 {
-        background-color: #047857 !important;
-      }
-      
-      body.dark-mode .safety-tips-btn:hover {
-        background-color: #065f46 !important;
+        border-color: #065f46 !important;
       }
     `;
     document.head.appendChild(style);
     console.log('✅ Dark mode button overrides injected');
+    
+    // Also apply inline styles directly to existing buttons for immediate effect
+    if (document.body.classList.contains('dark-mode')) {
+      applyDarkModeToButtons();
+    }
+  }
+  
+  function applyDarkModeToButtons() {
+    console.log('🔧 Applying dark mode styles directly to buttons');
+    
+    // Show More buttons
+    document.querySelectorAll('.show-more-btn, #showMoreBtn').forEach(btn => {
+      if (btn.classList.contains('text-white')) {
+        btn.style.setProperty('color', '#422d1e', 'important');
+        btn.style.setProperty('background-color', '#f2eceb', 'important');
+      }
+    });
+    
+    // Safety Tips buttons
+    document.querySelectorAll('.safety-tips-btn').forEach(btn => {
+      if (btn.classList.contains('bg-green-600')) {
+        btn.style.setProperty('background-color', '#047857', 'important');
+        btn.style.setProperty('border-color', '#047857', 'important');
+      }
+    });
+    
+    console.log('✅ Direct styles applied to buttons');
+  }
+  
+  // Execute after window load (when Tailwind has loaded)
+  window.addEventListener('load', function() {
+    injectDarkModeOverrides();
+    
+    // Watch for dynamically added buttons (alerts are created dynamically)
+    const observer = new MutationObserver(function(mutations) {
+      if (document.body.classList.contains('dark-mode')) {
+        applyDarkModeToButtons();
+      }
+    });
+    
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+    
+    console.log('👁️ MutationObserver watching for dynamic buttons');
   });
+  
+  // Also apply when dark mode is toggled
+  const originalToggle = document.body.classList.toggle;
+  document.body.classList.toggle = function(className) {
+    const result = originalToggle.apply(this, arguments);
+    if (className === 'dark-mode') {
+      setTimeout(applyDarkModeToButtons, 10);
+    }
+    return result;
+  };
 </script>
 
 </body>

@@ -2021,8 +2021,12 @@ window.getCurrentDate = function() {
   // Start with a default view (will be updated once we get user location)
   const map = L.map('map', {
     minZoom: 3,
-    maxZoom: 18
+    maxZoom: 18,
+    zoomControl: true,
+    trackResize: true // Ensure map handles resize events properly
   }).setView([-27.4698, 153.0251], 18);
+  
+  console.log('🗺️ Map initialized:', !!map);
   
   // Define light and dark tile layers
   const lightTileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
@@ -2042,6 +2046,8 @@ window.getCurrentDate = function() {
   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   const isDarkMode = savedTheme === 'dark' || (!savedTheme && prefersDark);
   
+  console.log('🎨 Initial theme:', isDarkMode ? 'dark' : 'light');
+  
   if (isDarkMode) {
     darkTileLayer.addTo(map);
   } else {
@@ -2050,12 +2056,43 @@ window.getCurrentDate = function() {
   
   // Function to switch map tiles (will be called by dark mode toggle)
   window.switchMapTiles = function(isDark) {
-    if (isDark) {
-      map.removeLayer(lightTileLayer);
-      darkTileLayer.addTo(map);
-    } else {
-      map.removeLayer(darkTileLayer);
-      lightTileLayer.addTo(map);
+    console.log('🗺️ Switching map tiles to:', isDark ? 'dark' : 'light');
+    
+    try {
+      if (isDark) {
+        // Check if light layer exists before removing
+        if (map.hasLayer(lightTileLayer)) {
+          map.removeLayer(lightTileLayer);
+        }
+        // Only add dark layer if not already added
+        if (!map.hasLayer(darkTileLayer)) {
+          darkTileLayer.addTo(map);
+        }
+      } else {
+        // Check if dark layer exists before removing
+        if (map.hasLayer(darkTileLayer)) {
+          map.removeLayer(darkTileLayer);
+        }
+        // Only add light layer if not already added
+        if (!map.hasLayer(lightTileLayer)) {
+          lightTileLayer.addTo(map);
+        }
+      }
+      
+      console.log('✅ Map tiles switched successfully');
+      
+      // Force map to refresh/redraw (helps prevent rendering issues)
+      setTimeout(() => {
+        map.invalidateSize();
+      }, 100);
+      
+    } catch (error) {
+      console.error('❌ Error switching map tiles:', error);
+      // Fallback: ensure at least one tile layer is active
+      if (!map.hasLayer(lightTileLayer) && !map.hasLayer(darkTileLayer)) {
+        console.log('⚠️ No tile layer active, adding default light layer');
+        lightTileLayer.addTo(map);
+      }
     }
   };
   

@@ -2928,6 +2928,9 @@ window.getCurrentDate = function() {
     // Reload spots with user context (silently since we show welcome message)
     await loadAllFromSupabase(true);
     
+    // Subscribe to real-time updates now that user is authenticated
+    subscribeToRealtimeUpdates();
+    
     // Load and process sync queue now that user is authenticated
     loadSyncQueue();
     updateSyncIndicator();
@@ -3035,6 +3038,19 @@ window.getCurrentDate = function() {
   function handleSignOut() {
     currentUser = null;
     userProfile = null;
+    
+    // Clean up real-time subscriptions
+    if (spotsChannel) {
+      console.log('🧹 Removing spots channel on sign out');
+      supabase.removeChannel(spotsChannel);
+      spotsChannel = null;
+    }
+    if (reportsChannel) {
+      console.log('🧹 Removing reports channel on sign out');
+      supabase.removeChannel(reportsChannel);
+      reportsChannel = null;
+    }
+    
     updateAuthUI();
     toast('Signed out successfully', 2000);
   }
@@ -3961,11 +3977,28 @@ window.getCurrentDate = function() {
   }
   
   // Subscribe to real-time updates
+  let spotsChannel = null;
+  let reportsChannel = null;
+  
   function subscribeToRealtimeUpdates() {
     if (!syncEnabled) return;
     
+    console.log('🔄 Setting up real-time subscriptions...');
+    
+    // Clean up existing subscriptions to prevent duplicates
+    if (spotsChannel) {
+      console.log('🧹 Cleaning up existing spots channel');
+      supabase.removeChannel(spotsChannel);
+      spotsChannel = null;
+    }
+    if (reportsChannel) {
+      console.log('🧹 Cleaning up existing reports channel');
+      supabase.removeChannel(reportsChannel);
+      reportsChannel = null;
+    }
+    
     // Subscribe to spots table changes
-    const spotsChannel = supabase
+    spotsChannel = supabase
       .channel('spots-changes')
       .on(
         'postgres_changes',
@@ -3981,8 +4014,10 @@ window.getCurrentDate = function() {
       )
       .subscribe();
     
+    console.log('✅ Subscribed to spots channel');
+    
     // Subscribe to reports table changes
-    const reportsChannel = supabase
+    reportsChannel = supabase
       .channel('reports-changes')
       .on(
         'postgres_changes',
@@ -3997,6 +4032,8 @@ window.getCurrentDate = function() {
         }
       )
       .subscribe();
+    
+    console.log('✅ Subscribed to reports channel');
   }
   
   // Handle real-time spot updates
@@ -7890,8 +7927,8 @@ window.getCurrentDate = function() {
     
     console.log('📊 After loadAllFromSupabase, spots count:', spots.length);
     
-    // Subscribe to real-time updates
-    subscribeToRealtimeUpdates();
+    // Subscribe to real-time updates (moved to after auth completes)
+    // subscribeToRealtimeUpdates();
     
     // If no spots loaded, create a default example spot
     if(spots.length === 0){

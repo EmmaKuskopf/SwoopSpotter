@@ -401,6 +401,64 @@
     border-color: var(--text-primary) !important;
   }
   
+  /* Auth modal tab headers - beige text for better contrast */
+  body.dark-mode #signInTab,
+  body.dark-mode #signUpTab {
+    color: var(--text-primary) !important;
+  }
+  
+  /* Auth modal active tab - beige border */
+  body.dark-mode #signInTab.active,
+  body.dark-mode #signUpTab.active {
+    border-bottom-color: var(--text-primary) !important;
+  }
+  
+  /* Auth modal submit buttons - beige background with dark brown text */
+  body.dark-mode #signInForm button[type="submit"],
+  body.dark-mode #signUpForm button[type="submit"] {
+    background-color: var(--text-primary) !important;
+    color: #422d1e !important;
+  }
+  
+  /* Swoop spot modal buttons - beige background with dark brown text */
+  body.dark-mode .add-report-btn,
+  body.dark-mode #addReportBtn,
+  body.dark-mode .add-report-exit-btn,
+  body.dark-mode #closeSafetyTipsBottom,
+  body.dark-mode #useGPSBtnModal,
+  body.dark-mode #testVibrateBtnModal,
+  body.dark-mode #closeTestingModalBottom,
+  body.dark-mode button[style*="background-color: #422d1e"] {
+    background-color: var(--text-primary) !important;
+    color: #422d1e !important;
+  }
+  
+  /* Exit modal "Yes, I saw the bird" button */
+  body.dark-mode .calm-feedback-btn[data-action="yes"] {
+    background-color: var(--text-primary) !important;
+    color: #422d1e !important;
+  }
+  
+  /* Safety Tips buttons - darker green in dark mode */
+  body.dark-mode .safety-tips-btn {
+    background-color: #047857 !important; /* green-700 - darker than default green-600 */
+  }
+  
+  body.dark-mode .safety-tips-btn:hover {
+    background-color: #065f46 !important; /* green-800 - even darker on hover */
+  }
+  
+  /* Leaflet map zoom controls - dark background with light symbols */
+  body.dark-mode .leaflet-control-zoom a {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+  }
+  
+  body.dark-mode .leaflet-control-zoom a:hover {
+    background-color: var(--bg-tertiary) !important;
+  }
+  
   /* Menu text - ensure dropdown menu items are readable */
   body.dark-mode #userMenuDropdown button {
     color: var(--text-primary) !important;

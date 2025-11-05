@@ -1223,6 +1223,17 @@
           Testing
         </button>
         
+        <!-- Manual Sync Button -->
+        <button id="menuSync" class="hidden w-full text-left px-3 py-2 rounded mb-1 text-primary hover:bg-secondary flex items-center gap-2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+          <span id="menuSyncText">Sync Now</span>
+          <span id="menuSyncBadge" class="hidden ml-auto bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full"></span>
+        </button>
+        
         <!-- Dark Mode Toggle -->
         <button id="menuDarkMode" class="w-full text-left px-3 py-2 rounded mb-1 text-primary hover:bg-secondary flex items-center gap-2">
           <svg class="moon-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1331,6 +1342,9 @@
 
 <!-- centered alert -->
 <div id="alertBox" role="status" aria-live="polite"></div>
+
+<!-- Sync Indicator -->
+<div id="syncIndicator" class="hidden"></div>
 
 <!-- Add / New Spot Modal -->
 <div id="spotModal" class="hidden fixed inset-0 modal-overlay flex items-start justify-center bg-black/40 pt-4 pb-4 px-4">
@@ -2477,6 +2491,7 @@ window.getCurrentDate = function() {
 
   // constants + data arrays
   const STORAGE_KEY = 'swoop_reports_v1';
+  const SYNC_QUEUE_KEY = 'swoop_sync_queue_v1';
   const BIRD_BEHAVIOURS = ["noisy","swoop","close swoop","made contact + uninjured","made contact + injured"];
   const HUMAN_BEHAVIOURS = ["walking","running","cycling","riding e-scooter","alone","with others","with pram","with children","in group","other"];
   const PRECAUTIONS = ["Hat","Sunglasses","Umbrella","Helmet","Helmet with Cable Ties","Made Eye Contact","None"];
@@ -2700,6 +2715,11 @@ window.getCurrentDate = function() {
   // Location tracking state
   let locationWatchId = null;
   let isTracking = false;
+  
+  // Sync queue state
+  let syncQueue = []; // Array of {spotId, action: 'create'|'update', timestamp, retryCount}
+  let syncInProgress = false;
+  let syncRetryTimer = null;
 
   // cute names - expanded dataset with 50+ creative generic bird names
   const cuteNames = [
@@ -2906,6 +2926,16 @@ window.getCurrentDate = function() {
     
     // Reload spots with user context (silently since we show welcome message)
     await loadAllFromSupabase(true);
+    
+    // Load and process sync queue now that user is authenticated
+    loadSyncQueue();
+    updateSyncIndicator();
+    
+    // Process any pending syncs
+    if (syncQueue.length > 0) {
+      console.log(`🔄 User signed in, processing ${syncQueue.length} pending syncs`);
+      setTimeout(() => processSyncQueue(), 2000);
+    }
     
     // Check if this is a new user signup
     const isNewUser = sessionStorage.getItem('newUserSignup') === 'true';
@@ -3496,74 +3526,301 @@ window.getCurrentDate = function() {
   // Persistence (Supabase + localStorage fallback)
   // ----------------------------
   
+  // ----------------------------
+  // Sync Queue Management
+  // ----------------------------
+  
+  // Load sync queue from localStorage
+  function loadSyncQueue() {
+    try {
+      const queueData = localStorage.getItem(SYNC_QUEUE_KEY);
+      syncQueue = queueData ? JSON.parse(queueData) : [];
+      console.log(`📋 Loaded ${syncQueue.length} items from sync queue`);
+      return syncQueue;
+    } catch (e) {
+      console.warn('⚠️ Error loading sync queue:', e);
+      syncQueue = [];
+      return [];
+    }
+  }
+  
+  // Save sync queue to localStorage
+  function saveSyncQueue() {
+    try {
+      localStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(syncQueue));
+      console.log(`💾 Saved ${syncQueue.length} items to sync queue`);
+    } catch (e) {
+      console.warn('⚠️ Error saving sync queue:', e);
+    }
+  }
+  
+  // Add spot to sync queue
+  function addToSyncQueue(spotId, action = 'create') {
+    console.log(`➕ Adding to sync queue: ${spotId} (${action})`);
+    
+    // Check if already in queue
+    const existingIndex = syncQueue.findIndex(item => item.spotId === spotId);
+    
+    if (existingIndex >= 0) {
+      // Update existing queue item
+      syncQueue[existingIndex].action = action;
+      syncQueue[existingIndex].timestamp = Date.now();
+      syncQueue[existingIndex].retryCount = (syncQueue[existingIndex].retryCount || 0);
+      console.log(`🔄 Updated existing queue item for ${spotId}`);
+    } else {
+      // Add new queue item
+      syncQueue.push({
+        spotId: spotId,
+        action: action,
+        timestamp: Date.now(),
+        retryCount: 0
+      });
+      console.log(`✅ Added new queue item for ${spotId}`);
+    }
+    
+    saveSyncQueue();
+    updateSyncIndicator();
+  }
+  
+  // Remove spot from sync queue
+  function removeFromSyncQueue(spotId) {
+    const initialLength = syncQueue.length;
+    syncQueue = syncQueue.filter(item => item.spotId !== spotId);
+    
+    if (syncQueue.length < initialLength) {
+      console.log(`✅ Removed ${spotId} from sync queue`);
+      saveSyncQueue();
+      updateSyncIndicator();
+    }
+  }
+  
+  // Update sync indicator UI
+  function updateSyncIndicator() {
+    const indicator = document.getElementById('syncIndicator');
+    const menuSync = document.getElementById('menuSync');
+    const menuSyncBadge = document.getElementById('menuSyncBadge');
+    
+    if (syncQueue.length > 0) {
+      // Update floating indicator
+      if (indicator) {
+        indicator.textContent = `${syncQueue.length} unsynced`;
+        indicator.classList.remove('hidden');
+        indicator.style.cssText = 'position: fixed; top: 140px; right: 20px; background: #F59E0B; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; z-index: 998; box-shadow: 0 2px 6px rgba(0,0,0,0.2);';
+      }
+      
+      // Show sync button in menu (only if user is signed in)
+      if (currentUser && menuSync) {
+        menuSync.classList.remove('hidden');
+      }
+      
+      // Update menu badge
+      if (menuSyncBadge) {
+        menuSyncBadge.textContent = syncQueue.length;
+        menuSyncBadge.classList.remove('hidden');
+      }
+    } else {
+      // Hide indicator
+      if (indicator) {
+        indicator.classList.add('hidden');
+      }
+      
+      // Hide sync button and badge
+      if (menuSync) {
+        menuSync.classList.add('hidden');
+      }
+      if (menuSyncBadge) {
+        menuSyncBadge.classList.add('hidden');
+      }
+    }
+  }
+  
+  // Process sync queue - retry all failed syncs
+  async function processSyncQueue() {
+    if (syncInProgress || syncQueue.length === 0 || !syncEnabled || !currentUser) {
+      return;
+    }
+    
+    console.log(`🔄 Processing sync queue: ${syncQueue.length} items`);
+    syncInProgress = true;
+    
+    // Create a copy to iterate over (in case queue changes during processing)
+    const itemsToSync = [...syncQueue];
+    
+    for (const item of itemsToSync) {
+      // Find the spot in our local spots array
+      const spot = spots.find(s => s.id === item.spotId);
+      
+      if (!spot) {
+        console.log(`⚠️ Spot ${item.spotId} not found locally, removing from queue`);
+        removeFromSyncQueue(item.spotId);
+        continue;
+      }
+      
+      console.log(`🔄 Attempting to sync: ${spot.name} (retry ${item.retryCount})`);
+      
+      try {
+        // Attempt to save to Supabase
+        await saveSpotToSupabaseInternal(spot);
+        
+        // Success - remove from queue
+        console.log(`✅ Successfully synced: ${spot.name}`);
+        removeFromSyncQueue(item.spotId);
+        toast(`Synced: ${spot.name}`, 1600);
+        
+      } catch (error) {
+        console.error(`❌ Failed to sync ${spot.name}:`, error);
+        
+        // Increment retry count
+        const queueItem = syncQueue.find(qi => qi.spotId === item.spotId);
+        if (queueItem) {
+          queueItem.retryCount = (queueItem.retryCount || 0) + 1;
+          queueItem.lastError = error.message;
+          queueItem.lastAttempt = Date.now();
+          saveSyncQueue();
+          
+          // If too many retries, notify user
+          if (queueItem.retryCount >= 5) {
+            console.warn(`⚠️ ${spot.name} failed ${queueItem.retryCount} times`);
+            toast(`Sync issue: ${spot.name} - will keep trying`, 3000);
+          }
+        }
+      }
+      
+      // Small delay between syncs to avoid overwhelming the server
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+    
+    syncInProgress = false;
+    updateSyncIndicator();
+    
+    // Schedule next retry if there are still items in queue
+    if (syncQueue.length > 0) {
+      scheduleNextSync();
+    }
+  }
+  
+  // Schedule next sync retry (exponential backoff)
+  function scheduleNextSync() {
+    if (syncRetryTimer) {
+      clearTimeout(syncRetryTimer);
+    }
+    
+    // Get the max retry count to determine backoff
+    const maxRetries = Math.max(...syncQueue.map(item => item.retryCount || 0), 0);
+    
+    // Exponential backoff: 30s, 1m, 2m, 5m, 10m
+    const delays = [30000, 60000, 120000, 300000, 600000];
+    const delay = delays[Math.min(maxRetries, delays.length - 1)];
+    
+    console.log(`⏰ Scheduling next sync in ${delay / 1000}s`);
+    
+    syncRetryTimer = setTimeout(() => {
+      console.log('⏰ Retry timer triggered, processing sync queue...');
+      processSyncQueue();
+    }, delay);
+  }
+  
+  // Internal save function (used by both direct save and sync queue)
+  async function saveSpotToSupabaseInternal(spot) {
+    if (!syncEnabled) {
+      throw new Error('Sync is disabled');
+    }
+    
+    if (!currentUser) {
+      throw new Error('User not authenticated');
+    }
+    
+    // Track that we're saving this spot to ignore its real-time update
+    recentlySavedSpotIds.add(spot.id);
+    
+    // Clear it after a short delay (in case the real-time update is delayed)
+    setTimeout(() => {
+      recentlySavedSpotIds.delete(spot.id);
+    }, 3000);
+    
+    // Prepare spot data (exclude UI elements)
+    const spotData = {
+      id: spot.id,
+      name: spot.name,
+      species: spot.species,
+      lat: Number(spot.lat),
+      lng: Number(spot.lng),
+      risk: spot.risk,
+      is_preseason: spot.isPreseason === true,
+      address: spot.address || null,
+      safe_passage_count: spot.safePassageCount || 0,
+      last_safe_passage: spot.lastSafePassage || null,
+      user_id: currentUser.id,
+      created_by_name: userProfile?.display_name || currentUser.email.split('@')[0]
+    };
+    
+    console.log(`💾 Saving spot ${spot.name}: isPreseason=${spot.isPreseason}, DB is_preseason=${spotData.is_preseason}`);
+    
+    // Upsert spot (insert or update)
+    const { data: spotResult, error: spotError } = await supabase
+      .from('spots')
+      .upsert(spotData)
+      .select();
+    
+    if (spotError) throw spotError;
+    
+    // Save reports for this spot
+    if (spot.reports && spot.reports.length > 0) {
+      const reportsData = spot.reports.map(r => ({
+        id: r.id,
+        spot_id: spot.id,
+        alert_level: r.alertLevel,
+        bird_behaviour: r.birdBehaviour || [],
+        human_behaviour: r.humanBehaviour || [],
+        precautions: r.precautions || [],
+        extra_details: r.extra || '',
+        timestamp: r.timestamp,
+        user_id: r.user_id || currentUser.id,
+        created_by_name: r.created_by_name || (userProfile?.display_name || currentUser.email.split('@')[0])
+      }));
+      
+      const { error: reportsError } = await supabase
+        .from('reports')
+        .upsert(reportsData);
+      
+      if (reportsError) throw reportsError;
+    }
+    
+    console.log('✅ Spot synced to Supabase:', spot.name);
+  }
+  
   // Save spot to Supabase
   async function saveSpotToSupabase(spot) {
     if (!syncEnabled) return;
     
+    // Don't sync if user is not authenticated
+    if (!currentUser) {
+      console.log('⚠️ User not authenticated, adding to sync queue for later');
+      addToSyncQueue(spot.id, 'create');
+      return;
+    }
+    
     try {
       isSyncing = true;
       
-      // Track that we're saving this spot to ignore its real-time update
-      recentlySavedSpotIds.add(spot.id);
+      // Try to save immediately
+      await saveSpotToSupabaseInternal(spot);
       
-      // Clear it after a short delay (in case the real-time update is delayed)
-      setTimeout(() => {
-        recentlySavedSpotIds.delete(spot.id);
-      }, 3000);
-      
-      // Prepare spot data (exclude UI elements)
-      const spotData = {
-        id: spot.id,
-        name: spot.name,
-        species: spot.species,
-        lat: Number(spot.lat),
-        lng: Number(spot.lng),
-        risk: spot.risk,
-        is_preseason: spot.isPreseason === true, // Explicitly convert to boolean (false if undefined/null/false)
-        address: spot.address || null,
-        safe_passage_count: spot.safePassageCount || 0,
-        last_safe_passage: spot.lastSafePassage || null,
-        user_id: currentUser?.id || null,
-        created_by_name: currentUser ? (userProfile?.display_name || currentUser.email.split('@')[0]) : null
-      };
-      
-      console.log(`💾 Saving spot ${spot.name}: isPreseason=${spot.isPreseason}, DB is_preseason=${spotData.is_preseason}`);
-      
-      // Upsert spot (insert or update)
-      const { data: spotResult, error: spotError } = await supabase
-        .from('spots')
-        .upsert(spotData)
-        .select();
-      
-      if (spotError) throw spotError;
-      
-      // Save reports for this spot
-      if (spot.reports && spot.reports.length > 0) {
-        const reportsData = spot.reports.map(r => ({
-          id: r.id,
-          spot_id: spot.id,
-          alert_level: r.alertLevel,
-          bird_behaviour: r.birdBehaviour || [],
-          human_behaviour: r.humanBehaviour || [],
-          precautions: r.precautions || [],
-          extra_details: r.extra || '',
-          timestamp: r.timestamp,
-          user_id: r.user_id || currentUser?.id || null,
-          created_by_name: r.created_by_name || (currentUser ? (userProfile?.display_name || currentUser.email.split('@')[0]) : null)
-        }));
-        
-        const { error: reportsError } = await supabase
-          .from('reports')
-          .upsert(reportsData);
-        
-        if (reportsError) throw reportsError;
-      }
-      
-      console.log('✅ Spot synced to Supabase:', spot.name);
+      // Success - remove from queue if it was there
+      removeFromSyncQueue(spot.id);
       
     } catch (error) {
       console.error('❌ Error saving to Supabase:', error);
-      toast('Sync error - saved locally', 2000);
+      
+      // Add to sync queue for retry
+      addToSyncQueue(spot.id, 'update');
+      
+      // Show user-friendly error
+      toast('Saved locally - will sync when online', 2000);
+      
+      // Schedule retry
+      scheduleNextSync();
+      
     } finally {
       isSyncing = false;
     }
@@ -3668,6 +3925,12 @@ window.getCurrentDate = function() {
       // Save to localStorage as backup
       saveAll();
       
+      // After loading from database, process sync queue to upload any pending items
+      if (currentUser && syncQueue.length > 0) {
+        console.log(`🔄 Processing ${syncQueue.length} queued items after database load`);
+        setTimeout(() => processSyncQueue(), 2000); // Small delay to let UI settle
+      }
+      
     } catch (error) {
       console.error('❌ Error loading from Supabase:', error);
       if (!silent) {
@@ -3685,6 +3948,14 @@ window.getCurrentDate = function() {
       console.log(`📂 Found ${raw.length} spots in localStorage`);
       raw.forEach(r => createSpotFromData(r, true));
       console.log(`✅ Successfully loaded ${spots.length} spots from localStorage`);
+      
+      // After loading from localStorage, check if we have a sync queue
+      loadSyncQueue();
+      if (currentUser && syncQueue.length > 0) {
+        console.log(`🔄 Found ${syncQueue.length} items in sync queue`);
+        updateSyncIndicator();
+        setTimeout(() => processSyncQueue(), 3000);
+      }
     } catch(e){ console.warn('❌ localStorage load error:', e); }
   }
   
@@ -7205,6 +7476,34 @@ window.getCurrentDate = function() {
     });
   }
   
+  // Manual Sync
+  const menuSync = document.getElementById('menuSync');
+  if (menuSync) {
+    menuSync.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      hamburgerMenuDropdown.classList.add('hidden');
+      
+      if (!currentUser) {
+        toast('Please sign in to sync data', 2000);
+        return;
+      }
+      
+      if (syncQueue.length === 0) {
+        toast('All data is synced!', 2000);
+        return;
+      }
+      
+      toast(`Syncing ${syncQueue.length} items...`, 2000);
+      await processSyncQueue();
+      
+      if (syncQueue.length === 0) {
+        toast('Sync complete!', 2000);
+      } else {
+        toast(`${syncQueue.length} items still pending`, 2000);
+      }
+    });
+  }
+  
   // Sign In
   if (menuSignIn) {
     menuSignIn.addEventListener('click', (e) => {
@@ -7418,6 +7717,28 @@ window.getCurrentDate = function() {
       }
     }
   })();
+
+  // ----------------------------
+  // Online/Offline Event Handlers for Sync Queue
+  // ----------------------------
+  window.addEventListener('online', () => {
+    console.log('🌐 Connection restored - processing sync queue');
+    toast('Back online - syncing data...', 2000);
+    
+    // Process sync queue when connection is restored
+    if (currentUser && syncQueue.length > 0) {
+      setTimeout(() => processSyncQueue(), 1000);
+    }
+  });
+  
+  window.addEventListener('offline', () => {
+    console.log('📡 Connection lost - will queue changes');
+    toast('Offline - changes will sync later', 2000);
+  });
+  
+  // Load sync queue on startup
+  loadSyncQueue();
+  updateSyncIndicator();
 
   // Load spots from Supabase (with fallback to localStorage)
   (async () => {

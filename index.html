@@ -7965,5 +7965,46 @@ window.getCurrentDate = function() {
 })();
 </script>
 
+<!-- Force dark mode button styles after Tailwind CDN loads -->
+<script>
+  // Wait for Tailwind to fully load, then inject our override styles
+  window.addEventListener('load', function() {
+    console.log('🎨 Injecting dark mode button overrides after Tailwind load');
+    
+    const style = document.createElement('style');
+    style.id = 'dark-mode-button-overrides';
+    style.textContent = `
+      /* Ultra-specific selectors to override Tailwind CDN */
+      
+      /* Show More button - dark brown text in dark mode */
+      body.dark-mode button.show-more-btn.text-xs.text-white,
+      body.dark-mode button#showMoreBtn.text-xs.text-white,
+      body.dark-mode button.text-xs.text-white[style*="background-color: #422d1e"] {
+        color: #422d1e !important;
+        background-color: #f2eceb !important;
+      }
+      
+      /* Safety Tips button - dark green in dark mode */
+      body.dark-mode button.safety-tips-btn.text-xs.bg-green-600.hover\\:bg-green-700.text-white {
+        background-color: #047857 !important;
+      }
+      
+      body.dark-mode button.safety-tips-btn.text-xs.bg-green-600.hover\\:bg-green-700.text-white:hover {
+        background-color: #065f46 !important;
+      }
+      
+      body.dark-mode .safety-tips-btn.bg-green-600 {
+        background-color: #047857 !important;
+      }
+      
+      body.dark-mode .safety-tips-btn:hover {
+        background-color: #065f46 !important;
+      }
+    `;
+    document.head.appendChild(style);
+    console.log('✅ Dark mode button overrides injected');
+  });
+</script>
+
 </body>
 </html>

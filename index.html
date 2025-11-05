@@ -480,10 +480,21 @@
     background-color: #065f46 !important;
   }
   
-  /* Override Tailwind text-white for show-more buttons */
+  /* Override Tailwind text-white for show-more buttons - use attribute selector for inline styles */
   body.dark-mode button.show-more-btn.text-white,
-  body.dark-mode button#showMoreBtn.text-white {
+  body.dark-mode button#showMoreBtn.text-white,
+  body.dark-mode button.show-more-btn[style*="background-color: #422d1e"],
+  body.dark-mode button#showMoreBtn[style*="background-color: #422d1e"] {
     color: #422d1e !important;
+  }
+  
+  /* Override inline style bg for safety tips buttons */
+  body.dark-mode button.safety-tips-btn[class*="bg-green"] {
+    background-color: #047857 !important;
+  }
+  
+  body.dark-mode button.safety-tips-btn[class*="bg-green"]:hover {
+    background-color: #065f46 !important;
   }
   
   /* Leaflet map zoom controls - dark background with light symbols */
@@ -1089,6 +1100,27 @@
     50% { opacity: 0.7; }
   }
 </style>
+
+<!-- Dark Mode Button Overrides - Must be after Tailwind to ensure highest priority -->
+<style>
+  /* Force override Tailwind's text-white class for show-more buttons in dark mode */
+  body.dark-mode .show-more-btn.text-white,
+  body.dark-mode #showMoreBtn.text-white {
+    color: #422d1e !important;
+  }
+  
+  /* Force override Tailwind's bg-green-600 class for safety-tips buttons in dark mode */
+  body.dark-mode .safety-tips-btn.bg-green-600,
+  body.dark-mode button.safety-tips-btn.bg-green-600 {
+    background-color: #047857 !important;
+  }
+  
+  body.dark-mode .safety-tips-btn.bg-green-600:hover,
+  body.dark-mode button.safety-tips-btn.bg-green-600:hover {
+    background-color: #065f46 !important;
+  }
+</style>
+
 </head>
 <body class="min-h-screen">
 
@@ -1554,7 +1586,7 @@
 <div id="authModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="z-index: 9999;">
   <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4" style="background-color: #f2eceb; border: 2px solid #d4cac7;">
     <div class="flex items-center justify-between p-6 border-b" style="border-color: #d4cac7;">
-      <h2 class="text-2xl font-bold" style="color: #422d1e;">Welcome to SwoopSpotter</h2>
+      <h2 class="text-2xl font-bold" style="color: #422d1e;">Welcome to Swoop Spotter</h2>
       <button id="closeAuthModal" class="text-gray-500 hover:text-gray-700">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>

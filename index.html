@@ -1763,36 +1763,37 @@
         <div class="mb-4">
           <label class="block text-sm font-medium mb-2" style="color: #422d1e;">Avatar</label>
           <input type="hidden" id="selectedAvatar" value="user_1.svg">
-          <div class="grid grid-cols-4 gap-3">
-            <button type="button" class="avatar-btn p-2 rounded border-2 hover:bg-gray-100" data-avatar="user_1.svg" style="border-color: transparent;">
-              <img src="Assets/Users Icons/user_1.svg" alt="Avatar 1" class="w-full h-auto">
+          <!-- Horizontal scrollable avatar picker -->
+          <div class="flex gap-2 overflow-x-auto pb-2" style="-webkit-overflow-scrolling: touch;">
+            <button type="button" class="avatar-btn flex-shrink-0 p-2 rounded-lg border-2 hover:bg-gray-100 transition-all" data-avatar="user_1.svg" style="border-color: transparent;">
+              <img src="Assets/Users Icons/user_1.svg" alt="Avatar 1" class="w-12 h-12">
             </button>
-            <button type="button" class="avatar-btn p-2 rounded border-2 hover:bg-gray-100" data-avatar="user_2.svg" style="border-color: transparent;">
-              <img src="Assets/Users Icons/user_2.svg" alt="Avatar 2" class="w-full h-auto">
+            <button type="button" class="avatar-btn flex-shrink-0 p-2 rounded-lg border-2 hover:bg-gray-100 transition-all" data-avatar="user_2.svg" style="border-color: transparent;">
+              <img src="Assets/Users Icons/user_2.svg" alt="Avatar 2" class="w-12 h-12">
             </button>
-            <button type="button" class="avatar-btn p-2 rounded border-2 hover:bg-gray-100" data-avatar="user_3.svg" style="border-color: transparent;">
-              <img src="Assets/Users Icons/user_3.svg" alt="Avatar 3" class="w-full h-auto">
+            <button type="button" class="avatar-btn flex-shrink-0 p-2 rounded-lg border-2 hover:bg-gray-100 transition-all" data-avatar="user_3.svg" style="border-color: transparent;">
+              <img src="Assets/Users Icons/user_3.svg" alt="Avatar 3" class="w-12 h-12">
             </button>
-            <button type="button" class="avatar-btn p-2 rounded border-2 hover:bg-gray-100" data-avatar="user_4.svg" style="border-color: transparent;">
-              <img src="Assets/Users Icons/user_4.svg" alt="Avatar 4" class="w-full h-auto">
+            <button type="button" class="avatar-btn flex-shrink-0 p-2 rounded-lg border-2 hover:bg-gray-100 transition-all" data-avatar="user_4.svg" style="border-color: transparent;">
+              <img src="Assets/Users Icons/user_4.svg" alt="Avatar 4" class="w-12 h-12">
             </button>
-            <button type="button" class="avatar-btn p-2 rounded border-2 hover:bg-gray-100" data-avatar="user_5.svg" style="border-color: transparent;">
-              <img src="Assets/Users Icons/user_5.svg" alt="Avatar 5" class="w-full h-auto">
+            <button type="button" class="avatar-btn flex-shrink-0 p-2 rounded-lg border-2 hover:bg-gray-100 transition-all" data-avatar="user_5.svg" style="border-color: transparent;">
+              <img src="Assets/Users Icons/user_5.svg" alt="Avatar 5" class="w-12 h-12">
             </button>
-            <button type="button" class="avatar-btn p-2 rounded border-2 hover:bg-gray-100" data-avatar="user_6.svg" style="border-color: transparent;">
-              <img src="Assets/Users Icons/user_6.svg" alt="Avatar 6" class="w-full h-auto">
+            <button type="button" class="avatar-btn flex-shrink-0 p-2 rounded-lg border-2 hover:bg-gray-100 transition-all" data-avatar="user_6.svg" style="border-color: transparent;">
+              <img src="Assets/Users Icons/user_6.svg" alt="Avatar 6" class="w-12 h-12">
             </button>
-            <button type="button" class="avatar-btn p-2 rounded border-2 hover:bg-gray-100" data-avatar="user_7.svg" style="border-color: transparent;">
-              <img src="Assets/Users Icons/user_7.svg" alt="Avatar 7" class="w-full h-auto">
+            <button type="button" class="avatar-btn flex-shrink-0 p-2 rounded-lg border-2 hover:bg-gray-100 transition-all" data-avatar="user_7.svg" style="border-color: transparent;">
+              <img src="Assets/Users Icons/user_7.svg" alt="Avatar 7" class="w-12 h-12">
             </button>
-            <button type="button" class="avatar-btn p-2 rounded border-2 hover:bg-gray-100" data-avatar="user_8.svg" style="border-color: transparent;">
-              <img src="Assets/Users Icons/user_8.svg" alt="Avatar 8" class="w-full h-auto">
+            <button type="button" class="avatar-btn flex-shrink-0 p-2 rounded-lg border-2 hover:bg-gray-100 transition-all" data-avatar="user_8.svg" style="border-color: transparent;">
+              <img src="Assets/Users Icons/user_8.svg" alt="Avatar 8" class="w-12 h-12">
             </button>
-            <button type="button" class="avatar-btn p-2 rounded border-2 hover:bg-gray-100" data-avatar="user_9.svg" style="border-color: transparent;">
-              <img src="Assets/Users Icons/user_9.svg" alt="Avatar 9" class="w-full h-auto">
+            <button type="button" class="avatar-btn flex-shrink-0 p-2 rounded-lg border-2 hover:bg-gray-100 transition-all" data-avatar="user_9.svg" style="border-color: transparent;">
+              <img src="Assets/Users Icons/user_9.svg" alt="Avatar 9" class="w-12 h-12">
             </button>
-            <button type="button" class="avatar-btn p-2 rounded border-2 hover:bg-gray-100" data-avatar="user_10.svg" style="border-color: transparent;">
-              <img src="Assets/Users Icons/user_10.svg" alt="Avatar 10" class="w-full h-auto">
+            <button type="button" class="avatar-btn flex-shrink-0 p-2 rounded-lg border-2 hover:bg-gray-100 transition-all" data-avatar="user_10.svg" style="border-color: transparent;">
+              <img src="Assets/Users Icons/user_10.svg" alt="Avatar 10" class="w-12 h-12">
             </button>
           </div>
         </div>
@@ -3309,7 +3310,7 @@ window.getCurrentDate = function() {
         .select('id, name, species, created_at')
         .eq('user_id', currentUser.id)
         .order('created_at', { ascending: false })
-        .limit(5);
+        .limit(3);
       
       if (spotsError) throw spotsError;
       
@@ -6750,6 +6751,8 @@ window.getCurrentDate = function() {
   }
   
   function openSafetyTipsModal(species = 'general') {
+    console.log('🦜 openSafetyTipsModal called with species:', species);
+    
     // Set the species in the dropdown
     tipsSpeciesSelect.value = species;
     
@@ -6758,9 +6761,44 @@ window.getCurrentDate = function() {
     displayPreventativeTips(species);
     displaySources();
     
+    // Reset to Safety Tips tab (first tab)
+    const allTabs = document.querySelectorAll('.safety-tips-tab-content');
+    const allTabBtns = document.querySelectorAll('.safety-tips-tab-btn');
+    
+    allTabs.forEach(tab => tab.classList.add('hidden'));
+    allTabBtns.forEach(btn => {
+      btn.classList.remove('active');
+      btn.style.borderColor = 'transparent';
+      btn.style.opacity = '0.6';
+    });
+    
+    // Activate Safety Tips tab
+    const safetyTab = document.getElementById('safetyTab');
+    const safetyTabBtn = document.querySelector('[data-tab="safety"]');
+    
+    if (safetyTab) {
+      safetyTab.classList.remove('hidden');
+      safetyTab.classList.add('active');
+    }
+    
+    if (safetyTabBtn) {
+      safetyTabBtn.classList.add('active');
+      safetyTabBtn.style.borderColor = '#422d1e';
+      safetyTabBtn.style.opacity = '1';
+    }
+    
     // Show the modal
     safetyTipsModal.classList.remove('hidden');
     document.body.classList.add('modal-open');
+    
+    // Scroll to top of the modal content area
+    setTimeout(() => {
+      const scrollableContent = safetyTipsModal.querySelector('.overflow-y-auto');
+      if (scrollableContent) {
+        scrollableContent.scrollTop = 0;
+        console.log('📜 Scrolled safety tips modal to top');
+      }
+    }, 50);
   }
   
   function displaySafetyTips(species) {
@@ -6782,7 +6820,8 @@ window.getCurrentDate = function() {
       <div class="space-y-3">
     `;
     
-    tips.tips.forEach((tip, index) => {
+    // Show first 5 tips
+    tips.tips.slice(0, 5).forEach((tip, index) => {
       html += `
         <div class="flex items-start gap-3 p-3 rounded" style="background-color: #fff; border-left: 3px solid #10B981;">
           <span class="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white" style="background-color: #10B981;">
@@ -6793,8 +6832,38 @@ window.getCurrentDate = function() {
       `;
     });
     
+    html += `</div>`;
+    
+    // Add remaining tips (hidden initially) if there are more than 5
+    if (tips.tips.length > 5) {
+      html += `
+        <div id="safetyTipsExtra" class="hidden space-y-3 mt-3">
+      `;
+      
+      tips.tips.slice(5).forEach((tip, index) => {
+        html += `
+          <div class="flex items-start gap-3 p-3 rounded" style="background-color: #fff; border-left: 3px solid #10B981;">
+            <span class="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white" style="background-color: #10B981;">
+              ${index + 6}
+            </span>
+            <p class="text-sm" style="color: #422d1e;">${escapeHtml(tip)}</p>
+          </div>
+        `;
+      });
+      
+      html += `</div>`;
+      
+      // Add Show More / Show Less button
+      html += `
+        <div class="mt-4 text-center">
+          <button id="safetyTipsShowMoreBtn" class="px-4 py-2 rounded-lg font-medium transition-colors" style="background-color: #e8e2e1; color: #422d1e;" onmouseover="this.style.backgroundColor='#d4cac7'" onmouseout="this.style.backgroundColor='#e8e2e1'">
+            Show ${tips.tips.length - 5} More Tips
+          </button>
+        </div>
+      `;
+    }
+    
     html += `
-      </div>
       <div class="mt-6 p-4 rounded" style="background-color: #FEF3C7; border-left: 3px solid #F59E0B;">
         <p class="text-sm font-medium" style="color: #92400E;">
           Remember: These birds are protected native wildlife. They're defending their nests, not attacking maliciously. 
@@ -6807,6 +6876,24 @@ window.getCurrentDate = function() {
     if (tipsContentElement) {
       tipsContentElement.innerHTML = html;
       console.log('✅ Tips content updated');
+      
+      // Attach show more/less handler
+      const showMoreBtn = document.getElementById('safetyTipsShowMoreBtn');
+      if (showMoreBtn) {
+        showMoreBtn.addEventListener('click', () => {
+          const extraTips = document.getElementById('safetyTipsExtra');
+          if (extraTips) {
+            const isHidden = extraTips.classList.contains('hidden');
+            if (isHidden) {
+              extraTips.classList.remove('hidden');
+              showMoreBtn.textContent = 'Show Less';
+            } else {
+              extraTips.classList.add('hidden');
+              showMoreBtn.textContent = `Show ${tips.tips.length - 5} More Tips`;
+            }
+          }
+        });
+      }
     } else {
       console.error('❌ tipsContent element not found');
     }
@@ -6910,7 +6997,8 @@ window.getCurrentDate = function() {
       <div class="space-y-3">
     `;
     
-    tips.forEach((tip, index) => {
+    // Show first 5 tips
+    tips.slice(0, 5).forEach((tip, index) => {
       html += `
         <div class="flex items-start gap-3 p-3 rounded" style="background-color: #fff; border-left: 3px solid #059669;">
           <span class="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white" style="background-color: #059669;">
@@ -6921,8 +7009,38 @@ window.getCurrentDate = function() {
       `;
     });
     
+    html += `</div>`;
+    
+    // Add remaining tips (hidden initially) if there are more than 5
+    if (tips.length > 5) {
+      html += `
+        <div id="preventativeTipsExtra" class="hidden space-y-3 mt-3">
+      `;
+      
+      tips.slice(5).forEach((tip, index) => {
+        html += `
+          <div class="flex items-start gap-3 p-3 rounded" style="background-color: #fff; border-left: 3px solid #059669;">
+            <span class="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white" style="background-color: #059669;">
+              ${index + 6}
+            </span>
+            <p class="text-sm" style="color: #422d1e;">${escapeHtml(tip)}</p>
+          </div>
+        `;
+      });
+      
+      html += `</div>`;
+      
+      // Add Show More / Show Less button
+      html += `
+        <div class="mt-4 text-center">
+          <button id="preventativeTipsShowMoreBtn" class="px-4 py-2 rounded-lg font-medium transition-colors" style="background-color: #e8e2e1; color: #422d1e;" onmouseover="this.style.backgroundColor='#d4cac7'" onmouseout="this.style.backgroundColor='#e8e2e1'">
+            Show ${tips.length - 5} More Tips
+          </button>
+        </div>
+      `;
+    }
+    
     html += `
-      </div>
       <div class="mt-6 p-4 rounded" style="background-color: #DCFCE7; border-left: 3px solid #059669;">
         <p class="text-sm font-medium" style="color: #14532D;">
           Remember: Preventative measures work best when practiced consistently throughout the year, 
@@ -6935,6 +7053,24 @@ window.getCurrentDate = function() {
     if (preventativeTipsElement) {
       preventativeTipsElement.innerHTML = html;
       console.log('✅ Preventative tips content updated');
+      
+      // Attach show more/less handler
+      const showMoreBtn = document.getElementById('preventativeTipsShowMoreBtn');
+      if (showMoreBtn) {
+        showMoreBtn.addEventListener('click', () => {
+          const extraTips = document.getElementById('preventativeTipsExtra');
+          if (extraTips) {
+            const isHidden = extraTips.classList.contains('hidden');
+            if (isHidden) {
+              extraTips.classList.remove('hidden');
+              showMoreBtn.textContent = 'Show Less';
+            } else {
+              extraTips.classList.add('hidden');
+              showMoreBtn.textContent = `Show ${tips.length - 5} More Tips`;
+            }
+          }
+        });
+      }
     } else {
       console.error('❌ preventativeTipsContent element not found');
     }
@@ -7433,16 +7569,17 @@ window.getCurrentDate = function() {
     menuStats.addEventListener('click', (e) => {
       e.stopPropagation();
       hamburgerMenuDropdown.classList.add('hidden');
+      console.log('📊 Stats menu clicked');
       // Close all modals first
       closeAllModals();
-      // Open Stats modal
+      // Open Stats modal (uses 'active' class, not 'hidden')
       const statsModal = document.getElementById('statsModal');
       if (statsModal) {
-        statsModal.classList.remove('hidden');
-        document.body.classList.add('modal-open');
+        console.log('📊 Opening stats modal');
+        statsModal.classList.add('active');
         // Refresh stats when opening
         if (typeof renderStatsModal === 'function') {
-          renderStatsModal(currentStatsPeriod);
+          renderStatsModal('today'); // Default to 'today' period
         }
       }
     });
@@ -7560,12 +7697,15 @@ window.getCurrentDate = function() {
     if (profileStatsContent) profileStatsContent.classList.add('hidden');
   });
   
-  // Avatar picker
+  // Avatar picker - horizontal scroll
   document.querySelectorAll('.avatar-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
       const avatar = btn.dataset.avatar;
-      if (selectedAvatar) selectedAvatar.value = avatar;
+      const selectedAvatarInput = document.getElementById('selectedAvatar');
+      if (selectedAvatarInput) selectedAvatarInput.value = avatar;
+      
+      console.log('🎭 Avatar selected:', avatar);
       
       // Update visual selection
       document.querySelectorAll('.avatar-btn').forEach(b => {

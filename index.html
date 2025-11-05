@@ -1111,12 +1111,19 @@
   
   /* Force override Tailwind's bg-green-600 class for safety-tips buttons in dark mode */
   body.dark-mode .safety-tips-btn.bg-green-600,
-  body.dark-mode button.safety-tips-btn.bg-green-600 {
+  body.dark-mode button.safety-tips-btn.bg-green-600,
+  body.dark-mode .safety-tips-btn.text-xs.bg-green-600,
+  body.dark-mode button.text-xs.bg-green-600.safety-tips-btn,
+  body.dark-mode .safety-tips-btn.text-xs.bg-green-600.hover\:bg-green-700 {
     background-color: #047857 !important;
   }
   
+  /* Override hover state for safety-tips buttons */
   body.dark-mode .safety-tips-btn.bg-green-600:hover,
-  body.dark-mode button.safety-tips-btn.bg-green-600:hover {
+  body.dark-mode button.safety-tips-btn.bg-green-600:hover,
+  body.dark-mode .safety-tips-btn.hover\:bg-green-700:hover,
+  body.dark-mode button.safety-tips-btn.hover\:bg-green-700:hover,
+  body.dark-mode .safety-tips-btn.text-xs.bg-green-600.hover\:bg-green-700:hover {
     background-color: #065f46 !important;
   }
 </style>

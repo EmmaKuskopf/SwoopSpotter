@@ -5469,7 +5469,7 @@ window.getCurrentDate = function() {
             <div class="text-sm font-medium ${textColor}">${escapeHtml(spot.risk)}</div>
           </div>
           <div class="flex flex-col gap-2">
-            <button class="safe-passage-btn text-xs px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded whitespace-nowrap" data-spot-id="${spot.id}">
+            <button class="safe-passage-btn text-xs px-3 py-1.5 text-white rounded whitespace-nowrap" style="background-color: #047857;" onmouseover="this.style.backgroundColor='#065f46'" onmouseout="this.style.backgroundColor='#047857'" data-spot-id="${spot.id}">
               Safe Passage
             </button>
             <button class="add-report-exit-btn text-xs px-3 py-1.5 text-white rounded whitespace-nowrap" style="background-color: #422d1e;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'" data-spot-id="${spot.id}">
@@ -5863,7 +5863,7 @@ window.getCurrentDate = function() {
             <button id="showMoreBtn" class="text-xs text-white rounded px-3 py-1.5" style="background-color: #422d1e;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">Show More</button>
             <button id="closeAlertBtn" class="text-xs border rounded px-3 py-1.5">Close</button>
           </div>
-          <button id="safetyTipsAlertBtn" class="text-xs bg-green-600 hover:bg-green-700 text-white rounded px-3 py-1.5 w-full flex items-center justify-center gap-1.5">
+          <button id="safetyTipsAlertBtn" class="text-xs text-white rounded px-3 py-1.5 w-full flex items-center justify-center gap-1.5" style="background-color: #047857;" onmouseover="this.style.backgroundColor='#065f46'" onmouseout="this.style.backgroundColor='#047857'">
             <img src="Assets/Icons/tips.svg" alt="Tips" style="width: 14px; height: 14px; filter: brightness(0) invert(1);">
             ${s.risk === 'Calm - All clear' ? 'Preventative Tips' : 'Safety Tips'}
           </button>

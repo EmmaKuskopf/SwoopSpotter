@@ -3732,6 +3732,25 @@ window.getCurrentDate = function() {
     }
   }
   
+  // Clear entire sync queue (useful for clearing old pre-fix spots)
+  function clearSyncQueue() {
+    console.log('🗑️ Clearing sync queue...');
+    const clearedCount = syncQueue.length;
+    
+    if (clearedCount === 0) {
+      toast('Sync queue is already empty', 2000);
+      return;
+    }
+    
+    // Clear the queue
+    syncQueue = [];
+    saveSyncQueue();
+    updateSyncIndicator();
+    
+    console.log(`✅ Cleared ${clearedCount} items from sync queue`);
+    toast(`Cleared ${clearedCount} unsynced spot${clearedCount > 1 ? 's' : ''}`, 2000);
+  }
+  
   // Update sync indicator UI
   function updateSyncIndicator() {
     const indicator = document.getElementById('syncIndicator');
@@ -7781,6 +7800,37 @@ window.getCurrentDate = function() {
         toast('Sync complete!', 2000);
       } else {
         toast(`${syncQueue.length} items still pending`, 2000);
+      }
+    });
+  }
+  
+  // Clear Sync Queue
+  const menuClearSync = document.getElementById('menuClearSync');
+  if (menuClearSync) {
+    menuClearSync.addEventListener('click', (e) => {
+      e.stopPropagation();
+      hamburgerMenuDropdown.classList.add('hidden');
+      
+      console.log('🗑️ Clear Unsynced button clicked');
+      
+      if (!currentUser) {
+        toast('Please sign in first', 2000);
+        return;
+      }
+      
+      if (syncQueue.length === 0) {
+        toast('Sync queue is already empty', 2000);
+        return;
+      }
+      
+      // Show confirmation
+      const confirmed = confirm(`Clear ${syncQueue.length} unsynced spot${syncQueue.length > 1 ? 's' : ''} from queue?\n\nThis will remove them from the sync queue but keep them visible locally. They won't be uploaded to the database.`);
+      
+      if (confirmed) {
+        console.log('✅ User confirmed - clearing sync queue');
+        clearSyncQueue();
+      } else {
+        console.log('❌ User cancelled clear operation');
       }
     });
   }

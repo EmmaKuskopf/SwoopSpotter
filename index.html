@@ -715,6 +715,26 @@
     border-color: #2563eb !important;
   }
   
+  /* Dark mode minimized alert - red color */
+  body.dark-mode #alertBox.minimized {
+    background: #DC2626 !important;
+  }
+  
+  @keyframes pulse-alert-dark {
+    0%, 100% { 
+      background: #DC2626;
+      box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+    }
+    50% { 
+      background: #EF4444;
+      box-shadow: 0 6px 20px rgba(220, 38, 38, 0.8);
+    }
+  }
+  
+  body.dark-mode #alertBox.minimized {
+    animation: pulse-alert-dark 2s ease-in-out infinite !important;
+  }
+  
   /* Ensure text in alertBox is light colored */
   body.dark-mode #alertBox,
   body.dark-mode #alertBox * {

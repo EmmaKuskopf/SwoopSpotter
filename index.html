@@ -3426,6 +3426,9 @@ window.getCurrentDate = function() {
         lng: Number(spot.lng),
         risk: spot.risk,
         is_preseason: spot.isPreseason === true, // Explicitly convert to boolean (false if undefined/null/false)
+        address: spot.address || null,
+        safe_passage_count: spot.safePassageCount || 0,
+        last_safe_passage: spot.lastSafePassage || null,
         user_id: currentUser?.id || null,
         created_by_name: currentUser ? (userProfile?.display_name || currentUser.email.split('@')[0]) : null
       };
@@ -4469,6 +4472,12 @@ window.getCurrentDate = function() {
       
       saveAll();
       
+      // Save to Supabase if sync is enabled
+      if (syncEnabled && currentUser) {
+        console.log('💾 Syncing safe passage count to Supabase for spot:', s.name);
+        saveToSupabase(s);
+      }
+      
       // Increment user's safe passage count in profile
       incrementUserSafePassages();
       
@@ -5441,6 +5450,12 @@ window.getCurrentDate = function() {
     spot.lastSafePassage = new Date().toISOString();
     saveAll();
     
+    // Save to Supabase if sync is enabled
+    if (syncEnabled && currentUser) {
+      console.log('💾 Syncing safe passage count to Supabase for spot:', spot.name);
+      saveToSupabase(spot);
+    }
+    
     // Increment user's safe passage count in profile
     incrementUserSafePassages();
     
@@ -5604,6 +5619,13 @@ window.getCurrentDate = function() {
           spot.lastSafePassage = new Date().toISOString();
           
           saveAll();
+          
+          // Save to Supabase if sync is enabled
+          if (syncEnabled && currentUser) {
+            console.log('💾 Syncing safe passage count to Supabase for spot:', spot.name);
+            saveToSupabase(spot);
+          }
+          
           incrementUserSafePassages();
           
           feedbackModal.remove();

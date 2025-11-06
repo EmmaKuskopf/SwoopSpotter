@@ -216,7 +216,7 @@
     background: #f59e0b !important;
     border: none !important;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
-    z-index: 999 !important;
+    z-index: 10 !important;
   }
   
   @keyframes pulse-alert {
@@ -999,6 +999,10 @@
     display: flex;
   }
   
+  body.dark-mode .stats-modal {
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+  
   /* Desktop/Web Top Navigation */
   .desktop-nav {
     display: none;
@@ -1263,8 +1267,8 @@
         <div id="menuDivider" class="hidden border-themed my-1" style="border-bottom-width: 1px;"></div>
         
         <button id="menuSignIn" class="w-full text-left px-3 py-2 rounded text-primary hover:bg-secondary flex items-center gap-2">
-          <img src="Assets/Menu Icons/Light Mode/login-light.svg" alt="" width="16" height="16" class="menu-icon-light">
-          <img src="Assets/Menu Icons/Dark Mode/login-dark.svg" alt="" width="16" height="16" class="menu-icon-dark hidden">
+          <img src="Assets/Menu Icons/Light Mode/menu-logout.svg" alt="" width="16" height="16" class="menu-icon-light">
+          <img src="Assets/Menu Icons/Dark Mode/menu-logout-dark.svg" alt="" width="16" height="16" class="menu-icon-dark hidden">
           Sign In
         </button>
         
@@ -2387,7 +2391,11 @@ window.getCurrentDate = function() {
   
   // Automatically try to get user's location on page load
   if (navigator.geolocation) {
-    requestUserLocation();
+    // Wait for map to be fully initialized before requesting location
+    setTimeout(() => {
+      console.log('🗺️ Map ready, requesting location...');
+      requestUserLocation();
+    }, 500);
   } else {
     console.warn('⚠️ Geolocation not supported by browser');
     toast('Location services not available. Showing default area.', 3000);

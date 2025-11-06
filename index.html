@@ -807,6 +807,11 @@
     opacity: 1;
   }
   
+  /* Make active mobile nav icons beige in dark mode */
+  body.dark-mode .mobile-nav-item.active img {
+    filter: brightness(0) saturate(100%) invert(92%) sepia(8%) saturate(378%) hue-rotate(338deg) brightness(96%) contrast(92%);
+  }
+  
   /* Make non-active mobile nav icons beige in dark mode */
   body.dark-mode .mobile-nav-item:not(.active) img {
     filter: brightness(0) saturate(100%) invert(93%) sepia(8%) saturate(502%) hue-rotate(330deg) brightness(102%) contrast(93%);
@@ -1178,48 +1183,38 @@
         
         <!-- Menu Items -->
         <button id="menuHome" class="w-full text-left px-3 py-2 rounded mb-1 text-primary hover:bg-secondary flex items-center gap-2">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-            <polyline points="9 22 9 12 15 12 15 22"></polyline>
-          </svg>
+          <img src="Assets/Menu Icons/Light Mode/menu-home.svg" alt="" width="16" height="16" class="menu-icon-light">
+          <img src="Assets/Menu Icons/Dark Mode/menu-home-dark.svg" alt="" width="16" height="16" class="menu-icon-dark hidden">
           Home
         </button>
         
         <button id="menuContributions" class="hidden w-full text-left px-3 py-2 rounded mb-1 text-primary hover:bg-secondary flex items-center gap-2">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-          </svg>
+          <img src="Assets/Menu Icons/Light Mode/menu-contributions.svg" alt="" width="16" height="16" class="menu-icon-light">
+          <img src="Assets/Menu Icons/Dark Mode/menu-contributions-dark.svg" alt="" width="16" height="16" class="menu-icon-dark hidden">
           Contributions
         </button>
         
         <button id="menuEditProfile" class="hidden w-full text-left px-3 py-2 rounded mb-1 text-primary hover:bg-secondary flex items-center gap-2">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-            <circle cx="12" cy="7" r="4"></circle>
-          </svg>
+          <img src="Assets/Menu Icons/Light Mode/menu-profile.svg" alt="" width="16" height="16" class="menu-icon-light">
+          <img src="Assets/Menu Icons/Dark Mode/menu-profile-dark.svg" alt="" width="16" height="16" class="menu-icon-dark hidden">
           Edit Profile
         </button>
         
         <button id="menuStats" class="hidden w-full text-left px-3 py-2 rounded mb-1 text-primary hover:bg-secondary flex items-center gap-2">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="18" y1="20" x2="18" y2="10"></line>
-            <line x1="12" y1="20" x2="12" y2="4"></line>
-            <line x1="6" y1="20" x2="6" y2="14"></line>
-          </svg>
+          <img src="Assets/Menu Icons/Light Mode/menu-stats.svg" alt="" width="16" height="16" class="menu-icon-light">
+          <img src="Assets/Menu Icons/Dark Mode/menu-stats-dark.svg" alt="" width="16" height="16" class="menu-icon-dark hidden">
           Stats
         </button>
         
         <button id="menuTips" class="w-full text-left px-3 py-2 rounded mb-1 text-primary hover:bg-secondary flex items-center gap-2">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"></circle>
-            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-            <line x1="12" y1="17" x2="12.01" y2="17"></line>
-          </svg>
+          <img src="Assets/Menu Icons/Light Mode/menu-tips.svg" alt="" width="16" height="16" class="menu-icon-light">
+          <img src="Assets/Menu Icons/Dark Mode/menu-tips-dark.svg" alt="" width="16" height="16" class="menu-icon-dark hidden">
           Safety Tips
         </button>
         
         <button id="menuTesting" class="w-full text-left px-3 py-2 rounded mb-1 text-primary hover:bg-secondary flex items-center gap-2">
-          <img src="Assets/Menu Icons/Light Mode/menu-testing.svg" alt="" width="16" height="16">
+          <img src="Assets/Menu Icons/Light Mode/menu-testing.svg" alt="" width="16" height="16" class="menu-icon-light">
+          <img src="Assets/Menu Icons/Light Mode/menu-testing.svg" alt="" width="16" height="16" class="menu-icon-dark hidden" style="filter: brightness(0) saturate(100%) invert(92%) sepia(8%) saturate(378%) hue-rotate(338deg) brightness(96%) contrast(92%);">
           Testing
         </button>
         
@@ -1268,20 +1263,14 @@
         <div id="menuDivider" class="hidden border-themed my-1" style="border-bottom-width: 1px;"></div>
         
         <button id="menuSignIn" class="w-full text-left px-3 py-2 rounded text-primary hover:bg-secondary flex items-center gap-2">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
-            <polyline points="10 17 15 12 10 7"></polyline>
-            <line x1="15" y1="12" x2="3" y2="12"></line>
-          </svg>
+          <img src="Assets/Menu Icons/Light Mode/login-light.svg" alt="" width="16" height="16" class="menu-icon-light">
+          <img src="Assets/Menu Icons/Dark Mode/login-dark.svg" alt="" width="16" height="16" class="menu-icon-dark hidden">
           Sign In
         </button>
         
         <button id="menuSignOut" class="hidden w-full text-left px-3 py-2 rounded text-primary hover:bg-secondary flex items-center gap-2">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-            <polyline points="16 17 21 12 16 7"></polyline>
-            <line x1="21" y1="12" x2="9" y2="12"></line>
-          </svg>
+          <img src="Assets/Menu Icons/Light Mode/menu-logout.svg" alt="" width="16" height="16" class="menu-icon-light">
+          <img src="Assets/Menu Icons/Dark Mode/menu-logout-dark.svg" alt="" width="16" height="16" class="menu-icon-dark hidden">
           Sign Out
         </button>
       </div>
@@ -7956,6 +7945,14 @@ window.getCurrentDate = function() {
       if (moonIcon) moonIcon.classList.add('hidden');
       if (sunIcon) sunIcon.classList.remove('hidden');
       if (darkModeText) darkModeText.textContent = 'Light Mode';
+      
+      // Toggle menu icons
+      document.querySelectorAll('.menu-icon-light').forEach(icon => {
+        icon.classList.add('hidden');
+      });
+      document.querySelectorAll('.menu-icon-dark').forEach(icon => {
+        icon.classList.remove('hidden');
+      });
     }
     
     // Toggle dark mode
@@ -7980,6 +7977,14 @@ window.getCurrentDate = function() {
           if (darkModeText) darkModeText.textContent = 'Dark Mode';
         }
       }
+      
+      // Toggle menu icons
+      document.querySelectorAll('.menu-icon-light').forEach(icon => {
+        icon.classList.toggle('hidden', isDark);
+      });
+      document.querySelectorAll('.menu-icon-dark').forEach(icon => {
+        icon.classList.toggle('hidden', !isDark);
+      });
     });
   }
 

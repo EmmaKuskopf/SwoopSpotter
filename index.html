@@ -3933,7 +3933,6 @@ window.getCurrentDate = function() {
       lng: Number(spot.lng),
       risk: spot.risk,
       is_preseason: spot.isPreseason === true,
-      address: spot.address || null,
       safe_passage_count: spot.safePassageCount || 0,
       last_safe_passage: spot.lastSafePassage || null,
       user_id: currentUser.id,
@@ -3977,7 +3976,18 @@ window.getCurrentDate = function() {
   
   // Save spot to Supabase
   async function saveSpotToSupabase(spot) {
-    if (!syncEnabled) return;
+    console.log('💾 saveSpotToSupabase called:', { 
+      spotName: spot.name, 
+      spotId: spot.id,
+      syncEnabled, 
+      currentUser: currentUser?.email || 'null',
+      reportsCount: spot.reports?.length || 0
+    });
+    
+    if (!syncEnabled) {
+      console.log('❌ Sync disabled - skipping save to Supabase');
+      return;
+    }
     
     // Don't sync if user is not authenticated
     if (!currentUser) {
@@ -3988,15 +3998,24 @@ window.getCurrentDate = function() {
     
     try {
       isSyncing = true;
+      console.log('📤 Attempting to save to Supabase...');
       
       // Try to save immediately
       await saveSpotToSupabaseInternal(spot);
+      
+      console.log('✅ Successfully saved to Supabase');
       
       // Success - remove from queue if it was there
       removeFromSyncQueue(spot.id);
       
     } catch (error) {
       console.error('❌ Error saving to Supabase:', error);
+      console.error('❌ Error details:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint
+      });
       
       // Add to sync queue for retry
       addToSyncQueue(spot.id, 'update');

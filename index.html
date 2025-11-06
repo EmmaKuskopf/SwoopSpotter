@@ -6782,14 +6782,14 @@ window.getCurrentDate = function() {
     
     if (isNewSpot) {
       // Messages for creating a new spot
-      message = `Thank you for keeping our community safe from <span class="font-bold" style="color: ${birdNameColor}">${escapeHtml(birdName)}</span> the <span class="font-bold">${escapeHtml(birdSpecies)}</span>.`;
+      message = `Thank you for reporting <span class="font-bold" style="color: ${birdNameColor}">${escapeHtml(birdName)}</span> the <span class="font-bold">${escapeHtml(birdSpecies)}</span> and keeping our community safe.`;
       
       if (birdBehaviours.includes('made contact + injured')) {
         iconPath = 'Assets/Icons/user_swoopedinjured.svg';
         message = `Thank you for reporting <span class="font-bold" style="color: ${birdNameColor}">${escapeHtml(birdName)}</span> the <span class="font-bold">${escapeHtml(birdSpecies)}</span>. We're so sorry to hear you were injured! Please seek medical attention if needed.`;
       } else if (birdBehaviours.includes('made contact + uninjured')) {
         iconPath = 'Assets/Icons/user_swoopeduninjured.svg';
-        message = `Thank you for reporting <span class="font-bold" style="color: ${birdNameColor}">${escapeHtml(birdName)}</span> the <span class="font-bold">${escapeHtml(birdSpecies)}</span>. Sorry to hear about it swooping you, but we're glad you weren't injured!`;
+        message = `Thank you for reporting <span class="font-bold" style="color: ${birdNameColor}">${escapeHtml(birdName)}</span> the <span class="font-bold">${escapeHtml(birdSpecies)}</span>. Sorry to hear it swooped you, but we're glad you weren't injured!`;
       } else if (birdBehaviours.includes('close swoop') || birdBehaviours.includes('swoop')) {
         iconPath = 'Assets/Icons/user_swooped.svg';
         message = `Thank you for reporting <span class="font-bold" style="color: ${birdNameColor}">${escapeHtml(birdName)}</span> the <span class="font-bold">${escapeHtml(birdSpecies)}</span>. Sorry to hear about the swoop — stay safe out there!`;
